@@ -1,0 +1,28 @@
+<module>
+	<rawname>endpointman</rawname>
+	<name>PBX End Point Manager</name>
+	<version>2.4.0alpha3</version>
+	<type>tool</type>
+	<category>End Point Manager</category>
+	<publisher>Andrew Nagy</publisher>
+	<license>MPLv1.1</license>
+	<menuitems>
+		<epm_devices sort="1">End Point Device List</epm_devices>
+		<epm_templates sort="2">End Point Template Manager</epm_templates>
+		<epm_config sort="3">End Point Configuration</epm_config>
+		<epm_advanced sort="4">End Point Advanced Settings</epm_advanced>
+	</menuitems>
+	 <description>PBX End Point Manager supports automated deployment of multiple manufacturers IP telephones.</description>
+	 <changelog>
+	 			*2.4.0alpha3* Fixed ARI Module & Looping Outputs that have been wrong since 2.3.2!
+                *2.4.0alpha2* You can add phones now, added information to Extensions Page on FreePBX
+                *2.4.0alpha1* First Alpha of Multi-Lines
+                *2.3.2* Various Bug Fixes
+                *2.3.1* Install directory case corrections
+                *2.3.0* No Changes
+        </changelog>
+	<info>http://projects.colsolgrp.net/projects/show/endpointman</info>
+	<location>contributed_modules/release/endpointman-2.3.2.tgz</location>
+
+<md5sum>b0e3a14a20449b0441d1a9f432f19559</md5sum>
+</module>
