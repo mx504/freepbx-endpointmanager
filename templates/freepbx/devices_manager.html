@@ -1,0 +1,355 @@
+{include="global_header"}
+{if condition="isset($show_error_box)"}
+    {include="message_box"}
+{/if}
+<br>
+<script type="text/javascript" charset="utf-8"> 
+    function add() {
+        $('#adding').html('<input type="hidden" name="sub_type" value="add"/>');
+        document.adding.submit();
+    }
+    function submit_wtype(type,id) {
+        $('#adding').html('<input type="hidden" name="edit_id" value="'+ id +'"/><input type="hidden" name="sub_type" value="'+ type +'"/>');
+        document.adding.submit();
+    }
+    function submit_wtype_sub(type,id,sub) {
+        $('#adding').html('<input type="hidden" name="edit_id" value="'+ id +'"/><input type="hidden" name="sub_type" value="'+ type +'"/><input type="hidden" name="sub_type_sub" value="'+ sub +'"/>');
+        document.adding.submit();
+    }
+    function delete_device(id) {
+        if (confirm('Are you sure you want to delete this device?')) {
+            location.href='config.php?type=tool&display=epm_devices&deleteready=true&type=device&display=epm_devices&id=' + id;
+        }
+    }
+</script>
+
+<center>
+    {if condition="$no_add == FALSE"}
+    <form action='config.php{$web_var}&display=epm_devices' method='POST'>
+        <label><?=_('Search for new devices in netmask')?>
+            <input name="netmask" type="text" value="{$srvip}/24">
+            <input type="Submit" name="button_go" value="<?=_('Go')?>">
+        </label>
+        <label>
+            <input name="nmap" type="checkbox" value="1" checked><?=_('Use NMAP')?>
+        </label>
+    </form>
+    {/if}
+</center>
+<table align='center' width='90%'>
+    <tr>
+        <td align='center' width='45'></td>
+        <td width="157" align='center'><h3><?=_('Mac Address')?></h3></td>
+        <td width="187" align='center'><h3><?=_('Brand')?></h3></td>
+        <td width="216" align='center'><h3><?=_('Model of Phone')?></h3></td>
+        <td width="172" align='center'><h3><?=_('Line')?></h3></td>
+        <td width="275" align='center'><h3><?=_('Extension Number')?></h3></td>
+        <td width="154" align='center'><h3><?=_('Template')?></h3></td>
+
+        <td width="234" align='center'></td>
+        <td align='center'></td>
+    </tr>
+	{if condition="$no_add == FALSE"}
+    <tr>
+    <form name="adding" id="adding" action='config.php{$web_var}&display=epm_devices' method='POST' />
+    <td align='center' width='2%'>&nbsp;</td>
+
+    <td align='center'>
+	{if condition="$mode == 'EDIT'"}
+	{$mac}
+	{else}
+        <input name='mac' type='text' tabindex='1' size="17" maxlength="17">
+	{/if}</td>
+    <td align='center'>  <label>
+	{if condition="$mode == 'EDIT'"}
+            {$name}
+	{else}
+            <select name="brand_list" id="brand_edit">
+                {loop name="brand_ava"}
+                <option value="{$value.value}" {if condition="isset($value.selected)"}selected{/if}>{$value.text}</option>
+                {/loop}
+            </select></label>
+	{/if}
+    </td>
+    <td align='center'>
+        <label>
+	{if condition="$mode == 'EDIT'"}
+            <input name="display" type="hidden" value="epm_devices">
+            <select name="model_list">
+                {loop name="models_ava"}
+                <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
+                {/loop}
+            </select>
+	{else}
+            <select name="model_list" id="model_new"><option></option></select>
+	{/if}
+        </label></td>
+    <td align='center'></td>
+    <td align='center'></td>
+    <td align='center'>  <div id="demo"><select name="template_list" id="template_list">
+            {loop name="display_templates"}
+            <option value="{$value.value}" {if condition="isset($value.selected)"}selected{/if}>{$value.text}</option>
+            {/loop}
+        </select>
+        
+            <a href="javascript:edit_template();"><img src='{$web_path}templates/images/edit.png' title="Edit"></a></div>
+        </label></td>
+    <td align='center'>
+	{if condition="$mode == 'EDIT'"}
+        <input type='Submit' name='button_save' onclick="submit_wtype_sub('edit',{$edit_id},'button_save');" value='<?=_('Save')?>'>
+	{else}
+               <input type='Submit' name='button_add' onclick="add();" value='<?=_('Add')?>'>
+	{/if}
+    </td>
+    {$edit}
+    <td align='center'><input type='reset' value='<?=_('Reset')?>'></td>
+</tr>
+{loop name="line_list_edit"}
+<tr>
+    <td align='center' width='2%'>&nbsp;</td>
+
+    <td align='center'></td>
+    <td align='center'></td>
+    <td align='center'></td>
+    <td align='center'>
+        <label>
+            <select name="line_list_{$value.luid}" id="line_list" >
+                {loop name="value.line_list"}
+                <option value="{$value.value}" {if condition="isset($value.selected)"}selected{/if}>{$value.text}</option>
+                {/loop}
+            </select>
+        </label></td>
+    <td align='center'>
+        <select name="ext_list_{$value.luid}" id="select">
+            {loop name="value.reg_list"}
+            <option value="{$value.value}" {if condition="isset($value.selected)"}selected{/if}>{$value.text}</option>
+            {/loop}
+        </select>
+        </label>
+    </td>
+    <td align='center'></td>
+    <td align='center'>{if condition="!isset($disabled_delete_line)"}<a href="javascript:submit_wtype_sub('edit',{$value.luid},'delete');"><img src="/admin/modules/endpointman/templates/images/delete.png">{/if}</a></td>
+    <td align='center'></td>
+</tr>
+{/loop}
+{if condition="$mode != 'EDIT'"}
+<tr>
+    <td align='center' width='2%'>&nbsp;</td>
+
+    <td align='center'></td>
+    <td align='center'></td>
+    <td align='center'></td>
+    <td align='center'>
+        <label>
+            <select name="line_list" id="line_list" >
+                <option></option>
+            </select>
+        </label></td>
+    <td align='center'>
+        <select name="ext_list" id="select">
+            {loop name="display_ext"}
+            <option value="{$value.value}">{$value.text}</option>
+            {/loop}
+        </select>
+        </label>
+    </td>
+    <td align='center'></td>
+    <td align='center'></a></td>
+    <td align='center'></td>
+</tr>
+{/if}
+{if condition="$mode == 'EDIT'"}
+<tr>
+    <td align='center'>&nbsp;</td>
+    <td align='center'></td>
+    <td align='center'></td>
+    <td align='center'></td>
+    <td align='center'>&nbsp;</td>
+    <td align='center'>&nbsp;</td>
+    <td align='center'></td>
+    <td align='center'><a href="javascript:submit_wtype_sub('edit',{$edit_id},'add_line_x');"><img src="/admin/modules/endpointman/templates/images/add.png" alt="Add Line" border="0" width="24" height="24"></a></td>
+    <td align='center'></td>
+</tr> 
+{else}
+<tr>
+    <td align='center'>&nbsp;</td>
+    <td align='center'></td>
+    <td align='center'></td>
+    <td align='center'></td>
+    <td align='center'>&nbsp;</td>
+    <td align='center'>&nbsp;</td>
+    <td align='center'></td>
+    <td align='center'><a href="javascript:add_line();"><img src="/admin/modules/endpointman/templates/images/add.png" alt="Add Line" border="0" width="24" height="24"></a></td>
+    <td align='center'></td>
+</tr>
+{/if}
+{/if}
+</table>
+</form>
+
+{if condition="$searched == 1"}
+<table width='90%' align='center'>
+    <tr>
+        <td align='center'>&nbsp;</td>
+        <td align='center'>&nbsp;</td>
+        <td align='center'>&nbsp;</td>
+        <td colspan="3" align='center'><h3><?=_('Unmanaged Extensions')?></h3></td>
+        <td align='center'>&nbsp;</td>
+        <td align='center'>&nbsp;</td>
+        <td align='center'>&nbsp;</td>
+    </tr>
+	{if condition="is_array($unmanaged)"}
+    <form action='config.php{$web_var}&display=epm_devices' method='POST'>
+        <input name="devices_cached" type="hidden" value="{$cached_devices}">
+		{loop name="unmanaged"}
+        <input name="mac_{$value.id}" type="hidden" value="{$value.mac_strip}">
+        <tr>
+            <td align='center' width='20'><input type="checkbox" name="add[]" value="{$value.id}"></td>
+            <td align='center' width='148'>{$value.mac_strip}<br />({$value.ip})</td>
+            <td width="188" align='center'>{$value.brand}</td>
+            <td width="216" align='center'>
+
+                <select name="model_list_{$value.id}">
+
+	    {loop name="value.list"}
+
+                    <option value="{$value.id}">{$value.model}</option>
+
+	      {/loop}
+
+                </select></td>
+            <td width="141" align='center'>
+                <select name="line_list_{$value.id}" id="line_list">
+                    {loop name="value.line_list"}
+                    <option value="{$value.value}">{$value.text}</option>
+                    {/loop}
+                </select>
+            </td>
+
+            <td width="276" align='center'>
+                <select name="ext_list_{$value.id}" id="ext">
+
+	    {loop name="display_ext"}
+
+                    <option value="{$value.value}">{$value.text}</option>
+
+	      {/loop}
+
+                </select></td>
+            <td align='center' width='220'>&nbsp;</td>
+            <td align='center' width='154'></td>
+            <td align='center' width='73'>&nbsp;</td>
+        </tr>
+		{/loop}
+        <tr>
+        <table width="90%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td><center><input type="submit" name="button_add_selected_phones" value="<?=_('Add Selected Phones')?>"></center></td>
+            </tr>
+        </table>
+        </tr>
+    </form>
+	{/if}
+</table>
+{/if}
+
+<table width='90%' align='center' id='devList'>
+    <tr class="headerRow">
+        <td width="3%" align='center'>&nbsp;</td>
+        <td align='center'>&nbsp;</td>
+        <td align='center'>&nbsp;</td>
+        <td colspan="3" style='vertical-align:text-bottom;text-align:center;'><h3><?=_('Current Managed Extensions')?></h3></td>
+        <td align='center'>&nbsp;</td>
+        <td align='center'></td>
+        <td align='center'></td>
+    </tr>
+    <tr class="headerRow">
+        <td width="3%" align='center'>&nbsp;</td>
+        <td align='center'><h3>Mac Address</h3></td>
+        <td align='center'><h3>Brand</h3></td>
+        <td align='center'><h3>Model of Phone</h3></td>
+        <td align='center'><h3>Line</h3></td>
+        <td align='center'><h3>Extension Number</h3></td>
+        <td align='center'><h3>Template</h3></td>
+        <td align='center'><h3>Edit</h3></td>
+        <td align='center'><h3>Delete</h3></td>
+    </tr>
+    <form action='config.php{$web_var}&display=epm_devices' method='POST'>
+	{loop name="list"}
+        <tr class="headerRow">
+            <td align='center' ><img src="{$web_path}templates/images/bullet_plus.png" id="imgrowGroup{$value.master_id}" alt="" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')"><input type="checkbox" name="selected[]" value="{$value.id}"></td>
+            <td align='center' width='11%'>{$value.mac}</td>
+            <td width="13%" align='center'>{$value.name}</td>
+            <td width="14%" align='center'>{$value.model}</td>
+            <td width="10%" align='center'></td>
+            <td width="19%" align='center'></td>
+            <td align='center' width='15%'>{$value.template_name}</td>
+            <td align='center' width='9%'><a href='javascript:submit_wtype("edit",{$value.id});'><img src='{$web_path}templates/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a></td>
+            <td align='center' width='7%'><a href='javascript:delete_device({$value.id});'><img src='{$web_path}templates/images/delete.png' ALT='<?=_('Delete')?>' border='0'></a></td>
+        </tr>
+        {loop name="value.line"}
+        <tr class="rowGroup{$value.master_id}" style="display:none;">
+            <td align='center' ></td>
+            <td align='center' width='11%'></td>
+            <td width="13%" align='center'></td>
+            <td width="14%" align='center'></td>
+            <td width="10%" align='center'>{$value.line}</td>
+            <td width="19%" align='center'>{$value.ext} - {$value.description}</td>
+            <td align='center' width='15%'></td>
+            <td align='center' width='9%'></td>
+            <td align='center' width='7%'><a href='config.php?type=tool&display=epm_devices&deleteready=true&type=line&display=epm_devices&id={$value.luid}'><img src='{$web_path}templates/images/delete.png' ALT='<?=_('Delete')?>' border='0'></a></td>
+        </tr>
+        {/loop}
+	{/loop}
+</table>
+
+<hr>
+<center>
+    <h4>
+        <?=_('Selected Phone(s) Options')?>
+    </h4>
+</center>
+<table width='90%' align='center'>
+    <tr>
+        <td width="26%" align='center'><input type="submit" name="button_delete_selected_phones" value="<?=('Delete Selected Phones')?>"></td>
+        <td width="26%" align='center'><input type="submit" name="button_rebuild_selected" value="<?=_('Rebuild Configs for Selected Phones')?>"></td>
+        <td width="32%" align='center'><?=_('Change Selected Phones to')?>: <br /><?=_('Brand')?>:<select name="brand_list_selected" id="brand_list_selected">
+                {loop name="brand_ava"}
+                <option value="{$value.value}" {if condition="isset($value.selected)"}selected{/if}>{$value.text}</option>
+                {/loop}
+            </select> <?=_('Model')?>: <select name="model_list_selected" id="model_list_selected"><option></option></select><br /><input type="submit" name="button_update_phones" value="<?=_('Update Phones')?>"></td>
+    </tr>
+</table>
+</form>
+<hr>
+<center>
+    <h4><?=_('Global Phone Options')?></h4>
+</center>
+<table width='90%' align='center'>
+    <tr>
+        <td width="26%" align='center'><form action='' method='POST'><input type='Submit' name='button_rebuild_configs_for_all_phones' value='<?=_('Rebuild Configs for All Phones')?>'></form></td>
+        <td width="32%" align='center'><form action='' method='POST'><select name="rb_brand">
+	{loop name="brand_ava"}
+                    <option value="{$value.value}">{$value.text}</option>
+	{/loop}
+                </select>
+                <input type='Submit' name='button_reboot_this_brand' value='<?=_('Reboot This Brand')?>'></form></td>
+        <td width="42%" align='center'><form action='' method='POST'><?=_('Reconfigure all')?> <select name="product_select" id="product_select">
+	{loop name="product_list"}
+                    <option value="{$value.value}">{$value.text}</option>
+	{/loop}
+                </select> <?=_('with')?>
+                <label>
+                    <select name="template_selector" id="template_selector">
+                        <option></option>
+                    </select>
+                    <input type="submit" name="button_rebuild_reboot" value="<?=_('Rebuild & Reboot')?>">
+                </label></td>
+    </tr>
+</table>
+</form>
+
+<script>
+    $("#demo img[title]").tooltip();
+</script> 
+{include="global_footer"}

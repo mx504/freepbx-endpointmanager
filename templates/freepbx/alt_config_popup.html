@@ -1,0 +1,18 @@
+{if condition="isset($show_error_box)"}
+    {include="message_box"}
+{/if}
+<center><h4><?=_("File Configuration Editor")?></h4>
+<table width="90%" border="0" cellspacing="4" cellpadding="4">
+    <tr><td><div style="font-size: 14px" align="left">{if condition="isset($location)"}File Location: <i>{$location}</i>{/if}</div></td></tr>
+  <tr>
+    <td><form method="post" action="">
+      <label>
+        <textarea name="config_text" id="textarea" cols="100" rows="30" wrap="off">{if condition="isset($config_data)"}{$config_data}{/if}</textarea>
+      </label>
+      <br><div style="font-size: 15px">
+      <label>
+        <input type="submit" name="button_save" value="<?=_('Save')?>">
+      </label>
+  </tr>
+</table>
+</center>

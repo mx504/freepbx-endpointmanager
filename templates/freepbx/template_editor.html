@@ -1,0 +1,141 @@
+{if condition="isset($in_ari)"}
+<html>
+    <head>
+        <link href="/recordings/theme/coda-slider-2.0a.css" rel="stylesheet" type="text/css" />
+        <!-- Begin JavaScript -->
+        <script type="text/javascript" src="/recordings/theme/js/jquery.easing.1.3.js"></script>
+        <script type="text/javascript" src="/recordings/theme/js/jquery.coda-slider-2.0.js"></script>
+        <script type="text/javascript">
+            $().ready(function() {
+                $('#coda-slider-9').codaSlider({
+                    dynamicArrows: false
+                });
+            });
+        </script>
+        <!-- End JavaScript -->
+    </head>
+    <body>
+{else}
+<script language="javascript" type="text/javascript">
+        function popitup(url, name) {
+            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=' + document.getElementById('altconfig_'+ name).value + '&rand=' + new Date().getTime(),'name','height=600,width=750');
+                if (window.focus) {newwindow.focus()}
+                return false;
+        }
+        function popitup2(url, name) {
+            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=0_' + name + '&rand=' + new Date().getTime(),'name','height=600,width=750');
+                if (window.focus) {newwindow.focus()}
+                return false;
+        }
+        </script>
+	{if condition="$custom != 0"}
+        <strong><?=_('Template Name')?>:</strong> <i>Custom Template: Extension {$ext}</i><br />
+        <strong><?=_('Product Line')?>:</strong> {$product}<br />
+        <strong><?=_('Clone of Model')?>:</strong> {$model}<br />
+        <strong><?=_('Area')?>:</strong>
+        <select name="area_list" disabled>
+        {loop name="area_ava"}
+        <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
+        {/loop}
+        </select>
+	{/if}
+        <form action="config.php?display=epm_templates" method="post">
+	{if condition="$custom == 0"}
+        <strong><?=_('Template Name')?>:</strong> <i>{$template_name}</i><br />
+        <strong><?=_('Product Line')?>:</strong> {$product}<br />
+        <strong><?=_('Clone of Model')?>:</strong>
+        <select name="model_list" disabled>
+        {loop name="models_ava"}
+        <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
+        {/loop}
+        </select>
+        <strong><?=_('Area')?>:</strong>
+        <select name="area_list" disabled>
+        {loop name="area_ava"}
+        <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
+        {/loop}
+        </select>
+	{/if}
+        <br />
+	{if condition="$alt != 0"}
+            <br/>
+        {loop name="alt_configs"}
+            <strong><?=_('Select Alternative File Configurations for:')?></strong>
+            {$value.name} <select name="{$value.name}" id="altconfig_{$value.name}">';
+            <option value="0_{$value.name}">{$value.name} (Original)</option>';
+            {loop name="value.list"}
+                <option value="{$value.id}_{$value.name}" {if condition="isset($value.selected)"}selected{/if}>{$value.name}</option>';
+            {/loop}
+            </select>
+            <a href="#" onclick="return popitup('config.php?display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;type=alt_cfg_edit', '{$value.name}')"><img src='{$web_path}templates/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
+            <br/>
+        {/loop}
+            <br/>
+	{/if}
+        {loop name="only_configs"}
+            <strong><?=_('Edit File Configurations for:')?></strong> {$value.name}
+            <a href="#" onclick="return popitup2('config.php?display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;type=alt_cfg_edit', '{$value.name}')"><img src='{$web_path}templates/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
+            <br/>
+        {/loop}
+            <br />
+            <?=_('You can also use certain variables in your configs')?>:<br />{noparse}
+	-"{$server.ip.1}" = <?=_('Server 1 IP')?><br />
+        -"{$server.port.1}" = <?=_('Server 1 Port')?><br />
+	-"{$mac}" = <?=_('Device\'s Mac Address')?><br />
+        -"{$model}" = <?=_('Device\'s Model')?><br />
+	-"{$ext.line.1}" = <?=_('Device\'s Default Extension (Line 1 or Master)')?><br />
+	-"{$displayname.line.1}" = <?=_('Device\'s Description in FreePBX (Usually the Full Name)')?><br />{/noparse}
+            <br />
+            {/if}
+
+            <div class="coda-slider-wrapper">
+                <div class="coda-slider preload" id="coda-slider-9">
+		{loop name="template_editor"} 
+                    <div class="panel">
+                        <div class="panel-wrapper">
+                            <h2 class="title">{$value.title}</h2>
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+					{loop name="value.data"}
+                                <tr>
+                                    <td nowrap>
+						{if condition="$value.type == 'input'"}
+                                                
+                                        <label>{$value.description}: <input type='text' name='{$value.key}' value='{$value.value}' size="40"></label>
+						{elseif condition="$value.type == 'radio'"}
+							{$value.description}
+							{loop name="value.data"}
+                                        <label>{$value.description}: <input type='radio' name='{$value.key}' value='{$value.value}' {if condition="array_key_exists('checked',$value)"}{$value.checked}{/if}></label>
+							{/loop}
+						{elseif condition="$value.type == 'list'"}
+							{$value.description} <select name='{$value.key}'>
+							{loop name="value.data"}
+                                            <option value='{$value.value}' {if condition="array_key_exists('selected',$value)"}{$value.selected}{/if}>{$value.description}</option>
+							{/loop}
+                                        </select>
+						{/if}
+                                    </td><td width="90%">
+						{if condition="isset($value.aried)"}
+                                        <label><input type='checkbox' name='ari_{$value.ari.key}' {if condition="isset($value.ari.checked)"}{$value.ari.checked}{/if}>End User Editable (<a href="http://projects.colsolgrp.net/documents/29" target="_blank">Through ARI Module</a>)</label>
+						{/if}
+                                    </td>
+                                </tr>
+						{if condition="$value.type == 'break'"}
+                                <tr>
+                                    <td>&nbsp;</td>
+                                    <td>&nbsp;</td>
+                                </tr>
+						{/if}
+					{/loop}
+                            </table>
+                        </div>
+                    </div>
+		{/loop}
+                </div><!-- .coda-slider -->
+            </div><!-- .coda-slider-wrapper -->
+            <input name="id" id="id" type="hidden" value="{$hidden_id}">
+            <input name="custom" id="custom" type="hidden" value="{$hidden_custom}">
+            {if condition="!isset($in_ari)"}
+            <input type="submit" name="button_save_template" value="<?=_('Save Template');?>">
+        </form>
+        {include="global_footer"}
+        {/if}
