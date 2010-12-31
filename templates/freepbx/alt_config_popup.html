@@ -2,6 +2,7 @@
     {include="message_box"}
 {/if}
 <center><h4><?=_("File Configuration Editor")?></h4>
+    <font color="red">Warning! You can really mess up your phone by messing with these settings. Potentially causing it to not boot!</font>
 <table width="90%" border="0" cellspacing="4" cellpadding="4">
     <tr><td><div style="font-size: 14px" align="left">{if condition="isset($location)"}File Location: <i>{$location}</i>{/if}</div></td></tr>
   <tr>
@@ -11,7 +12,7 @@
       </label>
       <br><div style="font-size: 15px">
       <label>
-        <input type="submit" name="button_save" value="<?=_('Save')?>">
+        <input type="submit" name="button_save" value="<?=_('Save')?>"><input type=button value="Close Window" onClick="javascript:window.close();">
       </label>
   </tr>
 </table>

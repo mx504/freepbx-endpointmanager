@@ -76,7 +76,7 @@ function ep_table_exists ($table) {
     return FALSE;
 }
 
-$version = "2.4.0";
+$version = "2.4.1";
 
 if(ep_table_exists("endpointman_global_vars")) {
         $global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
@@ -180,7 +180,7 @@ if(!$new_install) {
         //Add new Vars into database
         $sql_update_vars = "INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES
 		(5, 'config_location', '/tftpboot/'),
-		(6, 'update_server', 'http://www.provisioner.net/release/'),
+		(6, 'update_server', 'http://www.provisioner.net/release3/'),
 		(7, 'version', '2.0.0'),
 		(8, 'enable_ari', '0'),
 		(9, 'debug', '0'),
@@ -747,8 +747,8 @@ if(!$new_install) {
             $sql = "UPDATE endpointman_custom_configs SET product_id = '".$new_product_id."' WHERE id = ". $list['id'];
             $db->query($sql);
         }
-    } if
-    ($ver <= "2.2.3") {
+    }
+    if ($ver <= "2.2.3") {
         $sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release/' WHERE var_name = 'update_server'";
         $db->query($sql);
     }
@@ -834,6 +834,14 @@ if(!$new_install) {
         $db->query($sql);
     }
 
+    if ($ver <= "2.4.0") {
+        out("Uninstalling All Installed Brands (You'll just simply have to update again, no loss of data)");
+        $db->query("UPDATE endpointman_brand_list SET  installed =  '0'");
+        out("Changing update server");
+        $sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release3/' WHERE var_name ='update_server'";
+
+    }
+
 }
 
 
@@ -886,7 +894,7 @@ if ($new_install) {
             (3, 'gmtoff', ''),
             (4, 'gmthr', ''),
             (5, 'config_location', '/tftpboot/'),
-            (6, 'update_server', 'http://www.provisioner.net/release/'),
+            (6, 'update_server', 'http://www.provisioner.net/release3/'),
             (7, 'version', '".$version."'),
             (8, 'enable_ari', '0'),
             (9, 'debug', '0'),
@@ -1147,5 +1155,8 @@ if ($new_install) {
 
         out("Fixing permissions on ARI module");
         chmod($amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module", 0664);
+
+        $sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release/' WHERE var_name = 'update_server'";
+        $db->query($sql);
     }
 }

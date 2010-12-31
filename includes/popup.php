@@ -8,8 +8,30 @@ require 'functions.inc';
 
 $endpoint = new endpointmanager();
 
+if($_REQUEST['pop_type'] == 'edit_template') {
+    if(empty($_REQUEST['edit_id'])) {
+        $message = _("No Device Selected to Edit!")."!";
+        if(isset($message)) {
+            $endpoint->display_message_box($message,$endpoint->tpl,0);
+        }
+        if(isset($error_message)) {
+            $endpoint->display_message_box($error_message,$endpoint->tpl,1);
+        }
+    } else {
+        $template_editor = TRUE;
+        $sql = "UPDATE  endpointman_mac_list SET  model =  '".$_REQUEST['model_list']."' WHERE  id =".$_REQUEST['edit_id'];
+        $endpoint->db->query($sql);
+                        $endpoint->tpl->assign("silent_mode", 1);
 
-if($_REQUEST['type'] == "alt_cfg_edit") {
+        if ($_REQUEST['template_list'] == 0) {
+            $endpoint->edit_template_display($_REQUEST['edit_id'],1);
+        } else {
+            $endpoint->edit_template_display($_REQUEST['template_list'],0);
+        }
+    }
+}
+
+if($_REQUEST['pop_type'] == "alt_cfg_edit") {
         if($_REQUEST['custom'] == 0) {
             $res = explode("_", $_REQUEST['value'],2);
             if($res[0] != 0) {
@@ -26,6 +48,7 @@ if($_REQUEST['type'] == "alt_cfg_edit") {
             } else {
                 $sql = "SELECT endpointman_brand_list.directory, endpointman_product_list.cfg_dir FROM endpointman_brand_list, endpointman_product_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = (SELECT product_id FROM endpointman_template_list WHERE id = ".$_REQUEST['tid'].")";
                 $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+                //$res[1] = escapeshellcmd($res[1]);
                 $file=PHONE_MODULES_PATH.'endpoint/'.$row['directory']."/".$row['cfg_dir']."/".$res[1];
 
                 if(isset($_REQUEST['button_save'])) {
@@ -41,6 +64,36 @@ if($_REQUEST['type'] == "alt_cfg_edit") {
                 $endpoint->tpl->assign("config_data", $contents);
             }
         } else {
+            $res = explode("_", $_REQUEST['value'],2);
+            if($res[0] != 0) {
+                if(isset($_REQUEST['button_save'])) {
+                    $sql = "UPDATE endpointman_custom_configs SET data = '".addslashes($_REQUEST['config_text'])."' WHERE id = ".$res[0];
+                    $endpoint->db->query($sql);
+                    $message = "Saved to Database!";
+                }
+                $sql = 'SELECT * FROM endpointman_custom_configs WHERE id =' . $res[0];
+                $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+                $endpoint->tpl->assign("save_as_name_value", $row['name']);
+                $endpoint->tpl->assign("filename", $row['original_name']);
+                $endpoint->tpl->assign("config_data", $row['data']);
+            } else {
+                $sql = "SELECT endpointman_brand_list.directory, endpointman_product_list.cfg_dir FROM endpointman_brand_list, endpointman_product_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = (SELECT endpointman_model_list.product_id FROM endpointman_model_list, endpointman_mac_list WHERE endpointman_mac_list.model = endpointman_model_list.id AND endpointman_mac_list.id = ".$_REQUEST['tid'].")";
+                $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+                //$res[1] = escapeshellcmd($res[1]);
+                $file=PHONE_MODULES_PATH.'endpoint/'.$row['directory']."/".$row['cfg_dir']."/".$res[1];
+
+                if(isset($_REQUEST['button_save'])) {
+                    $wfh=fopen($file,'w');
+                    fwrite($wfh,$_REQUEST['config_text']);
+                    fclose($wfh);
+                    $message = "Saved to Hard Drive!";
+                }
+
+                $handle = fopen($file, "rb");
+                $contents = fread($handle, filesize($file));
+                fclose($handle);
+                $endpoint->tpl->assign("config_data", $contents);
+            }
         }
 
         if(isset($_REQUEST['cfg_file'])) {

@@ -18,12 +18,12 @@
 {else}
 <script language="javascript" type="text/javascript">
         function popitup(url, name) {
-            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=' + document.getElementById('altconfig_'+ name).value + '&rand=' + new Date().getTime(),'name','height=600,width=750');
+            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=' + document.getElementById('altconfig_'+ name).value + '&rand=' + new Date().getTime(),'name','height=710,width=750');
                 if (window.focus) {newwindow.focus()}
                 return false;
         }
         function popitup2(url, name) {
-            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=0_' + name + '&rand=' + new Date().getTime(),'name','height=600,width=750');
+            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=0_' + name + '&rand=' + new Date().getTime(),'name','height=700,width=770');
                 if (window.focus) {newwindow.focus()}
                 return false;
         }
@@ -32,12 +32,14 @@
         <strong><?=_('Template Name')?>:</strong> <i>Custom Template: Extension {$ext}</i><br />
         <strong><?=_('Product Line')?>:</strong> {$product}<br />
         <strong><?=_('Clone of Model')?>:</strong> {$model}<br />
-        <strong><?=_('Area')?>:</strong>
-        <select name="area_list" disabled>
+        <strong><?=_('Display')?></strong>
+        <select name="area_list" onchange="window.location.href='config.php?edit_template=true&display=epm_templates&custom='+ document.getElementById('custom').value +'&id='+ document.getElementById('id').value +'&maxlines='+this.options
+    [this.selectedIndex].value">
         {loop name="area_ava"}
         <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
         {/loop}
         </select>
+        <strong><?=_('Lines')?></strong>
 	{/if}
         <form action="config.php?display=epm_templates" method="post">
 	{if condition="$custom == 0"}
@@ -67,14 +69,14 @@
                 <option value="{$value.id}_{$value.name}" {if condition="isset($value.selected)"}selected{/if}>{$value.name}</option>';
             {/loop}
             </select>
-            <a href="#" onclick="return popitup('config.php?display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;type=alt_cfg_edit', '{$value.name}')"><img src='{$web_path}templates/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
+            <a href="#" onclick="return popitup('config.php?display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=alt_cfg_edit', '{$value.name}')"><img src='{$web_path}templates/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
             <br/>
         {/loop}
             <br/>
 	{/if}
         {loop name="only_configs"}
             <strong><?=_('Edit File Configurations for:')?></strong> {$value.name}
-            <a href="#" onclick="return popitup2('config.php?display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;type=alt_cfg_edit', '{$value.name}')"><img src='{$web_path}templates/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
+            <a href="#" onclick="return popitup2('config.php?display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=alt_cfg_edit', '{$value.name}')"><img src='{$web_path}templates/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
             <br/>
         {/loop}
             <br />
@@ -100,14 +102,14 @@
                                     <td nowrap>
 						{if condition="$value.type == 'input'"}
                                                 
-                                        <label>{$value.description}: <input type='text' name='{$value.key}' value='{$value.value}' size="40"></label>
+                                        <label>{$value.description}: <input type='text' name='{$value.key}' id='{$value.key}' value='{$value.value}' size="{if condition="isset($value.max_chars)"}{$value.max_chars}{else}40{/if}"></label>
 						{elseif condition="$value.type == 'radio'"}
 							{$value.description}
 							{loop name="value.data"}
-                                        <label>{$value.description}: <input type='radio' name='{$value.key}' value='{$value.value}' {if condition="array_key_exists('checked',$value)"}{$value.checked}{/if}></label>
+                                        <label>{$value.description}: <input type='radio' name='{$value.key}' id='{$value.key}' value='{$value.value}' {if condition="array_key_exists('checked',$value)"}{$value.checked}{/if}></label>
 							{/loop}
 						{elseif condition="$value.type == 'list'"}
-							{$value.description} <select name='{$value.key}'>
+							{$value.description} <select name='{$value.key}' id='{$value.key}'>
 							{loop name="value.data"}
                                             <option value='{$value.value}' {if condition="array_key_exists('selected',$value)"}{$value.selected}{/if}>{$value.description}</option>
 							{/loop}
