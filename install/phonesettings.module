@@ -131,9 +131,9 @@ class phonesettings {
                     break;
             }
         }
-         * 
+         *
          */
-        
+
         $custom_cfg_data = serialize($custom_cfg_data);
 
         $sql = "UPDATE endpointman_mac_list SET global_user_cfg_data = '".$custom_cfg_data."' WHERE id = ". $mac_id;

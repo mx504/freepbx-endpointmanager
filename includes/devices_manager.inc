@@ -14,9 +14,6 @@
 //Set opened variables
 $message = NULL;
 $error_message = NULL;
-
-print_r($_REQUEST);
-
 $no_add = FALSE;
 $final = NULL;
 $button = NULL;
@@ -406,12 +403,14 @@ switch ($sub_type) {
                         $endpoint->db->query($sql);
 
                         $row_new = $endpoint->get_phone_info($ext_id);
+                        $rebooted = "";
                         if(isset($_REQUEST['reboot_sel'])) {
                             $endpoint->prepare_configs($row_new);
+                            $rebooted = " & Rebooted";
                         } else {
                             $endpoint->prepare_configs($row_new,FALSE);
                         }
-                        $message = _("Saved")."!";
+                        $message = _("Saved").$rebooted."!";
                     } else {
                         $message = _("One or more selected phones had the same extension as a phone already added, these devices were not added");
                     }
@@ -422,128 +421,57 @@ switch ($sub_type) {
             }
         }
         break;
-    case "" :
+    case "change_brand" :
+        if(isset($_REQUEST['selected'])) {
+            if(($_REQUEST['brand_list_selected'] > 0) AND ($_REQUEST['model_list_selected'] > 0)) {
+                foreach($_REQUEST['selected'] as $key => $data) {
+                    $sql = "UPDATE endpointman_mac_list SET global_custom_cfg_data = '', template_id = 0, global_user_cfg_data = '', config_files_override = '', model = '".$_REQUEST['model_list_selected']."' WHERE id =  ". $_REQUEST['selected'][$key];
+                    $endpoint->db->query($sql);
+
+                    $phone_info = $endpoint->get_phone_info($_REQUEST['selected'][$key]);
+                    $endpoint->prepare_configs($phone_info);
+                    $rebooted = "";
+                    if(isset($_REQUEST['reboot_change'])) {
+                        $endpoint->prepare_configs($phone_info);
+                        $rebooted = " & Rebooted";
+                    } else {
+                        $endpoint->prepare_configs($phone_info,FALSE);
+                    }
+                    $message = _("Saved").$rebooted."!";
+                }
+            } else {
+                $message = _("Please select a Brand and/or Model");
+            }
+        } else {
+            $message = _("No Phones Selected!");
+        }
+        break;
+    case "rebuild_reboot" :
+        if($_REQUEST['product_select'] == "") {
+            $message = _("Please select a product");
+        } elseif($_REQUEST['template_selector'] == "") {
+            $message = _("Please select a template");
+        } else {
+            $sql = "SELECT endpointman_mac_list.id FROM endpointman_mac_list, endpointman_brand_list, endpointman_product_list, endpointman_model_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_mac_list.model = endpointman_model_list.id AND endpointman_product_list.id = '".$_REQUEST['product_select']."'";
+            $data =& $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
+            foreach($data as $row) {
+                $sql = "UPDATE endpointman_mac_list SET template_id = '".$_REQUEST['template_selector']."' WHERE id =  ". $row['id'];
+                $endpoint->db->query($sql);
+                $phone_info = $endpoint->get_phone_info($row['id']);
+                if(isset($_REQUEST['reboot'])) {
+                    $endpoint->prepare_configs($phone_info);
+                } else {
+                    $endpoint->prepare_configs($phone_info,FALSE);
+                }
+                foreach($phone_info['line'] as $line) {
+                    $sql = "UPDATE endpointman_line_list SET description = '".$line['description']."' WHERE luid = ".$line['luid'];
+                    $endpoint->db->query($sql);
+                }
+            }
+            $message = "Rebuilt Configs";
+        }
         break;
 }
-
-/*
-
-} elseif((isset($_REQUEST['button_add_selected_phones'])) AND (isset($_REQUEST['add']))) {
-    $list_num = count($_REQUEST['add']);
-    for($i=0;$i<$list_num;$i++) {
-        $num = $_REQUEST['add'][$i];
-        if($mac = $endpoint->mac_check_clean($_REQUEST['mac_'.$num])) {
-            $sql = "SELECT * FROM endpointman_line_list WHERE ext = ".$_REQUEST['ext_list_'.$num];
-            $res =& $endpoint->db->query($sql);
-            $count_macs = $res->numRows();
-            if(!$count_macs) {
-                $sql = 'SELECT `name` FROM `users` WHERE `extension` = '.$_REQUEST['ext_list_'.$num];
-                $name =& $endpoint->db->getOne($sql,array(),DB_FETCHMODE_ASSOC);
-
-
-                //$sql = 'SELECT endpointman_product_list. * , endpointman_brand_list.directory FROM endpointman_model_list, endpointman_brand_list, endpointman_product_list WHERE endpointman_model_list.id =  \''.$_REQUEST['model_list_'.$num].'\' AND endpointman_model_list.brand = endpointman_brand_list.id AND endpointman_model_list.product_id = endpointman_product_list.id';
-                //$row =& $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
-
-
-                $sql = "INSERT INTO `endpointman_mac_list` (`mac`, `model`, `template_id`) VALUES ('".$mac."', '".$_REQUEST['model_list_'.$num]."', '0')";
-                $endpoint->db->query($sql);
-
-                $sql = 'SELECT last_insert_id()';
-                $ext_id =& $endpoint->db->getOne($sql);
-
-                if(!isset($_REQUEST['line_list_'.$num])) {
-                    $_REQUEST['line_list_'.$num] = 1;
-                }
-
-                $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$_REQUEST['ext_list_'.$num]."', '".$_REQUEST['line_list_'.$num]."', '".$name."')";
-                $endpoint->db->query($sql);
-
-                $row_new = $endpoint->get_phone_info($ext_id);
-                $endpoint->prepare_configs($row_new);
-
-                $message = _("Saved")."!";
-            } else {
-                $message = _("One or more selected phones had the same extension as a phone already added, these devices were not added");
-            }
-
-        } else {
-            $message = _("Invalid MAC Address");
-        }
-    }
-} elseif((isset($_REQUEST['button_update_phones'])) AND (isset($_REQUEST['selected']))) {
-    if(($_REQUEST['brand_list_selected'] > 0) AND ($_REQUEST['model_list_selected'] > 0)) {
-        foreach($_REQUEST['selected'] as $key => $data) {
-            $sql = "UPDATE endpointman_mac_list SET custom_cfg_data = '', custom_cfg_template = '', user_cfg_data = '', config_files_override = '', model = '".$_REQUEST['model_list_selected']."' WHERE id =  ". $_REQUEST['selected'][$key];
-            $endpoint->db->query($sql);
-
-            $phone_info = $endpoint->get_phone_info($_REQUEST['selected'][$key]);
-            $endpoint->prepare_configs($phone_info);
-
-            $message = _("Saved")."!";
-        }
-    } else {
-        $message = _("Please select a Brand and/or Model");
-    }
-} elseif(isset($_REQUEST['button_delete_selected_phones'])) {
-    if(isset($_REQUEST['selected'])) {
-        foreach($_REQUEST['selected'] as $key => $data) {
-            $sql = "DELETE FROM endpointman_mac_list WHERE id=".$_REQUEST['selected'][$key];
-            $endpoint->db->query($sql);
-            $sql = "DELETE FROM endpointman_line_list WHERE mac_id=".$_REQUEST['selected'][$key];
-            $endpoint->db->query($sql);
-        }
-    } else {
-        $message = _("No Phones Selected")."!";
-    }
-} elseif(isset($_REQUEST['button_go'])) {
-
-} elseif(isset($_REQUEST['button_rebuild_configs_for_all_phones'])) {
-    $sql = "SELECT endpointman_mac_list.id FROM endpointman_mac_list, endpointman_brand_list, endpointman_product_list, endpointman_model_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_mac_list.model = endpointman_model_list.id ORDER BY endpointman_product_list.cfg_dir ASC";
-    $mac_list =& $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
-    foreach($mac_list as $data) {
-        $phone_info = $endpoint->get_phone_info($data['id']);
-        $endpoint->prepare_configs($phone_info);
-        foreach($phone_info['line'] as $line) {
-            $sql = "UPDATE endpointman_line_list SET description = '".$line['description']."' WHERE luid = ".$line['luid'];
-            $endpoint->db->query($sql);
-        }
-    }
-    $message = "Rebuilt Configs & Rebooted All Phones";
-} elseif(isset($_REQUEST['button_rebuild_reboot'])) {
-    if($_REQUEST['product_select'] == "") {
-        $message = _("Please select a product");
-    } elseif($_REQUEST['template_selector'] == "") {
-        $message = _("Please select a template");
-    } else {
-        $sql = "SELECT endpointman_mac_list.id FROM endpointman_mac_list, endpointman_brand_list, endpointman_product_list, endpointman_model_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_mac_list.model = endpointman_model_list.id AND endpointman_product_list.id = '".$_REQUEST['product_select']."'";
-        $data =& $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
-        foreach($data as $row) {
-            $sql = "UPDATE endpointman_mac_list SET template_id = '".$_REQUEST['template_selector']."' WHERE id =  ". $row['id'];
-            $endpoint->db->query($sql);
-            $phone_info = $endpoint->get_phone_info($row['id']);
-            $endpoint->prepare_configs($phone_info);
-            foreach($phone_info['line'] as $line) {
-                $sql = "UPDATE endpointman_line_list SET description = '".$line['description']."' WHERE luid = ".$line['luid'];
-                $endpoint->db->query($sql);
-            }
-        }
-        $message = "Rebuilt Configs & Rebooted Selected Phones2";
-    }
-} elseif(isset($_REQUEST['button_rebuild_selected'])) {
-    if(isset($_REQUEST['selected'])) {
-        foreach($_REQUEST['selected'] as $key => $data) {
-            $phone_info = $endpoint->get_phone_info($_REQUEST['selected'][$key]);
-            $endpoint->prepare_configs($phone_info);
-        }
-        $message = "Rebuilt Configs & Rebooted Selected Phones";
-    } else {
-        $message = _("No Phones Selected")."!";
-    }
-} elseif(isset($_REQUEST['button_reboot_this_brand'])) {
-
-}
- * 
- */
 
 //Refresh the list after processing
 $devices_list =& $endpoint->endpoint_data->all_devices();;

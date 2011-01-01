@@ -1378,180 +1378,202 @@ class endpointmanager {
         return $out;
     }
 
+    function download_brand($id) {
+        $row =& $this->db->getAll('SELECT * FROM  endpointman_brand_list WHERE id ='.$id, array(), DB_FETCHMODE_ASSOC);
+        echo "Downloading Brand XML.....";
+        $result = $this->download_xml(UPDATE_PATH .$row[0]['directory']. "/".$row[0]['directory'].".xml","endpoint/".$row[0]['directory']);
+        if($result) {
+            echo "Done!<br/>";
+            $temp = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$row[0]['directory'].'/brand_data.xml');
+            $this->update_brand($temp);
+        } else {
+            echo "<br/>Error Connecting to the Package Repository. Module not installed. Please Try again later.<br/>You Can Also Manually Update The Repository By Downloading Files here: <a href='http://www.provisioner.net/release.html' target='_blank'>Release Repo</a><br />Then Use Manual Upload in Advanced Settings";
+        }
+    }
+
     /**
      * This will install or updated a brand package (which is the same thing to this)
      * Still needs way to determine when models move...perhaps another function?
      * @param <type> $id
      */
-    function update_brand($id = NULL) {
-        $row =& $this->db->getAll('SELECT * FROM  endpointman_brand_list WHERE id ='.$id, array(), DB_FETCHMODE_ASSOC);
+    function update_brand($temp) {
+        $row[0]['directory'] = $temp['data']['brands']['directory'];
+        $brand_name = $temp['data']['brands']['name'];
+        $brand_id = $temp['data']['brands']['brand_id'];
+        $brand_version = $temp['data']['brands']['version'];
+        $brand_last_mod = $temp['data']['brands']['last_modified'];
+        $package = $temp['data']['brands']['package'];
 
-        echo "Downloading Brand XML.....";
-        $result = $this->download_xml(UPDATE_PATH .$row[0]['directory']. "/".$row[0]['directory'].".xml","endpoint/".$row[0]['directory']);
-        if($result) {
-            echo "Done!<br/>";
+        echo "<div style='float: left'>Downloading Brand Package...</div><div style='float: left' id=\"DivExample\">.</div>";
+        $this->download_file_with_progress_bar(UPDATE_PATH.$row[0]['directory'].'/'.$package, PHONE_MODULES_PATH."temp/".$package);
+        echo "<script type='text/javascript'>document.getElementById('DivExample').innerHTML='Done!';</script><br />";
 
-            $temp = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$row[0]['directory'].'/brand_data.xml');
+        echo "Extracting Tarball........";
+        exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $package ." -C ".PHONE_MODULES_PATH."temp/");
+        echo "Done!<br />";
 
-            $brand_name = $temp['data']['brands']['name'];
-            $brand_id = $temp['data']['brands']['brand_id'];
-            $brand_version = $temp['data']['brands']['version'];
-            $brand_last_mod = $temp['data']['brands']['last_modified'];
-            $package = $temp['data']['brands']['package'];
+        echo "Creating Directory Structure/Moving Files...............";
+        $dir_iterator = new RecursiveDirectoryIterator(PHONE_MODULES_PATH."temp/".$row[0]['directory']."/");
+        $iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::SELF_FIRST);
+        // could use CHILD_FIRST if you so wish
 
-            echo "<div style='float: left'>Downloading Brand Package...</div><div style='float: left' id=\"DivExample\">.</div>";
-            $this->download_file_with_progress_bar(UPDATE_PATH.$row[0]['directory'].'/'.$package, PHONE_MODULES_PATH."temp/".$package);
-            echo "<script type='text/javascript'>document.getElementById('DivExample').innerHTML='Done!';</script><br />";
-            
-            echo "Extracting Tarball........";
-            exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $package ." -C ".PHONE_MODULES_PATH."temp/");
-            echo "Done!<br />";
-
-            echo "Creating Directory Structure/Moving Files...............";
-            $dir_iterator = new RecursiveDirectoryIterator(PHONE_MODULES_PATH."temp/".$row[0]['directory']."/");
-            $iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::SELF_FIRST);
-            // could use CHILD_FIRST if you so wish
-
-            foreach ($iterator as $file) {
-                if(is_dir($file)) {
+        foreach ($iterator as $file) {
+            if(is_dir($file)) {
+                $dir = str_replace(PHONE_MODULES_PATH."temp/".$row[0]['directory']."/", "", $file);
+                if(!file_exists(PHONE_MODULES_PATH."endpoint/".$row[0]['directory']."/".$dir)) {
+                    mkdir(PHONE_MODULES_PATH."endpoint/".$row[0]['directory']."/".$dir,0764);
+                }
+            } else {
+                if(basename($file) != "brand_data.xml") {
                     $dir = str_replace(PHONE_MODULES_PATH."temp/".$row[0]['directory']."/", "", $file);
-                    if(!file_exists(PHONE_MODULES_PATH."endpoint/".$row[0]['directory']."/".$dir)) {
-                        mkdir(PHONE_MODULES_PATH."endpoint/".$row[0]['directory']."/".$dir,0764);
-                    }
-                } else {
-                    if(basename($file) != "brand_data.xml") {
-                        $dir = str_replace(PHONE_MODULES_PATH."temp/".$row[0]['directory']."/", "", $file);
-                        rename($file, PHONE_MODULES_PATH."endpoint/".$row[0]['directory']."/".$dir);
-                        chmod(PHONE_MODULES_PATH."endpoint/".$row[0]['directory']."/".$dir,0764);
-                    }
+                    rename($file, PHONE_MODULES_PATH."endpoint/".$row[0]['directory']."/".$dir);
+                    chmod(PHONE_MODULES_PATH."endpoint/".$row[0]['directory']."/".$dir,0764);
                 }
             }
-            echo "Done!<br />";
-
-            echo "Removing Temporary Files..............";
-            $this->deltree(PHONE_MODULES_PATH."temp/" .$row[0]['directory']);
-            unlink(PHONE_MODULES_PATH.'temp/'. $package);
-            echo "Done!<br />";
-
-            $last_mod = "";
-            $temp['data']['brands']['family_list']['family'] = $this->fix_single_array_keys($temp['data']['brands']['family_list']['family']);
-            foreach($temp['data']['brands']['family_list']['family'] as $family_list) {
-                echo "Updating Family Lines.................<br/>";
-                $last_mod = max($last_mod, $family_list['last_modified']);
-
-                $family_line_xml = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$row[0]['directory'].'/'.$family_list['directory'].'/family_data.xml');
-                $data =& $this->db->getOne("SELECT id FROM endpointman_product_list WHERE id='".$brand_id.$family_line_xml['data']['id']."'", array(), DB_FETCHMODE_ASSOC);
-                $short_name = preg_replace("/\[(.*?)\]/si", "", $family_line_xml['data']['name']);
-                if($data) {
-                    $sql = "UPDATE endpointman_product_list SET short_name = '".$short_name."', long_name = '".$family_line_xml['data']['name']."', cfg_ver = '".$family_line_xml['data']['version']."', config_files='".$family_line_xml['data']['configuration_files']."' WHERE id = '".$brand_id.$family_line_xml['data']['id']."'";
-                } else {
-                    $sql = "INSERT INTO endpointman_product_list (`id`, `brand`, `short_name`, `long_name`, `cfg_dir`, `cfg_ver`, `config_files`, `hidden`) VALUES ('".$brand_id.$family_line_xml['data']['id']."', '".$brand_id."', '".$short_name."', '".$family_line_xml['data']['name']."', '".$family_line_xml['data']['directory']."', '".$family_line_xml['data']['version']."','".$family_line_xml['data']['configuration_files']."', '0')";
-                }
-
-                $this->db->query($sql);
-                $family_line_xml['data']['model_list'] = $this->fix_single_array_keys($family_line_xml['data']['model_list']);
-                echo "--Updating Model Lines................<br/>";
-                foreach($family_line_xml['data']['model_list'] as $model_list) {
-                    if(is_array($model_list['template_data']['files'])) {
-                        $template_list = implode(",",$model_list['template_data']['files']);
-                    } else {
-                        $template_list = $model_list['template_data']['files'];
-                    }
-
-                    $model_final_id = $brand_id.$family_line_xml['data']['id'].$model_list['id'];
-                    $sql = 'SELECT id, global_custom_cfg_data, global_user_cfg_data FROM endpointman_mac_list WHERE model = '.$model_final_id;
-                    $old_data = NULL;
-                    $old_data = $this->db->getAll($sql, array(), DB_FETCHMODE_ASSOC);
-                    foreach($old_data as $data) {
-                        $global_custom_cfg_data = unserialize($data['global_custom_cfg_data']);
-                        if((is_array($global_custom_cfg_data)) AND (!array_key_exists('data', $global_custom_cfg_data))) {
-                            echo "----Old Data Detected! Migrating......";
-                            $new_data = array();
-                            $new_ari = array();
-                            foreach($global_custom_cfg_data as $key => $old_keys) {          
-                                if(array_key_exists('value', $old_keys)) {
-                                    $new_data[$key] = $old_keys['value'];
-                                } else {
-                                    $breaks = explode("_", $key);
-                                    $new_data["loop|".$key] = $old_keys[$breaks[2]];
-                                }
-                                if(array_key_exists('ari', $old_keys)) {
-                                    $new_ari[$key] = 1;
-                                }
-                            }
-                            $final_data = array();
-                            $final_data['data'] = $new_data;
-                            $final_data['ari'] = $new_ari;
-                            $final_data = serialize($final_data);
-                            $sql = "UPDATE endpointman_mac_list SET  global_custom_cfg_data =  '".$final_data."' WHERE  id =".$data['id'];
-                            $this->db->query($sql);
-                            echo "Done!<br/>";
-                        }
-
-                        $global_user_cfg_data = unserialize($data['global_user_cfg_data']);
-                        if((is_array($global_user_cfg_data)) AND (array_key_exists('value', $global_user_cfg_data))) {
-                            echo "Old Data Detected! Migrating......";
-                            $new_data = array();
-                            foreach($global_custom_cfg_data as $key => $old_keys) {
-                                if(array_key_exists('value', $old_keys)) {
-                                    $new_data[$key] = $old_keys['value'];
-                                }
-                            }
-                            $final_data = serialize($new_data);
-                            $sql = "UPDATE endpointman_mac_list SET  global_user_cfg_data =  '".$final_data."' WHERE  id =".$data['id'];
-                            $this->db->query($sql);
-                            echo "Done!<br/>";
-                        }
-                    }
-                    $old_data = NULL;
-                    $sql = 'SELECT id, global_custom_cfg_data FROM endpointman_template_list WHERE model_id = '.$model_final_id;
-                    $old_data = $this->db->getAll($sql, array(), DB_FETCHMODE_ASSOC);
-                    foreach($old_data as $data) {
-                        $global_custom_cfg_data = unserialize($data['global_custom_cfg_data']);
-                        if((is_array($global_custom_cfg_data)) AND (!array_key_exists('data', $global_custom_cfg_data))) {
-                            echo "Old Data Detected! Migrating......";
-                            $new_data = array();
-                            $new_ari = array();
-                            foreach($global_custom_cfg_data as $key => $old_keys) {
-                                if(array_key_exists('value', $old_keys)) {
-                                    $new_data[$key] = $old_keys['value'];
-                                } else {
-                                    $breaks = explode("_", $key);
-                                    $new_data["loop|".$key] = $old_keys[$breaks[2]];
-                                }
-                                if(array_key_exists('ari', $old_keys)) {
-                                    $new_ari[$key] = 1;
-                                }
-                            }
-                            $final_data = array();
-                            $final_data['data'] = $new_data;
-                            $final_data['ari'] = $new_ari;
-                            $final_data = serialize($final_data);
-                            $sql = "UPDATE endpointman_template_list SET  global_custom_cfg_data =  '".$final_data."' WHERE  id =".$data['id'];
-                            $this->db->query($sql);
-                            echo "Done!<br/>";
-                        }
-                    }
-
-                    $m_data =& $this->db->getOne("SELECT id FROM endpointman_model_list WHERE id='".$brand_id.$family_line_xml['data']['id'].$model_list['id']."'", array(), DB_FETCHMODE_ASSOC);
-                    if($m_data) {
-                        $sql = "UPDATE endpointman_model_list SET max_lines = '".$model_list['lines']."', model = '".$model_list['model']."', template_list = '".$template_list."' WHERE id = '".$brand_id.$family_line_xml['data']['id'].$model_list['id']."'";
-                    } else {
-                        $sql = "INSERT INTO endpointman_model_list (`id`, `brand`, `model`, `max_lines`, `product_id`, `template_list`, `enabled`, `hidden`) VALUES ('".$brand_id.$family_line_xml['data']['id'].$model_list['id']."', '".$brand_id."', '".$model_list['model']."', '".$model_list['lines']."', '".$brand_id.$family_line_xml['data']['id']."', '".$template_list."', '0', '0')";
-                    }
-                    $this->db->query($sql);
-                }
-            }
-
-            $brand_version = max($last_mod, $brand_last_mod);
-            echo "Updating data..........";
-            $sql = "UPDATE endpointman_brand_list SET name = '".$brand_name."', cfg_ver = '".$brand_version."', installed = 1, hidden = 0 WHERE id = ".$id;
-            $this->db->query($sql);
-            echo "Done!<br/>";
-            
-        } else {
-            echo "<br/>Error Connecting to the Package Repository. Module not installed. Please Try again later.<br/>You Can Also Manually Update The Repository By Downloading Files here: <a href='http://www.provisioner.net/release.html' target='_blank'>Release Repo</a><br />Then Use Manual Upload in Advanced Settings";
         }
+        echo "Done!<br />";
+
+        echo "Removing Temporary Files..............";
+        $this->deltree(PHONE_MODULES_PATH."temp/" .$row[0]['directory']);
+        unlink(PHONE_MODULES_PATH.'temp/'. $package);
+        echo "Done!<br />";
+
+        $last_mod = "";
+        $temp['data']['brands']['family_list']['family'] = $this->fix_single_array_keys($temp['data']['brands']['family_list']['family']);
+        foreach($temp['data']['brands']['family_list']['family'] as $family_list) {
+            echo "Updating Family Lines.................<br/>";
+            $last_mod = max($last_mod, $family_list['last_modified']);
+
+            $family_line_xml = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$row[0]['directory'].'/'.$family_list['directory'].'/family_data.xml');
+            $data =& $this->db->getOne("SELECT id FROM endpointman_product_list WHERE id='".$brand_id.$family_line_xml['data']['id']."'", array(), DB_FETCHMODE_ASSOC);
+            $short_name = preg_replace("/\[(.*?)\]/si", "", $family_line_xml['data']['name']);
+            if($data) {
+                $sql = "UPDATE endpointman_product_list SET short_name = '".$short_name."', long_name = '".$family_line_xml['data']['name']."', cfg_ver = '".$family_line_xml['data']['version']."', config_files='".$family_line_xml['data']['configuration_files']."' WHERE id = '".$brand_id.$family_line_xml['data']['id']."'";
+            } else {
+                $sql = "INSERT INTO endpointman_product_list (`id`, `brand`, `short_name`, `long_name`, `cfg_dir`, `cfg_ver`, `config_files`, `hidden`) VALUES ('".$brand_id.$family_line_xml['data']['id']."', '".$brand_id."', '".$short_name."', '".$family_line_xml['data']['name']."', '".$family_line_xml['data']['directory']."', '".$family_line_xml['data']['version']."','".$family_line_xml['data']['configuration_files']."', '0')";
+            }
+
+            $this->db->query($sql);
+            $family_line_xml['data']['model_list'] = $this->fix_single_array_keys($family_line_xml['data']['model_list']);
+            echo "--Updating Model Lines................<br/>";
+            foreach($family_line_xml['data']['model_list'] as $model_list) {
+                if(is_array($model_list['template_data']['files'])) {
+                    $template_list = implode(",",$model_list['template_data']['files']);
+                } else {
+                    $template_list = $model_list['template_data']['files'];
+                }
+
+                $model_final_id = $brand_id.$family_line_xml['data']['id'].$model_list['id'];
+                $sql = 'SELECT id, global_custom_cfg_data, global_user_cfg_data FROM endpointman_mac_list WHERE model = '.$model_final_id;
+                $old_data = NULL;
+                $old_data = $this->db->getAll($sql, array(), DB_FETCHMODE_ASSOC);
+                foreach($old_data as $data) {
+                    $global_custom_cfg_data = unserialize($data['global_custom_cfg_data']);
+                    if((is_array($global_custom_cfg_data)) AND (!array_key_exists('data', $global_custom_cfg_data))) {
+                        echo "----Old Data Detected! Migrating......";
+                        $new_data = array();
+                        $new_ari = array();
+                        foreach($global_custom_cfg_data as $key => $old_keys) {
+                            if(array_key_exists('value', $old_keys)) {
+                                $new_data[$key] = $old_keys['value'];
+                            } else {
+                                $breaks = explode("_", $key);
+                                $new_data["loop|".$key] = $old_keys[$breaks[2]];
+                            }
+                            if(array_key_exists('ari', $old_keys)) {
+                                $new_ari[$key] = 1;
+                            }
+                        }
+                        $final_data = array();
+                        $final_data['data'] = $new_data;
+                        $final_data['ari'] = $new_ari;
+                        $final_data = serialize($final_data);
+                        $sql = "UPDATE endpointman_mac_list SET  global_custom_cfg_data =  '".$final_data."' WHERE  id =".$data['id'];
+                        $this->db->query($sql);
+                        echo "Done!<br/>";
+                    }
+
+                    $global_user_cfg_data = unserialize($data['global_user_cfg_data']);
+                    $old_check = FALSE;
+                    if(is_array($global_user_cfg_data)) {
+                        foreach($global_user_cfg_data as $stuff) {
+                            if(is_array($stuff)) {
+                                if(array_key_exists('value', $stuff)) {
+                                    $old_check = TRUE;
+                                    break;
+                                } else {
+                                    break;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    if((is_array($global_user_cfg_data)) AND ($old_check)) {
+                        echo "Old Data Detected! Migrating......";
+                        $new_data = array();
+                        foreach($global_user_cfg_data as $key => $old_keys) {
+                            if(array_key_exists('value', $old_keys)) {
+                                $exploded = explode("_",$key);
+                                $counted = count($exploded);
+                                $counted = $counted - 1;
+                                if(is_numeric($exploded[$counted])) {
+                                    $key = "loop|".$key;
+                                }
+                                $new_data[$key] = $old_keys['value'];
+                            }
+                        }
+                        $final_data = serialize($new_data);
+                        $sql = "UPDATE endpointman_mac_list SET  global_user_cfg_data =  '".$final_data."' WHERE  id =".$data['id'];
+                        $this->db->query($sql);
+                        echo "Done!<br/>";
+                    }
+                }
+                $old_data = NULL;
+                $sql = 'SELECT id, global_custom_cfg_data FROM endpointman_template_list WHERE model_id = '.$model_final_id;
+                $old_data = $this->db->getAll($sql, array(), DB_FETCHMODE_ASSOC);
+                foreach($old_data as $data) {
+                    $global_custom_cfg_data = unserialize($data['global_custom_cfg_data']);
+                    if((is_array($global_custom_cfg_data)) AND (!array_key_exists('data', $global_custom_cfg_data))) {
+                        echo "Old Data Detected! Migrating......";
+                        $new_data = array();
+                        $new_ari = array();
+                        foreach($global_custom_cfg_data as $key => $old_keys) {
+                            if(array_key_exists('value', $old_keys)) {
+                                $new_data[$key] = $old_keys['value'];
+                            } else {
+                                $breaks = explode("_", $key);
+                                $new_data["loop|".$key] = $old_keys[$breaks[2]];
+                            }
+                            if(array_key_exists('ari', $old_keys)) {
+                                $new_ari[$key] = 1;
+                            }
+                        }
+                        $final_data = array();
+                        $final_data['data'] = $new_data;
+                        $final_data['ari'] = $new_ari;
+                        $final_data = serialize($final_data);
+                        $sql = "UPDATE endpointman_template_list SET  global_custom_cfg_data =  '".$final_data."' WHERE  id =".$data['id'];
+                        $this->db->query($sql);
+                        echo "Done!<br/>";
+                    }
+                }
+
+                $m_data =& $this->db->getOne("SELECT id FROM endpointman_model_list WHERE id='".$brand_id.$family_line_xml['data']['id'].$model_list['id']."'", array(), DB_FETCHMODE_ASSOC);
+                if($m_data) {
+                    $sql = "UPDATE endpointman_model_list SET max_lines = '".$model_list['lines']."', model = '".$model_list['model']."', template_list = '".$template_list."' WHERE id = '".$brand_id.$family_line_xml['data']['id'].$model_list['id']."'";
+                } else {
+                    $sql = "INSERT INTO endpointman_model_list (`id`, `brand`, `model`, `max_lines`, `product_id`, `template_list`, `enabled`, `hidden`) VALUES ('".$brand_id.$family_line_xml['data']['id'].$model_list['id']."', '".$brand_id."', '".$model_list['model']."', '".$model_list['lines']."', '".$brand_id.$family_line_xml['data']['id']."', '".$template_list."', '0', '0')";
+                }
+                $this->db->query($sql);
+            }
+        }
+
+        $brand_version = max($last_mod, $brand_last_mod);
+        echo "Updating data..........";
+        $sql = "UPDATE endpointman_brand_list SET name = '".$brand_name."', cfg_ver = '".$brand_version."', installed = 1, hidden = 0 WHERE id = ".$brand_id;
+        $this->db->query($sql);
+        echo "Done!<br/>";
     }
 
     /**
@@ -1560,6 +1582,8 @@ class endpointmanager {
      */
     function remove_brand($id=NULL) {
         $brand_dir =& $this->db->getOne("SELECT directory FROM endpointman_brand_list WHERE id=".$id);
+
+        $this->rmrf(PHONE_MODULES_PATH."endpoint/".$brand_dir);
 
         $sql = "DELETE FROM endpointman_model_list WHERE brand = '". $id."'";
         $this->db->query($sql);
@@ -1836,9 +1860,9 @@ class endpointmanager {
         foreach (glob($dir) as $file) {
             if (is_dir($file)) {
                 $this->rmrf("$file/*");
-                rmdir($file);
+                @rmdir($file);
             } else {
-                unlink($file);
+                @unlink($file);
             }
         }
     }

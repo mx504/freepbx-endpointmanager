@@ -18,6 +18,17 @@ if (! function_exists("outn")) {
     }
 }
 
+function epm_rmrf($dir) {
+    foreach (glob($dir) as $file) {
+        if (is_dir($file)) {
+            $this->rmrf("$file/*");
+            @rmdir($file);
+        } else {
+            @unlink($file);
+        }
+    }
+}
+
 function find_exec($exec) {
     $usr_bin = glob("/usr/bin/".$exec);
     $usr_sbin = glob("/usr/sbin/".$exec);
@@ -839,7 +850,26 @@ if(!$new_install) {
         $db->query("UPDATE endpointman_brand_list SET  installed =  '0'");
         out("Changing update server");
         $sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release3/' WHERE var_name ='update_server'";
+        $db->query($sql);
+        $sql = "UPDATE  endpointman_model_list SET  enabled =  '0'";
+        $db->query($sql);
 
+        exec("rm -Rf ".PHONE_MODULES_PATH);
+
+        if(!file_exists(PHONE_MODULES_PATH)) {
+            mkdir(PHONE_MODULES_PATH, 0764);
+            out("Creating Phone Modules Directory");
+        }
+
+        if(!file_exists(PHONE_MODULES_PATH."setup.php")) {
+            copy(LOCAL_PATH."install/setup.php",PHONE_MODULES_PATH."setup.php");
+            out("Moving Auto Provisioner Class");
+        }
+
+        if(!file_exists(PHONE_MODULES_PATH."temp/")) {
+            mkdir(PHONE_MODULES_PATH."temp/", 0764);
+            out("Creating temp folder");
+        }
     }
 
 }
@@ -1156,7 +1186,7 @@ if ($new_install) {
         out("Fixing permissions on ARI module");
         chmod($amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module", 0664);
 
-        $sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release/' WHERE var_name = 'update_server'";
-        $db->query($sql);
     }
+    $sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release3/' WHERE var_name = 'update_server'";
+    $db->query($sql);
 }

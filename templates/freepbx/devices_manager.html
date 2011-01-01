@@ -28,6 +28,10 @@
         $('#globalmanaged2').append('<input type="hidden" name="sub_type" value="'+ type +'"/>');
         document.globalmanaged2.submit();
     }
+    function submit_global3(type) {
+        $('#globalmanaged3').append('<input type="hidden" name="sub_type" value="'+ type +'"/>');
+        document.globalmanaged3.submit();
+    }
     function submit_wtype(type,id) {
         $('#adding').append('<input type="hidden" name="edit_id" value="'+ id +'"/><input type="hidden" name="sub_type" value="'+ type +'"/>');
         document.adding.submit();
@@ -336,7 +340,7 @@
                 {loop name="brand_ava"}
                 <option value="{$value.value}" {if condition="isset($value.selected)"}selected{/if}>{$value.text}</option>
                 {/loop}
-            </select> <?=_('Model')?>: <select name="model_list_selected" id="model_list_selected"><option></option></select><br /><input type="submit" name="button_update_phones" value="<?=_('Update Phones')?>"></td>
+            </select> <?=_('Model')?>: <select name="model_list_selected" id="model_list_selected"><option></option></select><br /><input type="submit" name="button_update_phones" onclick="submit_managed('change_brand');" value="<?=_('Update Phones')?>"><br /><input type="checkbox" name="reboot_change" checked>Reboot Phones</td>
     </tr>
 </table>
 </form>
@@ -353,7 +357,7 @@
 	{/loop}
                 </select>
                 <input type='Submit' name='button_reboot_this_brand' onclick="submit_global2('reboot_brand');" value='<?=_('Reboot This Brand')?>'></form></td>
-        <td width="42%" align='center'><form action='' method='POST'><?=_('Reconfigure all')?> <select name="product_select" id="product_select">
+        <td width="42%" align='center'><form action='' name='globalmanaged3' id='globalmanaged3' method='POST'><?=_('Reconfigure all')?> <select name="product_select" id="product_select">
 	{loop name="product_list"}
                     <option value="{$value.value}">{$value.text}</option>
 	{/loop}
@@ -362,7 +366,7 @@
                     <select name="template_selector" id="template_selector">
                         <option></option>
                     </select>
-                    <input type="submit" name="button_rebuild_reboot" value="<?=_('Rebuild & Reboot')?>">
+                    <input type="submit" name="button_rebuild_reboot" onclick="submit_global3('rebuild_reboot');" value="<?=_('Rebuild & Reboot')?>"><br /><input type="checkbox" name="reboot" checked>Reboot Phones
                 </label></td>
     </tr>
 </table>

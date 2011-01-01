@@ -1,7 +1,7 @@
 <module>
 	<rawname>endpointman</rawname>
 	<name>PBX End Point Manager</name>
-	<version>2.4.0alpha4</version>
+	<version>2.4.1beta2</version>
 	<type>tool</type>
 	<category>End Point Manager</category>
 	<publisher>Andrew Nagy</publisher>
