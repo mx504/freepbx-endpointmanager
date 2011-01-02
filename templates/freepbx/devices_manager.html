@@ -300,7 +300,7 @@
     <form id="managed" action='config.php{$web_var}&display=epm_devices' method='POST'>
 	{loop name="list"}
         <tr class="headerRow">
-            <td align='center' ><img src="{$web_path}templates/images/bullet_plus.png" id="imgrowGroup{$value.master_id}" alt="" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')"><input type="checkbox" name="selected[]" value="{$value.id}"></td>
+            <td align='center' ><div id="demo"><img src="{$web_path}templates/images/bullet_plus.png" id="imgrowGroup{$value.master_id}" alt="" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Expand Line Information"><input type="checkbox" name="selected[]" value="{$value.id}"></div></td>
             <td align='center' width='11%'>{$value.mac}</td>
             <td width="13%" align='center'>{$value.name}</td>
             <td width="14%" align='center'>{$value.model}</td>
@@ -320,7 +320,7 @@
             <td width="19%" align='center'>{$value.ext} - {$value.description}</td>
             <td align='center' width='15%'></td>
             <td align='center' width='9%'></td>
-            <td align='center' width='7%'><a href='javascript:submit_wtype("delete_line",{$value.luid});'><img src='{$web_path}templates/images/delete.png' ALT='<?=_('Delete')?>' border='0'></a></td>
+            <td align='center' width='7%'><div id="demo"><a href='javascript:submit_wtype("delete_line",{$value.luid});'><img src='{$web_path}templates/images/delete.png' ALT='<?=_('Delete')?>' title='Delete Line' border='0'></a></div></td>
         </tr>
         {/loop}
 	{/loop}
@@ -374,6 +374,5 @@
 
 <script>
     $("#demo img[title]").tooltip();
-    $("#demo2 img[title]").tooltip();
 </script> 
 {include="global_footer"}

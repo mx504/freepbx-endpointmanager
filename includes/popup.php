@@ -21,7 +21,7 @@ if($_REQUEST['pop_type'] == 'edit_template') {
         $template_editor = TRUE;
         $sql = "UPDATE  endpointman_mac_list SET  model =  '".$_REQUEST['model_list']."' WHERE  id =".$_REQUEST['edit_id'];
         $endpoint->db->query($sql);
-                        $endpoint->tpl->assign("silent_mode", 1);
+        $endpoint->tpl->assign("silent_mode", 1);
 
         if ($_REQUEST['template_list'] == 0) {
             $endpoint->edit_template_display($_REQUEST['edit_id'],1);

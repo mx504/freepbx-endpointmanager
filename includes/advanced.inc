@@ -53,27 +53,39 @@ switch($_REQUEST['subpage']) {
                                             $sql_model = "SELECT id FROM endpointman_model_list WHERE brand = ".$brand_id." AND model LIKE '%".$device[2]."%' LIMIT 1";
                                             $sql_ext = "SELECT extension, name FROM users WHERE extension LIKE '%".$device[3]."%' LIMIT 1";
 
-                                            $res_model =& $db->query($sql_model);
+                                            if(isset($device[4])) {
+                                                $line_id = $device[4];
+                                            } else {
+                                                $line_id = 1;
+                                            }
+
+                                            $res_model =& $endpoint->db->query($sql_model);
                                             if($res_model->numRows()) {
-                                                $model_id =& $db->getRow($sql_model,array(), DB_FETCHMODE_ASSOC);
+                                                $model_id =& $endpoint->db->getRow($sql_model,array(), DB_FETCHMODE_ASSOC);
                                                 $model_id = $model_id['id'];
 
-                                                $res_ext =& $db->query($sql_ext);
+                                                $res_ext =& $endpoint->db->query($sql_ext);
                                                 if($res_ext->numRows()) {
-                                                    $ext =& $db->getRow($sql_ext,array(), DB_FETCHMODE_ASSOC);
+                                                    $ext =& $endpoint->db->getRow($sql_ext,array(), DB_FETCHMODE_ASSOC);
                                                     $description = $ext['name'];
                                                     $ext = $ext['extension'];
 
-                                                    $sql = "INSERT INTO  endpointman_mac_list (mac, model) VALUES ('".$mac."','".$model_id."')";
+                                                    $sql_mac = "SELECT id FROM endpointman_mac_list WHERE mac = '".$mac."'";
+                                                    $res_mac =& $endpoint->db->query($sql_mac);
+                                                    if($res_mac->numRows()) {
+                                                        $ext_id = $endpoint->db->getOne($sql_mac);
+                                                    } else {
+                                                        $sql = "INSERT INTO  endpointman_mac_list (mac, model) VALUES ('".$mac."','".$model_id."')";
+                                                        $endpoint->db->query($sql);
+
+                                                        $sql = 'SELECT last_insert_id()';
+                                                        $ext_id =& $endpoint->db->getOne($sql);
+                                                    }
+
+                                                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$ext."', '".$line_id."','".$description."')";
                                                     $endpoint->db->query($sql);
 
-                                                    $sql = 'SELECT last_insert_id()';
-                                                    $ext_id =& $endpoint->db->getOne($sql);
-
-                                                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$ext."', '1','".$description."')";
-                                                    $endpoint->db->query($sql);
-
-                                                    $message .= "Inserted Mac Address ".$mac."<br/>";
+                                                    $message .= "Inserted Mac Address: ".$mac." & Line: ".$line_id."<br/>";
                                                 } else {
                                                     $endpoint->error['csv_upload'] = 'Invalid Extension Specified';
                                                 }

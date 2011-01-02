@@ -473,7 +473,7 @@ class endpointmanager {
      * @param <type> $user_cfg_data
      * @return <type>
      */
-    function generate_gui_html($cfg_data,$custom_cfg_data=NULL, $admin=FALSE, $user_cfg_data=NULL,$max_lines=3) {
+    function generate_gui_html($cfg_data,$custom_cfg_data=NULL, $admin=FALSE, $user_cfg_data=NULL,$max_lines=3,$ext=NULL) {
         //take the data out of the database and turn it back into an array for use
         $cfg_data = unserialize($cfg_data);
 
@@ -574,6 +574,31 @@ class endpointmanager {
                             //ARI View Only
                             $template_variables_array[$group_count]['title'] = "Your Phone Settings";
                             switch ($config_options['type']) {
+                                case "loop_line_options":
+                                        //$a is the line number
+                                        $sql = "SELECT line FROM endpointman_line_list WHERE  ext = ".$ext;
+                                        $a = $this->db->getOne($sql);
+                                        $template_variables_array[$group_count]['title'] = "Line Options for Line ".$a;
+                                        foreach($config_options['data']['item'] as $items) {
+                                            if(isset($items['description'])) {
+                                                $items['description'] = str_replace('{$count}',$a,$items['description']);
+                                                $key = "line|".$a."|".str_replace('$','',$items['variable']);
+                                                if(array_key_exists($key,$custom_cfg_data)) {
+                                                    $custom_cfg_data[$key] = $custom_cfg_data[$key];
+                                                } else {
+                                                    $custom_cfg_data[$key] = str_replace('{$count}', $a, $this->fix_single_array_keys($items['default_value']));
+                                                }
+                                            }
+                                            if(isset($custom_cfg_data_ari[$key])) {
+                                                $items[$variables_count] = $items;
+                                                $template_variables_array[$group_count]['data'][$variables_count] = $this->generate_form_data($variables_count,$items,$key,$custom_cfg_data,$admin,$user_cfg_data,$custom_cfg_data_ari);
+                                                $template_variables_array[$group_count]['data'][$variables_count]['looping'] = TRUE;
+                                                $variables_count++;
+                                            }
+                                        }
+                                        $template_variables_array[$group_count]['data'][$variables_count]['type'] = "break";
+                                        $variables_count++;
+                                    continue 2;
                                 case "loop":
                                     $template_variables_array[$group_count]['data'][$variables_count]['type'] = "break";
                                     $variables_count++;
@@ -877,7 +902,11 @@ class endpointmanager {
             }
         }
 
-        return($location);
+        if(isset($_REQUEST['silent_mode'])) {
+            echo '<script language="javascript" type="text/javascript">window.close();</script>';
+        } else {
+            return($location);
+        }
 
     }
 
@@ -1582,7 +1611,6 @@ class endpointmanager {
      */
     function remove_brand($id=NULL) {
         $brand_dir =& $this->db->getOne("SELECT directory FROM endpointman_brand_list WHERE id=".$id);
-
         $this->rmrf(PHONE_MODULES_PATH."endpoint/".$brand_dir);
 
         $sql = "DELETE FROM endpointman_model_list WHERE brand = '". $id."'";
@@ -1605,7 +1633,7 @@ class endpointmanager {
      * @param int $model Model ID
      * @return boolean True on sync completed. False on sync failed
      */
-    function sync_model($model=NULL) {
+    function sync_model($model) {
 
         //TODO: combine these queries
 
@@ -1852,18 +1880,23 @@ class endpointmanager {
     }
 
     /**
-     * A function to quickly remove a directory (works in seconds for a hundred thousand files)
-     * @author http://www.php.net/manual/en/function.glob.php#93669
+     * The RecursiveIteratorIterator must be told to provide children (files and subdirectories) before parents with its CHILD_FIRST constant.
+     * Using RecursiveIteratorIterator is the only way PHP is able to see hidden files.
+     * @author http://www.webcheatsheet.com/PHP/working_with_directories.php
      * @param string $dir Full Directory path to delete
      */
     function rmrf($dir) {
-        foreach (glob($dir) as $file) {
-            if (is_dir($file)) {
-                $this->rmrf("$file/*");
-                @rmdir($file);
-            } else {
-                @unlink($file);
+        if(file_exists($dir)) {
+            $iterator = new RecursiveDirectoryIterator($dir);
+            foreach (new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::CHILD_FIRST) as $file) {
+                if ($file->isDir()) {
+                    @rmdir($file->getPathname());
+                } else {
+                    @unlink($file->getPathname());
+                }
             }
+            //Remove parent path as the last step
+            @rmdir($dir);
         }
     }
 

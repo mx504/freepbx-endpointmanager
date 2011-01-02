@@ -33,8 +33,7 @@
         <strong><?=_('Product Line')?>:</strong> {$product}<br />
         <strong><?=_('Clone of Model')?>:</strong> {$model}<br />
         <strong><?=_('Display')?></strong>
-        <select name="area_list" onchange="window.location.href='config.php?edit_template=true&display=epm_templates&custom='+ document.getElementById('custom').value +'&id='+ document.getElementById('id').value +'&maxlines='+this.options
-    [this.selectedIndex].value">
+        <select name="area_list" onchange="window.location.href='config.php?edit_template=true&display=epm_templates&custom='+ document.getElementById('custom').value +'&id='+ document.getElementById('id').value +'&maxlines='+this.options[this.selectedIndex].value">
         {loop name="area_ava"}
         <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
         {/loop}
@@ -42,6 +41,9 @@
         <strong><?=_('Lines')?></strong>
 	{/if}
         <form action="config.php?display=epm_templates" method="post">
+        {if condition="isset($silent_mode)"}
+        <input name="silent_mode" id="silent_mode" type="hidden" value="1">
+        {/if}
 	{if condition="$custom == 0"}
         <strong><?=_('Template Name')?>:</strong> <i>{$template_name}</i><br />
         <strong><?=_('Product Line')?>:</strong> {$product}<br />
@@ -50,13 +52,14 @@
         {loop name="models_ava"}
         <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
         {/loop}
-        </select>
-        <strong><?=_('Area')?>:</strong>
-        <select name="area_list" disabled>
+        </select><br/>
+        <strong><?=_('Display')?></strong>
+        <select name="area_list" onchange="window.location.href='config.php?edit_template=true&display=epm_templates&custom='+ document.getElementById('custom').value +'&id='+ document.getElementById('id').value +'&maxlines='+this.options[this.selectedIndex].value">
         {loop name="area_ava"}
         <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
         {/loop}
         </select>
+        <strong><?=_('Lines')?></strong>
 	{/if}
         <br />
 	{if condition="$alt != 0"}

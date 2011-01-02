@@ -178,53 +178,69 @@ class phonesettings {
         $endpoint = new endpointmanager();
 
         $sql = "SELECT mac_id, line FROM endpointman_line_list WHERE ext = '".$_SESSION['ari_user']['extension']."' ";
-        $mac_row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
 
-        $mac_id = $mac_row['mac_id'];
-        $line = $mac_row['line'];
+        $res =& $endpoint->db->query($sql);
+        if($res->numRows()) {
 
-        $row = $endpoint->get_phone_info($mac_id);
+            $mac_row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
 
-        if(!$endpoint->sync_model($row['model_id'])) {
-            die("unable to sync local template files");
-        }
+            $mac_id = $mac_row['mac_id'];
+            $line = $mac_row['line'];
 
-        $brand_name = $row['directory'];
-        $model_name = $row['cfg_dir'];
+            $row = $endpoint->get_phone_info($mac_id);
 
-        //Start the display of the html file in the product folder
+            if(!$endpoint->sync_model($row['model_id'])) {
+                die("unable to sync local template files");
+            }
 
-        $template =  '<h3>Hello '. $row['line'][$line]['description'] . ', You are currently editing phone settings for extension '.$row['line'][$line]['ext'].'</h3><br />';
+            $brand_name = $row['directory'];
+            $model_name = $row['cfg_dir'];
 
-        if($row['template_id'] > 0) {
-            $out = $endpoint->generate_gui_html($row['template_data'],$row['template_data_info']['global_custom_cfg_data'],FALSE,$row['global_user_cfg_data']);
+            $ari = unserialize($row['global_custom_cfg_data']);
+            if(!empty($ari['ari'])) {
+                //Start the display of the html file in the product folder
+
+                $template =  '<h3>Hello '. $row['line'][$line]['description'] . ', You are currently editing phone settings for extension '.$row['line'][$line]['ext'].'</h3><br />';
+
+                if($row['template_id'] > 0) {
+                    $out = $endpoint->generate_gui_html($row['template_data'],$row['template_data_info']['global_custom_cfg_data'],FALSE,$row['global_user_cfg_data'],NULL,$_SESSION['ari_user']['extension']);
+                } else {
+                    $out = $endpoint->generate_gui_html($row['template_data'],$row['global_custom_cfg_data'],FALSE,$row['global_user_cfg_data'],NULL,$_SESSION['ari_user']['extension']);
+                }
+
+                if(!empty($out)) {
+                    $out[0]['data'] = array_values($out[0]['data']);
+                    $button = "<input name='submit' type='submit' value='Save & Reboot'>";
+                } else {
+                    $out[0]['title'] = "Your Phone Settings have not been enabled. Please talk to your administrator.";
+                    $out[0]['data'] = NULL;
+                    $button = "";
+                }
+
+                $endpoint->tpl->assign("in_ari", 1);
+                $endpoint->tpl->assign("template_editor", $out);
+                $endpoint->tpl->assign("hidden_id", $row['line'][$line]['luid']);
+                $template .= $endpoint->tpl->draw( 'template_editor', TRUE );
+
+
+                $m = "phonesettings";
+                $ret = "<form class='phonesettings' name='ari_settings' action='' method='GET'>
+                        <input type=hidden name=m value=" . $m . ">
+                        <input type=hidden name=f value='action'>
+                        <input type=hidden name=a value='update'>
+                        <br>
+                        " . $template . "
+                        <br>". $button ."</form>";
+                return($ret);
+            } else {
+                $m = "phonesettings";
+                $ret = "<h3>This User/Extension has no settings defined for you to control, Please talk to your administrator</h3>";
+                return($ret);
+            }
         } else {
-            $out = $endpoint->generate_gui_html($row['template_data'],$row['global_custom_cfg_data'],FALSE,$row['global_user_cfg_data']);
+            $m = "phonesettings";
+            $ret = "<h3>This User/Extension is not managed by Endpoint Manager, Please talk to your administrator</h3>";
+            return($ret);
         }
-
-        if(!empty($out)) {
-            $out[0]['data'] = array_values($out[0]['data']);
-            $button = "<input name='submit' type='submit' value='Save & Reboot'>";
-        } else {
-            $out[0]['title'] = "Your Phone Settings have not been enabled. Please talk to your administrator.";
-            $out[0]['data'] = NULL;
-            $button = "";
-        }
-
-        $endpoint->tpl->assign("in_ari", 1);
-        $endpoint->tpl->assign("template_editor", $out);
-        $endpoint->tpl->assign("hidden_id", $row['line'][$line]['luid']);
-        $template .= $endpoint->tpl->draw( 'template_editor', TRUE );
-
-
-        $m = "phonesettings";
-        $ret = "<form class='phonesettings' name='ari_settings' action='' method='GET'>
-	<input type=hidden name=m value=" . $m . ">
-	<input type=hidden name=f value='action'>
-	<input type=hidden name=a value='update'>
-	<br>
-	" . $template . "
-	<br>". $button ."</form>";
-        return($ret);
     }
 }

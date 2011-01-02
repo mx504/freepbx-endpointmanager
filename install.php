@@ -19,13 +19,17 @@ if (! function_exists("outn")) {
 }
 
 function epm_rmrf($dir) {
-    foreach (glob($dir) as $file) {
-        if (is_dir($file)) {
-            $this->rmrf("$file/*");
-            @rmdir($file);
-        } else {
-            @unlink($file);
+    if(file_exists($dir)) {
+        $iterator = new RecursiveDirectoryIterator($dir);
+        foreach (new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::CHILD_FIRST) as $file) {
+            if ($file->isDir()) {
+                @rmdir($file->getPathname());
+            } else {
+                @unlink($file->getPathname());
+            }
         }
+        //Remove parent path as the last step
+        @rmdir($dir);
     }
 }
 
@@ -782,15 +786,15 @@ if(!$new_install) {
 
     if ($ver <= "2.2.6") {
         $sql = "CREATE TABLE IF NOT EXISTS `endpointman_line_list` (
-  `luid` int(11) NOT NULL AUTO_INCREMENT,
-  `mac_id` int(11) NOT NULL,
-  `line` smallint(2) NOT NULL,
-  `ext` varchar(15) NOT NULL,
-  `description` varchar(20) NOT NULL,
-  `custom_cfg_data` longblob NOT NULL,
-  `user_cfg_data` longblob NOT NULL,
-  PRIMARY KEY (`luid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;";
+              `luid` int(11) NOT NULL AUTO_INCREMENT,
+              `mac_id` int(11) NOT NULL,
+              `line` smallint(2) NOT NULL,
+              `ext` varchar(15) NOT NULL,
+              `description` varchar(20) NOT NULL,
+              `custom_cfg_data` longblob NOT NULL,
+              `user_cfg_data` longblob NOT NULL,
+              PRIMARY KEY (`luid`)
+            ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;";
         $db->query($sql);
 
         $data = array();

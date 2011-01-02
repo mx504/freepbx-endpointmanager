@@ -71,7 +71,7 @@ if($_REQUEST['type'] == "brand") {
         case "upload_brand":
             if ((file_exists(PHONE_MODULES_PATH."temp/".$_REQUEST['package'])) AND (file_exists(PHONE_MODULES_PATH."temp/".$_REQUEST['xml']))) {
                 $temp = $endpoint->xml2array(PHONE_MODULES_PATH."temp/".$_REQUEST['xml']);
-                $this->update_brand($temp);
+                $endpoint->update_brand($temp);
             }
             break;
     }
