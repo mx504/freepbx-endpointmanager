@@ -947,27 +947,37 @@ class endpointmanager {
         $provisioner_lib->server[1]['ip'] = $this->global_cfg['srvip'];
         $provisioner_lib->server[1]['port'] = 5060;
 
-        //Provide alternate Configuration file instead of the one from the hard drive
         $temp = "";
-        if(!empty($phone_info['config_files_override'])) {
-            $temp = unserialize($phone_info['config_files_override']);
-            foreach($temp as $list) {
-                $sql = "SELECT original_name,data FROM endpointman_custom_configs WHERE id = ".$list;
-                $res =& $this->db->query($sql);
-                if($res->numRows()) {
-                    $data = $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
-                    $provisioner_lib->config_files_override[$data['original_name']] = $data['data'];
-                }
-            }
-        }
-
         $template_data = unserialize($phone_info['template_data']);
         $global_user_cfg_data = unserialize($phone_info['global_user_cfg_data']);
-
         if($phone_info['template_id'] > 0) {
             $global_custom_cfg_data = unserialize($phone_info['template_data_info']['global_custom_cfg_data']);
+            //Provide alternate Configuration file instead of the one from the hard drive
+            if(!empty($phone_info['template_data_info']['config_files_override'])) {
+                $temp = unserialize($phone_info['template_data_info']['config_files_override']);
+                foreach($temp as $list) {
+                    $sql = "SELECT original_name,data FROM endpointman_custom_configs WHERE id = ".$list;
+                    $res =& $this->db->query($sql);
+                    if($res->numRows()) {
+                        $data = $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
+                        $provisioner_lib->config_files_override[$data['original_name']] = $data['data'];
+                    }
+                }
+            }
         } else {
             $global_custom_cfg_data = unserialize($phone_info['global_custom_cfg_data']);
+            //Provide alternate Configuration file instead of the one from the hard drive
+            if(!empty($phone_info['config_files_override'])) {
+                $temp = unserialize($phone_info['config_files_override']);
+                foreach($temp as $list) {
+                    $sql = "SELECT original_name,data FROM endpointman_custom_configs WHERE id = ".$list;
+                    $res =& $this->db->query($sql);
+                    if($res->numRows()) {
+                        $data = $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
+                        $provisioner_lib->config_files_override[$data['original_name']] = $data['data'];
+                    }
+                }
+            }
         }
 
         if (!empty($global_custom_cfg_data)) {
