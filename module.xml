@@ -1,7 +1,7 @@
 <module>
 	<rawname>endpointman</rawname>
 	<name>PBX End Point Manager</name>
-	<version>2.4.1RC1</version>
+	<version>2.9.0.1</version>
 	<type>tool</type>
 	<category>End Point Manager</category>
 	<publisher>Andrew Nagy</publisher>
@@ -14,8 +14,7 @@
 	</menuitems>
 	 <description>PBX End Point Manager supports automated deployment of multiple manufacturers IP telephones.</description>
 	 <changelog>
-                *2.4.0alpha2* You can add phones now, added information to Extensions Page on FreePBX
-                *2.4.0alpha1* First Alpha of Multi-Lines
+				*2.9.0.0* bumped for 2.9, removed errors in module.xml causing erors for online xml parsing
                 *2.3.2* Various Bug Fixes
                 *2.3.1* Install directory case corrections
                 *2.3.0* No Changes

@@ -125,9 +125,13 @@
                             if( tblRows[i].style.display=='none' ){
                                 tblRows[i].style.display = '';
                                 document.getElementById("img"+rowClass).src= '{$web_path}templates/images/bullet_minus.png';
+                                document.getElementById("img2"+rowClass).src= '{$web_path}templates/images/collapse.png';
+                                document.getElementById("img3"+rowClass).src= '{$web_path}templates/images/collapse.png';
                             }else{
                                 tblRows[i].style.display = 'none';
                                 document.getElementById("img"+rowClass).src= '{$web_path}templates/images/bullet_plus.png';
+                                document.getElementById("img2"+rowClass).src= '{$web_path}templates/images/expand.png';
+                                document.getElementById("img3"+rowClass).src= '{$web_path}templates/images/expand.png';
                             }
                         }
                     }

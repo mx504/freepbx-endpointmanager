@@ -6,8 +6,11 @@
  * @license MPL / GPLv2 / LGPL
  * @package Provisioner
  */
+
+require 'functions.inc';
+$endpoint = new endpointmanager();
+
 include 'jsonwrapper.php';
-//ini_set('display_errors', 1);
 function in_array_recursive($needle, $haystack) {
 
     $it = new RecursiveIteratorIterator(new RecursiveArrayIterator($haystack));
@@ -18,43 +21,6 @@ function in_array_recursive($needle, $haystack) {
         }
     } 
     return FALSE;
-}
-
-function linesAvailable($lineid=NULL,$macid=NULL) {
-    global $db;
-    if(isset($lineid)) {
-        $sql="SELECT max_lines FROM endpointman_model_list WHERE id = (SELECT endpointman_mac_list.model FROM endpointman_mac_list, endpointman_line_list WHERE endpointman_line_list.luid = ".$lineid." AND endpointman_line_list.mac_id = endpointman_mac_list.id)";
-
-        $sql_l = "SELECT line, mac_id FROM `endpointman_line_list` WHERE luid = ".$lineid;
-        $line =& $db->getRow($sql_l, array(), DB_FETCHMODE_ASSOC);
-
-        $sql_lu = "SELECT line FROM endpointman_line_list WHERE mac_id = ".$line['mac_id'];
-    } elseif(isset($macid)) {
-        $sql="SELECT max_lines FROM endpointman_model_list WHERE id = (SELECT model FROM endpointman_mac_list WHERE id =".$macid.")";
-        $sql_lu = "SELECT line FROM endpointman_line_list WHERE mac_id = ".$macid;
-
-        $line['line'] = 0;
-    }
-    $max_lines = $db->getOne($sql);
-    $lines_used =& $db->getAll($sql_lu);
-
-    for($i = 1; $i <= $max_lines; $i++) {
-        if($i == $line['line']) {
-            $temp[$i]['value'] = $i;
-            $temp[$i]['text'] = $i;
-            $temp[$i]['selected'] = "selected";
-        } else {
-            if(!in_array_recursive($i,$lines_used)) {
-                $temp[$i]['value'] = $i;
-                $temp[$i]['text'] = $i;
-            }
-        }
-    }
-    if(isset($temp)) {
-        return($temp);
-    } else {
-        return FALSE;
-    }
 }
 
 if(($_REQUEST['id'] == "") OR ($_REQUEST['id'] == "0")) {
@@ -72,12 +38,22 @@ if($_REQUEST['atype'] == "model") {
 	$sql = "SELECT DISTINCT endpointman_template_list.id, endpointman_template_list.name as model FROM endpointman_template_list, endpointman_model_list, endpointman_product_list WHERE endpointman_template_list.product_id = endpointman_model_list.product_id AND endpointman_model_list.product_id = endpointman_product_list.id AND endpointman_model_list.id = '". $_GET['id']."'";
 } elseif ($_REQUEST['atype'] == "model_clone") {
         $sql = "SELECT endpointman_model_list.id, endpointman_model_list.model as model FROM endpointman_model_list, endpointman_product_list WHERE endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_model_list.enabled = 1 AND endpointman_model_list.hidden = 0 AND product_id = '". $_GET['id']."'";
-}   elseif ($_REQUEST['atype'] == "lines") {
-        if(isset($_REQUEST['macid'])) {
-            //die();
+} elseif ($_REQUEST['atype'] == "lines") {
+    if(isset($_REQUEST['macid'])) {
+        $sql = "SELECT endpointman_model_list.max_lines FROM endpointman_model_list,endpointman_line_list,endpointman_mac_list WHERE endpointman_mac_list.id = endpointman_line_list.mac_id AND endpointman_model_list.id = endpointman_mac_list.model AND endpointman_line_list.luid = ". $_REQUEST['macid'];
+    } elseif(isset($_REQUEST['mac'])) {
+        $sql = "SELECT id FROM endpointman_mac_list WHERE mac = '".$endpoint->mac_check_clean($_REQUEST['mac'])."'";
+        $macid = $endpoint->db->getOne($sql);
+        if($macid) {
+            $_REQUEST['mac'] = $macid;
+            $sql = "SELECT endpointman_model_list.max_lines FROM endpointman_model_list,endpointman_line_list,endpointman_mac_list WHERE endpointman_mac_list.id = endpointman_line_list.mac_id AND endpointman_model_list.id = endpointman_mac_list.model AND endpointman_mac_list.id = ". $macid;
         } else {
+            unset($_REQUEST['mac']);
             $sql = "SELECT max_lines FROM endpointman_model_list WHERE id = '". $_GET['id']."'";
         }
+    } else {
+        $sql = "SELECT max_lines FROM endpointman_model_list WHERE id = '". $_GET['id']."'";
+    }
 }
 
 if (($_REQUEST['atype'] == "template") OR ($_REQUEST['atype'] == "template2")) {
@@ -92,20 +68,22 @@ if (($_REQUEST['atype'] == "template") OR ($_REQUEST['atype'] == "template2")) {
 	$i=0;
 }
 
-if(($_REQUEST['atype'] == "lines") && (!isset($_REQUEST['macid']))) {
-    $count = $db->getOne($sql);
+if(($_REQUEST['atype'] == "lines") && (!isset($_REQUEST['mac'])) && (!isset($_REQUEST['macid']))) {
+    $count = $endpoint->db->getOne($sql);
     for($z=0;$z<$count;$z++) {
         $result[$z]['id'] = $z + 1;
         $result[$z]['model'] = $z + 1;
     }
 } elseif(isset($_REQUEST['macid'])) {
-    $result = linesAvailable($_REQUEST['macid']);
+    $result = $endpoint->linesAvailable($_REQUEST['macid']);
+} elseif(isset($_REQUEST['mac'])) {
+    $result = $endpoint->linesAvailable(NULL,$_REQUEST['mac']);
 } else {
-    $result = $db->getAll($sql,array(), DB_FETCHMODE_ASSOC);
+    $result = $endpoint->db->getAll($sql,array(), DB_FETCHMODE_ASSOC);
 }
 
 foreach($result as $row) {
-        if(isset($_REQUEST['macid'])) {
+        if((isset($_REQUEST['macid'])) OR (isset($_REQUEST['mac']))) {
             $out[$i]['optionValue'] = $row['value'];
             $out[$i]['optionDisplay'] = $row['text'];
         } else {

@@ -143,29 +143,7 @@ switch ($sub_type) {
   
             $row =& $endpoint->db->getRow($sql,array(),DB_FETCHMODE_ASSOC);
 
-            $cfg_data = unserialize($row['template_data']);
-
-            $count = count($cfg_data);
-            $i = 0;
-            while($i < $count) {
-                if(array_key_exists('variable',$cfg_data[$i])) {
-                    $temping = str_replace('$','',$cfg_data[$i]['variable']);
-                    if(is_array($cfg_data[$i]['default_value'])) {
-                        $custom_cfg_data[$temping]['value'] = '';
-                    } else {
-                        $custom_cfg_data[$temping]['value'] = $cfg_data[$i]['default_value'];
-                    }
-                }
-                $i++;
-            }
-            if((isset($custom_cfg_data)) AND (is_array($custom_cfg_data))) {
-                $custom_cfg_data = serialize($custom_cfg_data);
-            } else {
-                $temp = array();
-                $custom_cfg_data = serialize($temp);
-            }
-
-            $sql = "INSERT INTO `endpointman_mac_list` (`mac`, `model`, `global_custom_cfg_data`, `template_id`) VALUES ('".$mac."', '".$_REQUEST['model_list']."', '".$custom_cfg_data."', '".$_REQUEST['template_list']."')";
+            $sql = "INSERT INTO `endpointman_mac_list` (`mac`, `model`, `template_id`) VALUES ('".$mac."', '".$_REQUEST['model_list']."', '".$_REQUEST['template_list']."')";
             $endpoint->db->query($sql);
 
             $sql = 'SELECT last_insert_id()';

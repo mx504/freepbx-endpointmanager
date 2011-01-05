@@ -32,7 +32,7 @@ class endpointmanager {
         //TODO: Need to have this change when the user changes timezones, for now we keep it set to my timezone
         date_default_timezone_set('America/Los_Angeles');
 
-                //Move all information from the global $amp_conf into our public space. This will help prevent security concerns
+        //Move all information from the global $amp_conf into our public space. This will help prevent security concerns
         $this->amp_conf = $amp_conf;
 
         //Generate empty array
@@ -51,7 +51,7 @@ class endpointmanager {
         define("LOCAL_PATH", dirname($_SERVER["SCRIPT_FILENAME"])."/modules/endpointman/");
 
         //Define error reporting
-        if($this->global_cfg['debug']) {
+        if(($this->global_cfg['debug']) AND (!isset($_REQUEST['quietmode']))) {
             error_reporting(E_ALL);
             ini_set('display_errors', 1);
         } else {
@@ -121,20 +121,6 @@ class endpointmanager {
     }
 
     /**
-     * A hacky way to add notifications into freepbx
-     * @deprecated Supposed to remove
-     * @param <type> $id
-     * @param <type> $type
-     * @param <type> $display_text
-     * @param <type> $text
-     * @param <type> $link
-     */
-    function add_freepbx_notification($id, $type, $display_text, $text, $link) {
-        $sql = "INSERT INTO notifications (module, id, level, display_text, link, candelete, timestamp, extended_text) VALUES ('endpointman', '".$id."', '500', '".$display_text."', '".$link."', '1', '".time()."', '".$text."')";
-        mysql_query($sql);
-    }
-
-    /**
      * Taken from PHP.net. A list of errors returned when uploading files.
      * @param <type> $error_code
      * @return string
@@ -167,12 +153,12 @@ class endpointmanager {
      */
     function get_brand_from_mac($mac){
         //Check for valid mac address first
-        if(!preg_match("/[0-9a-f][0-9a-f][:-][0-9a-f][0-9a-f][:-][0-9a-f][0-9a-f][:-][0-9a-f][0-9a-f][:-][0-9a-f][0-9a-f][:-][0-9a-f][0-9a-f]/i",$mac)) {
+        if(!$this->mac_check_clean($mac)) {
             return(FALSE);
         }
 
         //Get the OUI only
-        $oui = substr($mac,0,6);
+        $oui = substr($this->mac_check_clean($mac),0,6);
         //Find the matching brand model to the oui
         $oui_sql = "SELECT endpointman_brand_list.name, endpointman_brand_list.id FROM endpointman_oui_list, endpointman_brand_list WHERE oui LIKE '%". $oui ."%' AND endpointman_brand_list.id = endpointman_oui_list.brand AND endpointman_brand_list.installed = 1 LIMIT 1";
         $brand =& $this->db->getRow($oui_sql, array(), DB_FETCHMODE_ASSOC);
@@ -192,52 +178,67 @@ class endpointmanager {
         return($phone_info);
     }
 
-    /**
-     * Setup provisioner class from Provisioner.net
-     *
-     * Not used yet
-     *
-     * @param <type> $mac_id
-     */
-    function setup_provisioner($mac_id=NULL) {
-        if(!class_exists('ProvisionerConfig')) {
-            require(PHONE_MODULES_PATH.'setup.php');
-        }
-        $phone_info = $endpoint->get_phone_info($mac_id);
+    function add_device() {
 
-        if(is_array($phone_info['template_data'])) {
-            $template_data = unserialize($phone_info['template_data']['custom_cfg_data']);
-        } else {
-            $template_data = unserialize($phone_info['custom_cfg_data']);
-        }
+    }
 
-        $new_template_data = array();
-        if(is_array($template_data)) {
-            foreach($template_data as $key => $data) {
-                $new_template_data = array_merge($new_template_data, array($key => $data['value']));
-            }
-        }
+    function add_line() {
 
-        $class = "endpoint_" . $phone_info['directory'] . "_" . $phone_info['cfg_dir'] . '_phone';
+    }
 
-        $provisioner_lib = new $class();
+    function delete_line() {
 
-        $provisioner_lib->root_dir = PHONE_MODULES_PATH;
+    }
 
-        $provisioner_lib->engine = 'asterisk';
-        $provisioner_lib->system = 'unix';
+    function delete_device() {
 
-        $provisioner_lib->options = $new_template_data;
-
-        //have to because of versions less than php5.3
-        $provisioner_lib->brand_name = $phone_info['directory'];
-        $provisioner_lib->family_line = $phone_info['cfg_dir'];
     }
 
     /**
      * Send this function an ID from the mac devices list table and you'll get all the information we have on that particular phone
      * @param integer $mac_id ID number reference from the MySQL database referencing the table endpointman_mac_list
-     * @return <type>
+     * @return array
+     * @example
+     * Final Output will look something similar to this
+     *  Array
+     *       (
+     *            [config_files_override] =>
+     *            [global_user_cfg_data] => N;
+     *            [model_id] => 213
+     *            [brand_id] => 2
+     *            [name] => Grandstream
+     *            [directory] => grandstream
+     *            [model] => GXP2000
+     *            [mac] => 000B820D0050
+     *            [template_id] => 0
+     *            [global_custom_cfg_data] => Serialized Data (Changed Template Values)
+     *            [long_name] => GXP Enterprise IP series [280,1200,2000,2010,2020]
+     *            [product_id] => 21
+     *            [cfg_dir] => gxp
+     *            [cfg_ver] => 1.5
+     *            [template_data] => Serialized Data (The default Template Values)
+     *            [enabled] => 1
+     *            [line] => Array
+     *                (
+     *                    [1] => Array
+     *                        (
+     *                            [luid] => 2
+     *                            [mac_id] => 2
+     *                            [line] => 1
+     *                            [ext] => 1000
+     *                            [description] => Description
+     *                            [custom_cfg_data] =>
+     *                            [user_cfg_data] =>
+     *                            [secret] => secret
+     *                            [id] => 1000
+     *                            [tech] => sip
+     *                            [dial] => SIP/1000
+     *                            [devicetype] => fixed
+     *                            [user] => 1000
+     *                            [emergency_cid] =>
+     *                        )
+     *                )
+     *         )
      */
     function get_phone_info($mac_id=NULL) {
         //You could screw up a phone if the mac_id is blank
@@ -298,50 +299,6 @@ class endpointmanager {
                 $phone_info['line'][$line['line']] = $line;
             }
         }
-
-        //Final Output will look something similar to this
-        /**Array
-            (
-                [config_files_override] =>
-                [global_user_cfg_data] => N;
-                [model_id] => 213
-                [brand_id] => 2
-                [name] => Grandstream
-                [directory] => grandstream
-                [model] => GXP2000
-                [mac] => 000B820D0050
-                [template_id] => 0
-                [global_custom_cfg_data] => Serialized Data (Changed Template Values)
-                [long_name] => GXP Enterprise IP series [280,1200,2000,2010,2020]
-                [product_id] => 21
-                [cfg_dir] => gxp
-                [cfg_ver] => 1.5
-                [template_data] => Serialized Data (The default Template Values)
-                [enabled] => 1
-                [line] => Array
-                    (
-                        [1] => Array
-                            (
-                                [luid] => 2
-                                [mac_id] => 2
-                                [line] => 1
-                                [ext] => 1000
-                                [description] => Description
-                                [custom_cfg_data] =>
-                                [user_cfg_data] =>
-                                [secret] => secret
-                                [id] => 1000
-                                [tech] => sip
-                                [dial] => SIP/1000
-                                [devicetype] => fixed
-                                [user] => 1000
-                                [emergency_cid] =>
-                            )
-
-                    )
-
-            )
-        */
         return $phone_info;
     }
 
@@ -740,9 +697,6 @@ class endpointmanager {
             case "textarea":
                 $template_variables_array['type'] = "NA";
                 break;
-            case "file":
-                $template_variables_array['type'] = "NA";
-                break;
             case "break":
                if($admin) {
                     $template_variables_array['type'] = "break";
@@ -777,9 +731,9 @@ class endpointmanager {
         //Custom Means specific to that MAC
         //This function is reversed. Not sure why
         if($custom != "0") {
-            $sql = "SELECT endpointman_product_list.config_files, endpointman_mac_list.*, endpointman_product_list.id as product_id, endpointman_product_list.long_name, endpointman_model_list.template_data, endpointman_product_list.cfg_dir, endpointman_brand_list.directory FROM endpointman_brand_list, endpointman_mac_list, endpointman_model_list, endpointman_product_list WHERE endpointman_mac_list.id=".$id." AND endpointman_mac_list.model = endpointman_model_list.id AND endpointman_model_list.brand = endpointman_brand_list.id AND endpointman_model_list.product_id = endpointman_product_list.id";
+            $sql = "SELECT endpointman_model_list.max_lines, endpointman_product_list.config_files, endpointman_mac_list.*, endpointman_product_list.id as product_id, endpointman_product_list.long_name, endpointman_model_list.template_data, endpointman_product_list.cfg_dir, endpointman_brand_list.directory FROM endpointman_brand_list, endpointman_mac_list, endpointman_model_list, endpointman_product_list WHERE endpointman_mac_list.id=".$id." AND endpointman_mac_list.model = endpointman_model_list.id AND endpointman_model_list.brand = endpointman_brand_list.id AND endpointman_model_list.product_id = endpointman_product_list.id";
         } else {
-            $sql = "SELECT endpointman_brand_list.directory, endpointman_product_list.cfg_dir, endpointman_product_list.config_files, endpointman_product_list.long_name, endpointman_model_list.template_data, endpointman_model_list.id as model_id, endpointman_template_list.* FROM endpointman_brand_list, endpointman_product_list, endpointman_model_list, endpointman_template_list WHERE endpointman_product_list.id = endpointman_template_list.product_id AND endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_template_list.model_id = endpointman_model_list.id AND endpointman_template_list.id = ".$id;
+            $sql = "SELECT endpointman_model_list.max_lines, endpointman_brand_list.directory, endpointman_product_list.cfg_dir, endpointman_product_list.config_files, endpointman_product_list.long_name, endpointman_model_list.template_data, endpointman_model_list.id as model_id, endpointman_template_list.* FROM endpointman_brand_list, endpointman_product_list, endpointman_model_list, endpointman_template_list WHERE endpointman_product_list.id = endpointman_template_list.product_id AND endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_template_list.model_id = endpointman_model_list.id AND endpointman_template_list.id = ".$id;
         }
 
         //Load template data
@@ -830,7 +784,7 @@ class endpointmanager {
                                 }
                             }
                         } elseif ($config_options['type'] == 'loop_line_options') {
-                            for($a=1;$a<=3;$a++) {
+                            for($a=1;$a<=$row['max_lines'];$a++) {
                                 foreach($config_options['data']['item'] as $items) {
                                     if(isset($items['description'])) {
                                         $items['description'] = str_replace('{$count}',$a,$items['description']);
@@ -887,12 +841,11 @@ class endpointmanager {
   
         $this->db->query($sql);
 
-        $phone_info = "";
+        $phone_info = array();
 
         if($custom != 0) {
             $phone_info = $this->get_phone_info($id);
             $this->prepare_configs($phone_info);
-
         } else {
             $sql = 'SELECT id FROM endpointman_mac_list WHERE template_id = '.$id;
             $phones = $this->db->getAll($sql, array(), DB_FETCHMODE_ASSOC);
@@ -1035,7 +988,6 @@ class endpointmanager {
         //Set Variables according to the template_data files included. We can include different template.xml files within family_data.xml also one can create
         //template_data_custom.xml which will get included or template_data_<model_name>_custom.xml which will also get included
         //line 'global' will set variables that aren't line dependant
-
         $provisioner_lib->options = $new_template_data;
 
         //Setting a line variable here...these aren't defined in the template_data.xml file yet. however they will still be parsed
@@ -1050,7 +1002,7 @@ class endpointmanager {
         $time_end = microtime(true);
         $time = $time_end - $time_start;
         if($time > 360) {
-            $this->error['generate_time'] = "It's taking a awfully long time to generate configs...(".round($time,2)." seconds)";
+            $this->error['generate_time'] = "It took an awfully long time to generate configs...(".round($time,2)." seconds)";
         }
         //Create Directory Structure (If needed)
         if(isset($provisioner_lib->directory_structure)) {
@@ -1259,6 +1211,9 @@ class endpointmanager {
             return($array_n);
         } elseif(!empty($array)) {
             return($array);
+        //This is so stupid?! PHP gets confused.
+        } elseif($array == '0') {
+            return($array);
         } else {
             return("");
         }
@@ -1417,6 +1372,10 @@ class endpointmanager {
         return $out;
     }
 
+    /**
+     * This will download the xml & brand package remotely
+     * @param integer $id Brand ID
+     */
     function download_brand($id) {
         $row =& $this->db->getAll('SELECT * FROM  endpointman_brand_list WHERE id ='.$id, array(), DB_FETCHMODE_ASSOC);
         echo "Downloading Brand XML.....";
@@ -1473,7 +1432,7 @@ class endpointmanager {
         echo "Done!<br />";
 
         echo "Removing Temporary Files..............";
-        $this->deltree(PHONE_MODULES_PATH."temp/" .$row[0]['directory']);
+        $this->rmrf(PHONE_MODULES_PATH."temp/" .$row[0]['directory']);
         unlink(PHONE_MODULES_PATH.'temp/'. $package);
         echo "Done!<br />";
 
@@ -1632,7 +1591,7 @@ class endpointmanager {
         $sql = "DELETE FROM endpointman_oui_list WHERE brand = '". $id . "'";
         $this->db->query($sql);
 
-        $this->deltree(PHONE_MODULES_PATH .$brand_dir);
+        $this->rmrf(PHONE_MODULES_PATH .$brand_dir);
         $sql = "DELETE FROM endpointman_brand_list WHERE id = ". $id;
 
         $this->db->query($sql);
@@ -1881,15 +1840,6 @@ class endpointmanager {
     }
 
     /**
-     * Delete Directory Tree.
-     * @deprecated In favor of rmrf
-     * @param string $dir Full Directory path to delete
-     */
-    function deltree($dir) {
-        $this->rmrf($dir);
-    }
-
-    /**
      * The RecursiveIteratorIterator must be told to provide children (files and subdirectories) before parents with its CHILD_FIRST constant.
      * Using RecursiveIteratorIterator is the only way PHP is able to see hidden files.
      * @author http://www.webcheatsheet.com/PHP/working_with_directories.php
@@ -2060,14 +2010,14 @@ class endpointmanager {
         if ((strlen($mac) == "17") OR (strlen($mac) == "12")) {
             //It might be better to use switch here instead of these IF statements...
 
-            //Is the mac separated by colons(:)?
+            //Is the mac separated by colons(:) or dashes(-)?
             if (preg_match("/[0-9a-f][0-9a-f][:-]".
             "[0-9a-f][0-9a-f][:-]".
             "[0-9a-f][0-9a-f][:-]".
             "[0-9a-f][0-9a-f][:-]".
             "[0-9a-f][0-9a-f][:-]".
             "[0-9a-f][0-9a-f]/i", $mac)) {
-                return(strtoupper(str_replace(":", "", $mac)));
+                return(strtoupper(str_replace(":", "", str_replace("-", "", $mac))));
                 //Is the string exactly 12 characters?
             } elseif(strlen($mac) == "12") {
                 //Now is the string a valid HEX mac address?

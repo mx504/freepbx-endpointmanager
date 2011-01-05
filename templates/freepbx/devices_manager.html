@@ -300,12 +300,12 @@
     <form id="managed" action='config.php{$web_var}&display=epm_devices' method='POST'>
 	{loop name="list"}
         <tr class="headerRow">
-            <td align='center' ><div id="demo"><img src="{$web_path}templates/images/bullet_plus.png" id="imgrowGroup{$value.master_id}" alt="" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Expand Line Information"><input type="checkbox" name="selected[]" value="{$value.id}"></div></td>
+            <td align='center' ><div id="demo"><a href="#"><img src="{$web_path}templates/images/bullet_plus.png" id="imgrowGroup{$value.master_id}" alt="" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Expanded Line Information"><input type="checkbox" name="selected[]" value="{$value.id}"></a></div></td>
             <td align='center' width='11%'>{$value.mac}</td>
             <td width="13%" align='center'>{$value.name}</td>
             <td width="14%" align='center'>{$value.model}</td>
-            <td width="10%" align='center'></td>
-            <td width="19%" align='center'></td>
+            <td width="10%" align='center'><div id="demo"><a href="#"><img src="{$web_path}templates/images/expand.png" id="img2rowGroup{$value.master_id}" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Expanded Line Information"></a></div></td>
+            <td width="19%" align='center'><div id="demo"><a href="#"><img src="{$web_path}templates/images/expand.png" id="img3rowGroup{$value.master_id}" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Expanded Line Information"></a></div></td>
             <td align='center' width='15%'>{$value.template_name}</td>
             <td align='center' width='9%'><div id="demo"><a href='javascript:submit_wtype("edit",{$value.id});'><img src='{$web_path}templates/images/edit.png' ALT='<?=_('Edit')?>' title='Edit Device' border='0'></a></div></td>
             <td align='center' width='7%'><div id="demo"><a href='javascript:delete_device({$value.id});'><img src='{$web_path}templates/images/delete.png' ALT='<?=_('Delete')?>' title='Delete Device' border='0'></a></div></td>

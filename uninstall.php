@@ -27,7 +27,7 @@ if (! function_exists("outn")) {
 }
 
 out("Removing Phone Modules Directory");
-$endpoint->deltree(PHONE_MODULES_PATH);
+$endpoint->rmrf(PHONE_MODULES_PATH);
 exec("rm -R ". PHONE_MODULES_PATH);
 
 out("Dropping all relevant tables");
