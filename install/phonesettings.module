@@ -104,36 +104,6 @@ class phonesettings {
             }
         }
 
-        /*
-        foreach($cfg_data as $config_options) {
-            switch ($config_options['type']) {
-                case "loop":
-                    $loop_start = $config_options['loop_start'];
-                    $loop_end = $config_options['loop_end'];
-                    for($a=$loop_start;$a<=$loop_end;$a++) {
-                        foreach($config_options['data']['item'] as $items) {
-                            $temping = str_replace('$','',$items['variable'])."_".$a;
-                            if((isset($_REQUEST[$temping])) AND (isset($custom_cfg_data_ari[$temping])) AND ($custom_cfg_data_ari[$temping] == 1)) {
-                                $custom_cfg_data[$temping] = $_REQUEST[$temping];
-                            }
-                        }
-                    }
-                    break;
-                case "input":
-                case "radio":
-                case "list":
-                    $temping = str_replace('$','',$config_options['variable']);
-                    if((isset($_REQUEST[$temping])) AND (isset($custom_cfg_data_ari[$temping])) AND ($custom_cfg_data_ari[$temping] == 1)) {
-                        $custom_cfg_data[$temping] = $_REQUEST[$temping];
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-         *
-         */
-
         $custom_cfg_data = serialize($custom_cfg_data);
 
         $sql = "UPDATE endpointman_mac_list SET global_user_cfg_data = '".$custom_cfg_data."' WHERE id = ". $mac_id;
@@ -196,7 +166,11 @@ class phonesettings {
             $brand_name = $row['directory'];
             $model_name = $row['cfg_dir'];
 
-            $ari = unserialize($row['global_custom_cfg_data']);
+            if($row['template_id'] > 0) {
+                $ari = unserialize($row['template_data_info']['global_custom_cfg_data']);
+            } else {
+                $ari = unserialize($row['global_custom_cfg_data']);
+            }
             if(!empty($ari['ari'])) {
                 //Start the display of the html file in the product folder
 
