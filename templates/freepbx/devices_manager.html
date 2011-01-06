@@ -372,7 +372,9 @@
 </table>
 </form>
 
+{if condition="!isset($disable_help)"}
 <script>
     $("#demo img[title]").tooltip();
-</script> 
+</script>
+{/if}
 {include="global_footer"}

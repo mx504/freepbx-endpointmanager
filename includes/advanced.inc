@@ -566,14 +566,10 @@ switch($_REQUEST['subpage']) {
             } else {
                 $_POST['enable_debug'] = 0;
             }
-            if((isset($_POST['enable_updates'])) AND ($_POST['enable_updates'] == "on")) {
-                $_POST['enable_updates'] = 1;
-                $sql = "INSERT INTO cronmanager (module, id, time, freq, lasttime, command) VALUES ('endpointman', 'UPDATES', '23', '24', '0', 'php ".$amp_conf['AMPWEBROOT']."/admin/modules/endpointman/includes/update_check.php')";
-                $endpoint->db->query($sql);
+            if((isset($_POST['disable_help'])) AND ($_POST['disable_help'] == "on")) {
+                $_POST['disable_help'] = 1;
             } else {
-                $_POST['enable_updates'] = 0;
-                $sql = "DELETE FROM `cronmanager` WHERE CONVERT(`cronmanager`.`module` USING utf8) = 'endpointman' AND CONVERT(`cronmanager`.`id` USING utf8) = 'UPDATES' LIMIT 1";
-                $endpoint->db->query($sql);
+                $_POST['disable_help'] = 0;
             }
 
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['enable_ari'] . "' WHERE var_name='enable_ari'";
@@ -593,13 +589,13 @@ switch($_REQUEST['subpage']) {
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['asterisk_loc'] . "' WHERE var_name='asterisk_location'";
             $endpoint->db->query($sql);
 
-            $sql="UPDATE endpointman_global_vars SET value='" . $_POST['enable_updates'] . "' WHERE var_name='check_updates'";
-            $endpoint->db->query($sql);
-
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['nmap_loc'] . "' WHERE var_name='nmap_location'";
             $endpoint->db->query($sql);
 
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['arp_loc'] . "' WHERE var_name='arp_location'";
+            $endpoint->db->query($sql);
+
+            $sql="UPDATE endpointman_global_vars SET value='" . $_POST['disable_help'] . "' WHERE var_name='disable_help'";
             $endpoint->db->query($sql);
 
             $message .= "Updated!";
@@ -613,18 +609,13 @@ switch($_REQUEST['subpage']) {
         } else {
             $ari_selected = "";
         }
-
-        if($endpoint->global_cfg['disable_htaccess']) {
-            $htaccess_selected = "checked";
+        
+        if($endpoint->global_cfg['disable_help']) {
+            $help_selected = "checked";
         } else {
-            $htaccess_selected = "";
+            $help_selected = "";
         }
 
-        if($endpoint->global_cfg['check_updates']) {
-            $updates_selected = "checked";
-        } else {
-            $updates_selected = "";
-        }
         if($endpoint->global_cfg['debug']) {
             $debug_selected = "checked";
             global $debug;
@@ -633,9 +624,9 @@ switch($_REQUEST['subpage']) {
         } else {
             $debug_selected = "";
         }
-        $endpoint->tpl->assign("htaccess_selected", $htaccess_selected);
+        $endpoint->tpl->assign("help_selected", $help_selected);
+
         $endpoint->tpl->assign("ari_selected", $ari_selected);
-        $endpoint->tpl->assign("updates_selected", $updates_selected);
         $endpoint->tpl->assign("debug_selected", $debug_selected);
 
         $endpoint->tpl->assign("ip", $_SERVER["SERVER_ADDR"]);

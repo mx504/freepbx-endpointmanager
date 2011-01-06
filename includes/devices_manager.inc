@@ -526,7 +526,6 @@ if (isset($template_editor)) {
     if($ma != FALSE) {
         $endpoint->tpl->assign("models_ava", $ma);
     }
-    $endpoint->tpl->assign("web_path", WEB_PATH);
     $endpoint->tpl->assign("product_list", $product_list);
     $endpoint->tpl->assign("display_ext", $endpoint->display_registration_list());
     $endpoint->tpl->assign("brand_ava", $endpoint->brands_available());

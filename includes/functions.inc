@@ -77,6 +77,11 @@ class endpointmanager {
 
         $this->tpl = new RainTPL( LOCAL_PATH.'templates/freepbx', LOCAL_PATH.'templates/freepbx/compiled', '/admin/modules/endpointman/templates/images' );
 
+        if($this->global_cfg['disable_help']) {
+            $this->tpl->assign("disable_help", 1);
+        }
+        
+        $this->tpl->assign("web_path", WEB_PATH);
     }
 
     /**
@@ -411,7 +416,6 @@ class endpointmanager {
         } else {
             echo "No Template Data has been defined for this Product<br />";
         }
-        $this->tpl->assign("web_path", WEB_PATH);
 
         $this->tpl->assign("template_editor", $out);
         $this->tpl->assign("hidden_id", $row['id']);
@@ -845,13 +849,21 @@ class endpointmanager {
 
         if($custom != 0) {
             $phone_info = $this->get_phone_info($id);
-            $this->prepare_configs($phone_info);
+            if(isset($_REQUEST['epm_reboot'])) {
+                $this->prepare_configs($phone_info);
+            } else {
+                $this->prepare_configs($phone_info,FALSE);
+            }
         } else {
             $sql = 'SELECT id FROM endpointman_mac_list WHERE template_id = '.$id;
             $phones = $this->db->getAll($sql, array(), DB_FETCHMODE_ASSOC);
             foreach($phones as $data) {
                 $phone_info = $this->get_phone_info($data['id']);
-                $this->prepare_configs($phone_info);
+                if(isset($_REQUEST['epm_reboot'])) {
+                    $this->prepare_configs($phone_info);
+                } else {
+                    $this->prepare_configs($phone_info,FALSE);
+                }
             }
         }
 

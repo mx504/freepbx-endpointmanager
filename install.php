@@ -91,7 +91,7 @@ function ep_table_exists ($table) {
     return FALSE;
 }
 
-$version = "2.4.1";
+$version = "2.9.0.3";
 
 if(ep_table_exists("endpointman_global_vars")) {
         $global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
@@ -167,6 +167,18 @@ if(!isset($global_cfg['version'])) {
     $ver = "2.4.1";
 } elseif($global_cfg['version'] == '2.4.2') {
     $ver = "2.4.2";
+} elseif($global_cfg['version'] == '2.9.0.0') {
+    $ver = "2.9.0.0";
+} elseif($global_cfg['version'] == '2.9.0.1') {
+    $ver = "2.9.0.1";
+} elseif($global_cfg['version'] == '2.9.0.2') {
+    $ver = "2.9.0.2";
+} elseif($global_cfg['version'] == '2.9.0.3') {
+    $ver = "2.9.0.3";
+} elseif($global_cfg['version'] == '2.9.0.4') {
+    $ver = "2.9.0.4";
+} elseif($global_cfg['version'] == '2.9.0.5') {
+    $ver = "2.9.0.5";
 } else {
     $ver = "1000";
     $new_install = TRUE;
@@ -205,7 +217,8 @@ if(!$new_install) {
                 (13, 'language', ''),
                 (14, 'check_updates', '1'),
                 (15, 'disable_htaccess', ''),
-                (16, 'endpoint_vers', '0')";
+                (16, 'endpoint_vers', '0'),
+                (17, 'disable_help', '0')";
         $db->query($sql_update_vars);
 
         out("Updating Mac List table");
@@ -876,6 +889,11 @@ if(!$new_install) {
         }
     }
 
+    if ($ver <= "2.9.0.2") {
+        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'disable_help\', \'0\');';
+        $db->query($sql);
+    }
+
 }
 
 
@@ -938,7 +956,8 @@ if ($new_install) {
             (13, 'language', ''),
             (14, 'check_updates', '0'),
             (15, 'disable_htaccess', ''),
-            (16, 'endpoint_vers', '0')";
+            (16, 'endpoint_vers', '0'),
+            (17, 'disable_help', '0')";
         $db->query($sql);
 
         out("Creating mac list Table");
@@ -1156,11 +1175,11 @@ if ($new_install) {
 
         mkdir($amp_conf['AMPWEBROOT']."/recordings/theme/js/");
 
-        copy(LOCAL_PATH. "templates/javascript/jquery.coda-slider-2.0.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js");
+        copy(LOCAL_PATH. "templates/freepbx/javascript/jquery.coda-slider-2.0.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js");
 
-        copy(LOCAL_PATH. "templates/javascript/jquery.easing.1.3.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
+        copy(LOCAL_PATH. "templates/freepbx/javascript/jquery.easing.1.3.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
 
-        copy(LOCAL_PATH. "templates/stylesheets/coda-slider-2.0a.css", $amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
+        copy(LOCAL_PATH. "templates/freepbx/stylesheets/coda-slider-2.0a.css", $amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
 
 
         out("Fixing permissions on ARI module");
@@ -1180,11 +1199,11 @@ if ($new_install) {
             mkdir($amp_conf['AMPWEBROOT']."/recordings/theme/js/");
         }
 
-        copy(LOCAL_PATH. "templates/javascript/jquery.coda-slider-2.0.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js");
+        copy(LOCAL_PATH. "templates/freepbx/javascript/jquery.coda-slider-2.0.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js");
 
-        copy(LOCAL_PATH. "templates/javascript/jquery.easing.1.3.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
+        copy(LOCAL_PATH. "templates/freepbx/javascript/jquery.easing.1.3.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
         
-        copy(LOCAL_PATH. "templates/stylesheets/coda-slider-2.0a.css", $amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
+        copy(LOCAL_PATH. "templates/freepbx/stylesheets/coda-slider-2.0a.css", $amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
 
 
         out("Fixing permissions on ARI module");

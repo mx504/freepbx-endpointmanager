@@ -105,7 +105,6 @@ if($default_display) {
     $endpoint->tpl->assign("class_list", $class_row);
     $endpoint->tpl->assign("no_add", $no_add);
     $endpoint->tpl->assign("debug", $debug);
-    $endpoint->tpl->assign("web_path", WEB_PATH);
 
     foreach($endpoint->error as $key => $error) {
         $error_message .= $error;

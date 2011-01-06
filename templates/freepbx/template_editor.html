@@ -16,6 +16,9 @@
     </head>
     <body>
 {else}
+<script type="text/javascript" src="<?=WEB_PATH?>templates/freepbx/javascript/jquery.tooltip.v.1.1.js"></script>
+<script type="text/javascript" src="<?=WEB_PATH?>templates/freepbx/javascript/jquery.tooltip.execute.js"></script>
+<link href="<?=WEB_PATH?>templates/freepbx/stylesheets/simpletooltip.css" rel="stylesheet" type="text/css" />
 <script language="javascript" type="text/javascript">
         function popitup(url, name) {
             newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=' + document.getElementById('altconfig_'+ name).value + '&rand=' + new Date().getTime(),'name','height=710,width=750');
@@ -112,7 +115,7 @@
                                         <label>{$value.description}: <input type='radio' name='{$value.key}' id='{$value.key}' value='{$value.value}' {if condition="array_key_exists('checked',$value)"}{$value.checked}{/if}></label>
 							{/loop}
 						{elseif condition="$value.type == 'list'"}
-							{$value.description} <select name='{$value.key}' id='{$value.key}'>
+							{$value.description}: <select name='{$value.key}' id='{$value.key}'>
 							{loop name="value.data"}
                                             <option value='{$value.value}' {if condition="array_key_exists('selected',$value)"}{$value.selected}{/if}>{$value.description}</option>
 							{/loop}
@@ -140,6 +143,7 @@
             <input name="id" id="id" type="hidden" value="{$hidden_id}">
             <input name="custom" id="custom" type="hidden" value="{$hidden_custom}">
             {if condition="!isset($in_ari)"}
+            Reboot Phone(s) <input type='checkbox' name='epm_reboot'><br />
             <input type="submit" name="button_save_template" value="<?=_('Save Template');?>">
         </form>
         {include="global_footer"}
