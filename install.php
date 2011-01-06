@@ -868,7 +868,7 @@ if(!$new_install) {
         out("Changing update server");
         $sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release3/' WHERE var_name ='update_server'";
         $db->query($sql);
-        $sql = "UPDATE  endpointman_model_list SET  enabled =  '0'";
+        $sql = "UPDATE  endpointman_model_list SET  enabled =  '0', template_data = '".serialize(array())."'";
         $db->query($sql);
 
         exec("rm -Rf ".PHONE_MODULES_PATH);

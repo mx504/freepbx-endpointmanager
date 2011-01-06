@@ -1397,7 +1397,7 @@ class endpointmanager {
             $temp = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$row[0]['directory'].'/brand_data.xml');
             $this->update_brand($temp);
         } else {
-            echo "<br/>Error Connecting to the Package Repository. Module not installed. Please Try again later.<br/>You Can Also Manually Update The Repository By Downloading Files here: <a href='http://www.provisioner.net/release.html' target='_blank'>Release Repo</a><br />Then Use Manual Upload in Advanced Settings";
+            echo "<br/>Error Connecting to the Package Repository. Module not installed. Please Try again later.<br/>You Can Also Manually Update The Repository By Downloading Files here: <a href='http://www.provisioner.net/releases3' target='_blank'>Release Repo</a><br />Then Use Manual Upload in Advanced Settings";
         }
     }
 
@@ -1576,6 +1576,8 @@ class endpointmanager {
                     $sql = "INSERT INTO endpointman_model_list (`id`, `brand`, `model`, `max_lines`, `product_id`, `template_list`, `enabled`, `hidden`) VALUES ('".$brand_id.$family_line_xml['data']['id'].$model_list['id']."', '".$brand_id."', '".$model_list['model']."', '".$model_list['lines']."', '".$brand_id.$family_line_xml['data']['id']."', '".$template_list."', '0', '0')";
                 }
                 $this->db->query($sql);
+
+                $this->sync_model($brand_id.$family_line_xml['data']['id'].$model_list['id']);
             }
         }
 
