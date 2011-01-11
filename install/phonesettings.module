@@ -205,15 +205,18 @@ class phonesettings {
                         <br>
                         " . $template . "
                         <br>". $button ."</form>";
+                ini_set('display_errors', 0);
                 return($ret);
             } else {
                 $m = "phonesettings";
                 $ret = "<h3>This User/Extension has no settings defined for you to control, Please talk to your administrator</h3>";
+                ini_set('display_errors', 0);
                 return($ret);
             }
         } else {
             $m = "phonesettings";
             $ret = "<h3>This User/Extension is not managed by Endpoint Manager, Please talk to your administrator</h3>";
+            ini_set('display_errors', 0);
             return($ret);
         }
     }

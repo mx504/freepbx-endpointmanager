@@ -880,203 +880,221 @@ class endpointmanager {
      * @param array $phone_info Everything from get_phone_info
      */
     function prepare_configs($phone_info,$reboot=TRUE) {
-        if(!class_exists('ProvisionerConfig')) {
-            require(PHONE_MODULES_PATH.'setup.php');
-        }
-
-        //Load Provisioner
-        $class = "endpoint_" . $phone_info['directory'] . "_" . $phone_info['cfg_dir'] . '_phone';
-        $provisioner_lib = new $class();
-
-        //Tell the system who we are and were to find the data.
-        $provisioner_lib->root_dir = PHONE_MODULES_PATH;
-        $provisioner_lib->engine = 'asterisk';
-        $provisioner_lib->engine_location = $this->global_cfg['asterisk_location'];
-        $provisioner_lib->system = 'unix';
-
-        //have to because of versions less than php5.3
-        $provisioner_lib->brand_name = $phone_info['directory'];
-        $provisioner_lib->family_line = $phone_info['cfg_dir'];
-
-        //Mac Address
-        $provisioner_lib->mac = $phone_info['mac'];
-
-        //Phone Model (Please reference family_data.xml in the family directory for a list of recognized models)
-        //This has to match word for word. I really need to fix this....
-        $provisioner_lib->model = $phone_info['model'];
-
-        //Timezone
-        $provisioner_lib->timezone = $this->global_cfg['tz'];
-
-        //Server IP
-        $provisioner_lib->server[1]['ip'] = $this->global_cfg['srvip'];
-        $provisioner_lib->server[1]['port'] = 5060;
-
-        $temp = "";
-        $template_data = unserialize($phone_info['template_data']);
-        $global_user_cfg_data = unserialize($phone_info['global_user_cfg_data']);
-        if($phone_info['template_id'] > 0) {
-            $global_custom_cfg_data = unserialize($phone_info['template_data_info']['global_custom_cfg_data']);
-            //Provide alternate Configuration file instead of the one from the hard drive
-            if(!empty($phone_info['template_data_info']['config_files_override'])) {
-                $temp = unserialize($phone_info['template_data_info']['config_files_override']);
-                foreach($temp as $list) {
-                    $sql = "SELECT original_name,data FROM endpointman_custom_configs WHERE id = ".$list;
-                    $res =& $this->db->query($sql);
-                    if($res->numRows()) {
-                        $data = $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
-                        $provisioner_lib->config_files_override[$data['original_name']] = $data['data'];
-                    }
-                }
+        if(file_exists(PHONE_MODULES_PATH.'setup.php')) {
+            if(!class_exists('ProvisionerConfig')) {
+                require(PHONE_MODULES_PATH.'setup.php');
             }
-        } else {
-            $global_custom_cfg_data = unserialize($phone_info['global_custom_cfg_data']);
-            //Provide alternate Configuration file instead of the one from the hard drive
-            if(!empty($phone_info['config_files_override'])) {
-                $temp = unserialize($phone_info['config_files_override']);
-                foreach($temp as $list) {
-                    $sql = "SELECT original_name,data FROM endpointman_custom_configs WHERE id = ".$list;
-                    $res =& $this->db->query($sql);
-                    if($res->numRows()) {
-                        $data = $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
-                        $provisioner_lib->config_files_override[$data['original_name']] = $data['data'];
-                    }
-                }
-            }
-        }
 
-        if (!empty($global_custom_cfg_data)) {
-            if(array_key_exists('data', $global_custom_cfg_data)) {
-                $global_custom_cfg_ari = $global_custom_cfg_data['ari'];
-                $global_custom_cfg_data = $global_custom_cfg_data['data'];
-            } else {
-                $global_custom_cfg_data = array();
-                $global_custom_cfg_ari = array();
-            }
-        }
+            //Load Provisioner
+            $class = "endpoint_" . $phone_info['directory'] . "_" . $phone_info['cfg_dir'] . '_phone';
+            if(class_exists($class)) {
+                $provisioner_lib = new $class();
 
-        $new_template_data = array();
-        $line_ops = array();
-        if(is_array($global_custom_cfg_data)) {
-            foreach($global_custom_cfg_data as $key => $data) {
-                $full_key = $key;
-                $key = explode('|',$key);
-                $count = count($key);
-                switch($count) {
-                    case 1:
-                        if(($this->global_cfg['enable_ari'] == 1) AND (isset($global_custom_cfg_ari[$full_key])) AND (isset($global_user_cfg_data[$full_key]))) {
-                            $new_template_data[$full_key] = $global_user_cfg_data[$full_key];
-                        } else {
-                            $new_template_data[$full_key] = $global_custom_cfg_data[$full_key];
-                        }
-                    break;
-                    case 2:
-                        $breaks = explode('_',$key[1]);
-                        if(($this->global_cfg['enable_ari'] == 1) AND (isset($global_custom_cfg_ari[$full_key])) AND (isset($global_user_cfg_data[$full_key]))) {
-                            $new_template_data[$breaks[0]][$breaks[2]][$breaks[1]] = $global_user_cfg_data[$full_key];
-                        } else {
-                            $new_template_data[$breaks[0]][$breaks[2]][$breaks[1]] = $global_custom_cfg_data[$full_key];
-                        }
-                    break;
-                    case 3:
-                        if(($this->global_cfg['enable_ari'] == 1) AND (isset($global_custom_cfg_ari[$full_key])) AND (isset($global_user_cfg_data[$full_key]))) {
-                            $line_ops[$key[1]][$key[2]] = $global_user_cfg_data[$full_key];
-                        } else {
-                            $line_ops[$key[1]][$key[2]] = $global_custom_cfg_data[$full_key];
-                        }
-                    break;
-                }
-            }
-        }
+                //Tell the system who we are and were to find the data.
+                $provisioner_lib->root_dir = PHONE_MODULES_PATH;
+                $provisioner_lib->engine = 'asterisk';
+                $provisioner_lib->engine_location = $this->global_cfg['asterisk_location'];
+                $provisioner_lib->system = 'unix';
 
-        //Loop through Lines!
-        foreach($phone_info['line'] as $line) {
-            $provisioner_lib->lines[$line['line']] = array('ext' => $line['ext'], 'secret' => $line['secret'], 'displayname' => $line['description']);
-            if(isset($line_ops[$line['line']])) {
-                $provisioner_lib->lines[$line['line']]['options'] = $line_ops[$line['line']];
-            }
-        }
+                //have to because of versions less than php5.3
+                $provisioner_lib->brand_name = $phone_info['directory'];
+                $provisioner_lib->family_line = $phone_info['cfg_dir'];
 
-        //Set Variables according to the template_data files included. We can include different template.xml files within family_data.xml also one can create
-        //template_data_custom.xml which will get included or template_data_<model_name>_custom.xml which will also get included
-        //line 'global' will set variables that aren't line dependant
-        $provisioner_lib->options = $new_template_data;
+                //Mac Address
+                $provisioner_lib->mac = $phone_info['mac'];
 
-        //Setting a line variable here...these aren't defined in the template_data.xml file yet. however they will still be parsed
-        //and if they have defaults assigned in a future template_data.xml or in the config file using pipes (|) those will be used, pipes take precedence
-        $provisioner_lib->processor_info = "EndPoint Manager Version ".$this->global_cfg['version'];
+                //Phone Model (Please reference family_data.xml in the family directory for a list of recognized models)
+                //This has to match word for word. I really need to fix this....
+                $provisioner_lib->model = $phone_info['model'];
 
-        // Because every brand is an extension (eventually) of endpoint, you know this function will exist regardless of who it is
-        //Start timer
-        $time_start = microtime(true);
-        $returned_data = $provisioner_lib->generate_config();
-        //End timer
-        $time_end = microtime(true);
-        $time = $time_end - $time_start;
-        if($time > 360) {
-            $this->error['generate_time'] = "It took an awfully long time to generate configs...(".round($time,2)." seconds)";
-        }
-        //Create Directory Structure (If needed)
-        if(isset($provisioner_lib->directory_structure)) {
-            foreach($provisioner_lib->directory_structure as $data) {
-                $dir = $this->global_cfg['config_location'] . $data;
-                if(!file_exists($dir)) {
-                    mkdir($dir, 0777);
-                }
-            }
-        }
+                //Timezone
+                $provisioner_lib->timezone = $this->global_cfg['tz'];
 
-        //Copy Files/Directories (If needed)
-        if(isset($provisioner_lib->copy_files)) {
-            foreach($provisioner_lib->copy_files as $data) {
-                if(((file_exists($this->global_cfg['config_location'].$data)) AND (!in_array($data,$provisioner_lib->protected_files))) OR (!file_exists($this->global_cfg['config_location'].$data))) {
-                    if(is_dir(PHONE_MODULES_PATH."endpoint/".$phone_info['directory']."/".$phone_info['cfg_dir']."/".$data)) {
-                        if(!file_exists($this->global_cfg['config_location'].$data)) {
-                            if (!@mkdir($this->global_cfg['config_location'].$data, 0777)) {
-                                $this->error['parse_configs'] = "Could Not Create Directory: ".$data;
+                //Server IP
+                $provisioner_lib->server[1]['ip'] = $this->global_cfg['srvip'];
+                $provisioner_lib->server[1]['port'] = 5060;
+
+                $temp = "";
+                $template_data = unserialize($phone_info['template_data']);
+                $global_user_cfg_data = unserialize($phone_info['global_user_cfg_data']);
+                if($phone_info['template_id'] > 0) {
+                    $global_custom_cfg_data = unserialize($phone_info['template_data_info']['global_custom_cfg_data']);
+                    //Provide alternate Configuration file instead of the one from the hard drive
+                    if(!empty($phone_info['template_data_info']['config_files_override'])) {
+                        $temp = unserialize($phone_info['template_data_info']['config_files_override']);
+                        foreach($temp as $list) {
+                            $sql = "SELECT original_name,data FROM endpointman_custom_configs WHERE id = ".$list;
+                            $res =& $this->db->query($sql);
+                            if($res->numRows()) {
+                                $data = $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
+                                $provisioner_lib->config_files_override[$data['original_name']] = $data['data'];
                             }
                         }
-                        $dir_iterator = new RecursiveDirectoryIterator(PHONE_MODULES_PATH."endpoint/".$phone_info['directory']."/".$phone_info['cfg_dir']."/".$data."/");
-                        $iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::SELF_FIRST);
-                        // could use CHILD_FIRST if you so wish
-                        foreach ($iterator as $file) {
-                            if(is_dir($file)) {
-                                $dir = str_replace(PHONE_MODULES_PATH."endpoint/".$phone_info['directory']."/".$phone_info['cfg_dir']."/".$data."/", "", $file);
-                                if(!file_exists($this->global_cfg['config_location'].$data."/".$dir)) {
-                                    if (!@mkdir($this->global_cfg['config_location'].$data."/".$dir, 0777)) {
-                                        $this->error['parse_configs'] = "Could Not Create Directory: ".$data."/".$dir;
+                    }
+                } else {
+                    $global_custom_cfg_data = unserialize($phone_info['global_custom_cfg_data']);
+                    //Provide alternate Configuration file instead of the one from the hard drive
+                    if(!empty($phone_info['config_files_override'])) {
+                        $temp = unserialize($phone_info['config_files_override']);
+                        foreach($temp as $list) {
+                            $sql = "SELECT original_name,data FROM endpointman_custom_configs WHERE id = ".$list;
+                            $res =& $this->db->query($sql);
+                            if($res->numRows()) {
+                                $data = $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
+                                $provisioner_lib->config_files_override[$data['original_name']] = $data['data'];
+                            }
+                        }
+                    }
+                }
+
+                if (!empty($global_custom_cfg_data)) {
+                    if(array_key_exists('data', $global_custom_cfg_data)) {
+                        $global_custom_cfg_ari = $global_custom_cfg_data['ari'];
+                        $global_custom_cfg_data = $global_custom_cfg_data['data'];
+                    } else {
+                        $global_custom_cfg_data = array();
+                        $global_custom_cfg_ari = array();
+                    }
+                }
+
+                $new_template_data = array();
+                $line_ops = array();
+                if(is_array($global_custom_cfg_data)) {
+                    foreach($global_custom_cfg_data as $key => $data) {
+                        $full_key = $key;
+                        $key = explode('|',$key);
+                        $count = count($key);
+                        switch($count) {
+                            case 1:
+                                if(($this->global_cfg['enable_ari'] == 1) AND (isset($global_custom_cfg_ari[$full_key])) AND (isset($global_user_cfg_data[$full_key]))) {
+                                    $new_template_data[$full_key] = $global_user_cfg_data[$full_key];
+                                } else {
+                                    $new_template_data[$full_key] = $global_custom_cfg_data[$full_key];
+                                }
+                                break;
+                            case 2:
+                                $breaks = explode('_',$key[1]);
+                                if(($this->global_cfg['enable_ari'] == 1) AND (isset($global_custom_cfg_ari[$full_key])) AND (isset($global_user_cfg_data[$full_key]))) {
+                                    $new_template_data[$breaks[0]][$breaks[2]][$breaks[1]] = $global_user_cfg_data[$full_key];
+                                } else {
+                                    $new_template_data[$breaks[0]][$breaks[2]][$breaks[1]] = $global_custom_cfg_data[$full_key];
+                                }
+                                break;
+                            case 3:
+                                if(($this->global_cfg['enable_ari'] == 1) AND (isset($global_custom_cfg_ari[$full_key])) AND (isset($global_user_cfg_data[$full_key]))) {
+                                    $line_ops[$key[1]][$key[2]] = $global_user_cfg_data[$full_key];
+                                } else {
+                                    $line_ops[$key[1]][$key[2]] = $global_custom_cfg_data[$full_key];
+                                }
+                                break;
+                        }
+                    }
+                }
+
+                //Loop through Lines!
+                foreach($phone_info['line'] as $line) {
+                    $provisioner_lib->lines[$line['line']] = array('ext' => $line['ext'], 'secret' => $line['secret'], 'displayname' => $line['description']);
+                    if(isset($line_ops[$line['line']])) {
+                        $provisioner_lib->lines[$line['line']]['options'] = $line_ops[$line['line']];
+                    }
+                }
+
+                //Set Variables according to the template_data files included. We can include different template.xml files within family_data.xml also one can create
+                //template_data_custom.xml which will get included or template_data_<model_name>_custom.xml which will also get included
+                //line 'global' will set variables that aren't line dependant
+                $provisioner_lib->options = $new_template_data;
+
+                //Setting a line variable here...these aren't defined in the template_data.xml file yet. however they will still be parsed
+                //and if they have defaults assigned in a future template_data.xml or in the config file using pipes (|) those will be used, pipes take precedence
+                $provisioner_lib->processor_info = "EndPoint Manager Version ".$this->global_cfg['version'];
+
+                // Because every brand is an extension (eventually) of endpoint, you know this function will exist regardless of who it is
+                //Start timer
+                $time_start = microtime(true);
+                $returned_data = $provisioner_lib->generate_config();
+                //End timer
+                $time_end = microtime(true);
+                $time = $time_end - $time_start;
+                if($time > 360) {
+                    $this->error['generate_time'] = "It took an awfully long time to generate configs...(".round($time,2)." seconds)";
+                }
+                //Create Directory Structure (If needed)
+                if(isset($provisioner_lib->directory_structure)) {
+                    foreach($provisioner_lib->directory_structure as $data) {
+                        $dir = $this->global_cfg['config_location'] . $data;
+                        if(!file_exists($dir)) {
+                            mkdir($dir, 0777);
+                        }
+                    }
+                }
+
+                //Copy Files/Directories (If needed)
+                if(isset($provisioner_lib->copy_files)) {
+                    foreach($provisioner_lib->copy_files as $data) {
+                        if(((file_exists($this->global_cfg['config_location'].$data)) AND (!in_array($data,$provisioner_lib->protected_files))) OR (!file_exists($this->global_cfg['config_location'].$data))) {
+                            if(is_dir(PHONE_MODULES_PATH."endpoint/".$phone_info['directory']."/".$phone_info['cfg_dir']."/".$data)) {
+                                if(!file_exists($this->global_cfg['config_location'].$data)) {
+                                    if (!@mkdir($this->global_cfg['config_location'].$data, 0777)) {
+                                        $this->error['parse_configs'] = "Could Not Create Directory: ".$data;
+                                        return(FALSE);
+                                    }
+                                }
+                                $dir_iterator = new RecursiveDirectoryIterator(PHONE_MODULES_PATH."endpoint/".$phone_info['directory']."/".$phone_info['cfg_dir']."/".$data."/");
+                                $iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::SELF_FIRST);
+                                // could use CHILD_FIRST if you so wish
+                                foreach ($iterator as $file) {
+                                    if(is_dir($file)) {
+                                        $dir = str_replace(PHONE_MODULES_PATH."endpoint/".$phone_info['directory']."/".$phone_info['cfg_dir']."/".$data."/", "", $file);
+                                        if(!file_exists($this->global_cfg['config_location'].$data."/".$dir)) {
+                                            if (!@mkdir($this->global_cfg['config_location'].$data."/".$dir, 0777)) {
+                                                $this->error['parse_configs'] = "Could Not Create Directory: ".$data."/".$dir;
+                                                return(FALSE);
+                                            }
+                                        }
+                                    } else {
+                                        $dir = str_replace(PHONE_MODULES_PATH."endpoint/".$phone_info['directory']."/".$phone_info['cfg_dir']."/".$data."/", "", $file);
+                                        if(!@copy($file, $this->global_cfg['config_location'].$data."/".$dir)) {
+                                            $this->error['parse_configs'] = "Could Not Copy File: ".$data."/".$dir;
+                                            return(FALSE);
+                                        } else {
+                                            chmod($this->global_cfg['config_location'].$data."/".$dir, 0777);
+                                        }
                                     }
                                 }
                             } else {
-                                $dir = str_replace(PHONE_MODULES_PATH."endpoint/".$phone_info['directory']."/".$phone_info['cfg_dir']."/".$data."/", "", $file);
-                                if(!@copy($file, $this->global_cfg['config_location'].$data."/".$dir)) {
-                                   $this->error['parse_configs'] = "Could Not Copy File: ".$data."/".$dir;
-                                } else {
-                                    chmod($this->global_cfg['config_location'].$data."/".$dir, 0777);
-                                }
+                                copy(PHONE_MODULES_PATH."endpoint/".$phone_info['directory']."/".$phone_info['cfg_dir']."/".$data,$this->global_cfg['config_location'].$data);
+                                chmod($this->global_cfg['config_location'].$data, 0777);
                             }
                         }
-                    } else {
-                        copy(PHONE_MODULES_PATH."endpoint/".$phone_info['directory']."/".$phone_info['cfg_dir']."/".$data,$this->global_cfg['config_location'].$data);
-                        chmod($this->global_cfg['config_location'].$data, 0777);
                     }
                 }
-            }
-        }
 
-        //Generate Files
-        foreach($returned_data as $key => $data) {
-            if(((file_exists($this->global_cfg['config_location'].$key)) AND (!in_array($key,$provisioner_lib->protected_files))) OR (!file_exists($this->global_cfg['config_location'].$key))) {
-                $fp = fopen($this->global_cfg['config_location'].$key, 'w');
-                fwrite($fp, $data);
-                fclose($fp);
-                if(!file_exists($this->global_cfg['config_location'].$key)) {
-                    $this->error['parse_configs'] = "File not written to hard drive!";
+                //Generate Files
+                foreach($returned_data as $key => $data) {
+                    if(((file_exists($this->global_cfg['config_location'].$key)) AND (is_writable($this->global_cfg['config_location'].$key)) AND (!in_array($key,$provisioner_lib->protected_files))) OR (!file_exists($this->global_cfg['config_location'].$key))) {
+                        $fp = fopen($this->global_cfg['config_location'].$key, 'w');
+                        fwrite($fp, $data);
+                        fclose($fp);
+                        if(!file_exists($this->global_cfg['config_location'].$key)) {
+                            $this->error['parse_configs'] = "File not written to hard drive!";
+                            return(FALSE);
+                        }
+                    } elseif(!in_array($key,$provisioner_lib->protected_files)) {
+                        $this->error['parse_configs'] = "File not written to hard drive!";
+                        return(FALSE);
+                    }
                 }
+                if($reboot) {
+                    $provisioner_lib->reboot();
+                }
+                return(TRUE);
+            } else {
+                $this->error['parse_configs'] = "Can't Load \"".$class."\" Class!";
+                return(FALSE);
             }
-        }
-        if($reboot) {
-            $provisioner_lib->reboot();
+        } else {
+            $this->error['parse_configs'] = "Can't Load the Autoloader!";
+            return(FALSE);
         }
     }
 
@@ -1577,7 +1595,9 @@ class endpointmanager {
                 }
                 $this->db->query($sql);
 
-                $this->sync_model($brand_id.$family_line_xml['data']['id'].$model_list['id']);
+                if(!$this->sync_model($brand_id.$family_line_xml['data']['id'].$model_list['id'])) {
+                    echo "System Error in Sync Model Function, Load Failure!<br />";
+                }
             }
         }
 
@@ -1617,86 +1637,87 @@ class endpointmanager {
      * @return boolean True on sync completed. False on sync failed
      */
     function sync_model($model) {
+        if((!empty($model)) OR ($model > 0)) {
+            $sql = "SELECT * FROM  endpointman_model_list WHERE id='".$model."'";
 
-        //TODO: combine these queries
+            $model_row =& $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
 
-        $sql = "SELECT * FROM  endpointman_model_list WHERE id='".$model."'";
+            $sql = "SELECT * FROM  endpointman_product_list WHERE id='".$model_row['product_id']."'";
 
-        $model_row =& $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
+            $product_row =& $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
 
-        $sql = "SELECT * FROM  endpointman_product_list WHERE id='".$model_row['product_id']."'";
-
-        $product_row =& $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
-
-        $sql = "SELECT * FROM  endpointman_brand_list WHERE id=".$model_row['brand'];
+            $sql = "SELECT * FROM  endpointman_brand_list WHERE id=".$model_row['brand'];
 
 
-        $brand_row =& $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
+            $brand_row =& $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
 
-        $family_line_xml = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/family_data.xml');
+            $family_line_xml = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/family_data.xml');
 
-        if($product_row['cfg_ver'] <= $family_line_xml['data']['version']) {
-            $key = $this->arraysearchrecursive($model_row['model'], $family_line_xml['data']['model_list'], 'model');
+            if($product_row['cfg_ver'] <= $family_line_xml['data']['version']) {
+                $key = $this->arraysearchrecursive($model_row['model'], $family_line_xml['data']['model_list'], 'model');
 
-            if($key === FALSE) {
-                $this->error['sync_model'] = "Can't locate model in family XML file";
-                return(FALSE);
-            } else {
-                if(is_array($family_line_xml['data']['model_list'][$key[0]]['template_data']['files'])) {
-                    $template_list = implode(",",$family_line_xml['data']['model_list'][$key[0]]['template_data']['files']);
-                    $template_list_array = $family_line_xml['data']['model_list'][$key[0]]['template_data']['files'];
+                if($key === FALSE) {
+                    $this->error['sync_model'] = "Can't locate model in family XML file";
+                    return(FALSE);
                 } else {
-                    $template_list = $family_line_xml['data']['model_list'][$key[0]]['template_data']['files'];
-                    $template_list_array[0] = $family_line_xml['data']['model_list'][$key[0]]['template_data']['files'];
+                    if(is_array($family_line_xml['data']['model_list'][$key[0]]['template_data']['files'])) {
+                        $template_list = implode(",",$family_line_xml['data']['model_list'][$key[0]]['template_data']['files']);
+                        $template_list_array = $family_line_xml['data']['model_list'][$key[0]]['template_data']['files'];
+                    } else {
+                        $template_list = $family_line_xml['data']['model_list'][$key[0]]['template_data']['files'];
+                        $template_list_array[0] = $family_line_xml['data']['model_list'][$key[0]]['template_data']['files'];
+                    }
                 }
-            }
 
-            $sql = "UPDATE endpointman_model_list SET max_lines = '".$family_line_xml['data']['model_list'][$key[0]]['lines']."', template_list = '".$template_list."' WHERE id = '".$model."'";
-            $this->db->query($sql);
+                $sql = "UPDATE endpointman_model_list SET max_lines = '".$family_line_xml['data']['model_list'][$key[0]]['lines']."', template_list = '".$template_list."' WHERE id = '".$model."'";
+                $this->db->query($sql);
 
-            $version = $family_line_xml['data']['version'];
-            $long_name = $family_line_xml['data']['name'];
-            $short_name = preg_replace("/\[(.*?)\]/si", "", $family_line_xml['data']['name']);
-            $configuration_files = $family_line_xml['data']['configuration_files'];
+                $version = $family_line_xml['data']['version'];
+                $long_name = $family_line_xml['data']['name'];
+                $short_name = preg_replace("/\[(.*?)\]/si", "", $family_line_xml['data']['name']);
+                $configuration_files = $family_line_xml['data']['configuration_files'];
 
-            $sql = "UPDATE endpointman_product_list SET long_name = '".$template_list."', short_name = '".$short_name."' , cfg_ver = '".$version."', WHERE id = '".$product_row['id']."'";
-            $this->db->query($sql);
+                $sql = "UPDATE endpointman_product_list SET long_name = '".$template_list."', short_name = '".$short_name."' , cfg_ver = '".$version."', WHERE id = '".$product_row['id']."'";
+                $this->db->query($sql);
 
-            $template_data_array = array();
-            foreach($template_list_array as $data) {
-                if(file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/'.$data)) {
-                    $template_data_xml = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/'.$data);
-                    $template_data_xml = $this->fix_single_array_keys($template_data_xml['template_data']);
-                    $template_data_array = array_merge($template_data_array, $template_data_xml);
+                $template_data_array = array();
+                foreach($template_list_array as $data) {
+                    if(file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/'.$data)) {
+                        $template_data_xml = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/'.$data);
+                        $template_data_xml = $this->fix_single_array_keys($template_data_xml['template_data']);
+                        $template_data_array = array_merge($template_data_array, $template_data_xml);
+                    }
                 }
-            }
 
-            if (file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/template_data_custom.xml')) {
-                $template_data_multi = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/template_data_custom.xml');
-                if($template_data_multi) {
-                    $template_data_multi = $this->fix_single_array_keys($template_data_multi['template_data']['item']);
-                    $template_data_array = array_merge($template_data_array, $template_data_multi);
+                if (file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/template_data_custom.xml')) {
+                    $template_data_multi = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/template_data_custom.xml');
+                    if($template_data_multi) {
+                        $template_data_multi = $this->fix_single_array_keys($template_data_multi['template_data']['item']);
+                        $template_data_array = array_merge($template_data_array, $template_data_multi);
+                    }
                 }
-            }
 
-            if (file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/template_data_' . $model_row['model'] . '_custom.xml')) {
-                $template_data_multi = $this->xml2array(self::$modules_path . $this->brand_name . "/" . $this->family_line . "/template_data_" . $this->model . "_custom.xml");
-                if($template_data_multi) {
-                    $template_data_multi = $this->fix_single_array_keys($template_data_multi['template_data']['item']);
-                    $template_data_array = array_merge($template_data_array, $template_data_multi);
+                if (file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/template_data_' . $model_row['model'] . '_custom.xml')) {
+                    $template_data_multi = $this->xml2array(self::$modules_path . $this->brand_name . "/" . $this->family_line . "/template_data_" . $this->model . "_custom.xml");
+                    if($template_data_multi) {
+                        $template_data_multi = $this->fix_single_array_keys($template_data_multi['template_data']['item']);
+                        $template_data_array = array_merge($template_data_array, $template_data_multi);
+                    }
                 }
+
+                if(empty($template_data_array)) {
+                    $this->error['sync_model'] = "No Template Data Found";
+                    return(FALSE);
+                }
+
+                $sql = "UPDATE endpointman_model_list SET template_data = '".serialize($template_data_array)."' WHERE id = '".$model."'";
+                $this->db->query($sql);
             }
 
-            if(empty($template_data_array)) {
-                $this->error['sync_model'] = "No Template Data Found";
-                return(FALSE);
-            }
-
-            $sql = "UPDATE endpointman_model_list SET template_data = '".serialize($template_data_array)."' WHERE id = '".$model."'";
-            $this->db->query($sql);
+            return(TRUE);
+        } else {
+            return(FALSE);
         }
-
-        return(TRUE);
     }
 
     /**
@@ -2245,7 +2266,9 @@ class endpointmanager {
         }
 
         if(!isset($temp)) {
-            $this->error['modelsAvailable'] = "You need to enable at least ONE model";
+            if(!isset($this->global_cfg['new'])) {
+                $this->error['modelsAvailable'] = "You need to enable at least ONE model";
+            }
             return(FALSE);
         } else {
             return($temp);

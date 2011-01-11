@@ -49,7 +49,9 @@ if(isset($_REQUEST['edit_template'])) {
 } elseif((isset($_REQUEST['button_save_template'])) AND (isset($_REQUEST['custom']))) {
     $endpoint->save_template($_REQUEST['id'],$_REQUEST['custom'],$_REQUEST);
     $default_display = TRUE;
-    $message = _('Saved');
+    if(empty($endpoint->error)) {
+        $message = _('Saved');
+    }
 } else {
     $default_display = TRUE;
 }
