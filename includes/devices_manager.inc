@@ -147,7 +147,6 @@ switch ($sub_type) {
                     $message = _("You Must Select an Extension/Device From the Drop Down")."!";
                 } elseif(!isset($_REQUEST['template_list'])) {
                     $message = _("You Must Select A Template From the Drop Down")."!";
-                    print_r($_REQUEST);
                 } else {
                     $sql = 'SELECT description FROM devices WHERE id = '.$_REQUEST['ext_list'];
                     $name =& $endpoint->db->getOne($sql);
@@ -237,25 +236,39 @@ switch ($sub_type) {
     case "delete_selected_phones":
         if(isset($_REQUEST['selected'])) {
             foreach($_REQUEST['selected'] as $key => $data) {
+                /**
                 $sql = "DELETE FROM endpointman_mac_list WHERE id=".$_REQUEST['selected'][$key];
                 $endpoint->db->query($sql);
                 $sql = "DELETE FROM endpointman_line_list WHERE mac_id=".$_REQUEST['selected'][$key];
                 $endpoint->db->query($sql);
-                $message = "Deleted!";
+                 *
+                 */
+                if($endpoint->delete_device($_REQUEST['selected'][$key])) {
+                    $message = "Deleted!";
+                }
             }
         } else {
             $message = _("No Phones Selected")."!";
         }
         break;
     case "delete_device":
+        /**
         $row = $endpoint->get_phone_info($_REQUEST['edit_id']);
         $sql = "DELETE FROM endpointman_mac_list WHERE id=".$_REQUEST['edit_id'];
         $endpoint->db->query($sql);
         $sql = "DELETE FROM endpointman_line_list WHERE mac_id=".$_REQUEST['edit_id'];
         $endpoint->db->query($sql);
         $message = _("Deleted")."!";
+         *
+         */
+        if($endpoint->delete_device($_REQUEST['edit_id'])) {
+            $message = "Deleted!";
+        } else {
+            $message = $endpoint->get_message("delete_device");
+        }
         break;
     case "delete_line" :
+        /**
         $sql = 'SELECT mac_id FROM endpointman_line_list WHERE luid = '.$_REQUEST['edit_id'] ;
         $mac_id =& $endpoint->db->getOne($sql,array(),DB_FETCHMODE_ASSOC);
         $row = $endpoint->get_phone_info($mac_id);
@@ -268,6 +281,13 @@ switch ($sub_type) {
             $message = _("Deleted")."!";
         } else {
             $message = _("You can't remove the only line left")."!";
+        }
+         *
+         */
+        if($endpoint->delete_line($_REQUEST['edit_id'])) {
+            $message = "Deleted!";
+        } else {
+            $message = $endpoint->get_message("delete_line");
         }
         break;
     case "rebuild_selected_phones":

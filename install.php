@@ -91,7 +91,7 @@ function ep_table_exists ($table) {
     return FALSE;
 }
 
-$version = "2.9.0.3";
+$version = "2.9.0.4";
 
 if(ep_table_exists("endpointman_global_vars")) {
         $global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
@@ -521,7 +521,7 @@ if(!$new_install) {
         $sql = 'ALTER TABLE `endpointman_mac_list` CHANGE `custom_cfg_data` `custom_cfg_data` BLOB NOT NULL, CHANGE `user_cfg_data` `user_cfg_data` BLOB NOT NULL';
         $db->query($sql);
 
-        $sql = 'ALTER TABLE `endpointman_custom_configs` CHANGE `data` `data` BLOB NOT NULL';
+        $sql = 'ALTER TABLE `endpointman_custom_configs` CHANGE `data` `data` LONGBLOB NOT NULL';
         $db->query($sql);
 
         $sql = 'ALTER TABLE `endpointman_product_list` ADD `special_cfgs` BLOB NOT NULL;';
@@ -894,6 +894,11 @@ if(!$new_install) {
         $db->query($sql);
     }
 
+    if($ver <= "2.9.0.3") {
+        $sql = 'ALTER TABLE  `endpointman_custom_configs` CHANGE  `data`  `data` LONGBLOB NOT NULL';
+        $db->query($sql);
+    }
+
 }
 
 
@@ -1164,7 +1169,7 @@ if ($new_install) {
           `name` varchar(255) NOT NULL,
           `original_name` varchar(255) NOT NULL,
           `product_id` varchar(11) NOT NULL,
-          `data` blob NOT NULL,
+          `data` longblob NOT NULL,
           PRIMARY KEY (`id`)
         ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
         $db->query($sql);

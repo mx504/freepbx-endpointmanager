@@ -36,11 +36,16 @@ function endpointman_configpageinit($pagename) {
 	global $currentcomponent;
 
         $display = isset($_REQUEST['display'])?$_REQUEST['display']:null;
-        $extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
+        if($action == "add") {
+            $extdisplay = isset($_REQUEST['extension'])?$_REQUEST['extension']:null;
+        } else {
+            $extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
+        }
         $action = isset($_REQUEST['action'])?$_REQUEST['action']:null;
         $delete = isset($_REQUEST['epm_delete'])?$_REQUEST['epm_delete']:null;
+        $tech = isset($_REQUEST['tech_hardware'])?$_REQUEST['tech_hardware']:null;
 
-        if(($display == "extensions") && isset($extdisplay)) {
+        if(($display == "extensions") && (isset($extdisplay) OR ($tech == "sip_generic"))) {
             global $endpoint;
 
             $doc_root =	$_SERVER["DOCUMENT_ROOT"] ."/admin/modules/endpointman/";
@@ -49,25 +54,20 @@ function endpointman_configpageinit($pagename) {
             $endpoint = new endpointmanager();
             ini_set('display_errors', 0);
 
-            if($action == "edit") {
+            if ($action == "del") {        
+                $sql = "SELECT mac_id,line FROM endpointman_line_list WHERE ext = ". $extdisplay;
+                $macid = $endpoint->db->getRow($sql,array(),DB_FETCHMODE_ASSOC);
+                if($macid) {
+                    $endpoint->delete_line($macid['line'], TRUE);
+                }
+            }
 
+            if(($action == "edit") OR ($action == "add")) {
                 if(isset($delete)) {
                     $sql = "SELECT mac_id,line FROM endpointman_line_list WHERE ext = ". $extdisplay;
                     $macid = $endpoint->db->getRow($sql,array(),DB_FETCHMODE_ASSOC);
-
                     if($macid) {
-                        $sql = "SELECT * FROM endpointman_line_list WHERE mac_id = ".$macid['mac_id'];
-                        $list = $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
-
-                        $count = count($list);
-
-                        if($count == 1) {
-                            $sql = "DELETE FROM endpointman_mac_list WHERE id = ".$macid['mac_id'];
-                            $endpoint->db->query($sql);
-                        }
-
-                        $sql = "DELETE FROM endpointman_line_list WHERE mac_id = ".$macid['mac_id']." AND line = ".$macid['line'];
-                        $endpoint->db->query($sql);
+                        $endpoint->delete_line($macid['line'], TRUE);
                     }
                 }
 
@@ -79,7 +79,6 @@ function endpointman_configpageinit($pagename) {
                     $model = isset($_REQUEST['epm_model'])?$_REQUEST['epm_model']:null;
                     $line = isset($_REQUEST['epm_line'])?$_REQUEST['epm_line']:null;
                     $temp = isset($_REQUEST['epm_temps'])?$_REQUEST['epm_temps']:null;
-                    $extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
                     $name = isset($_REQUEST['name'])?$_REQUEST['name']:null;
                     $reboot = isset($_REQUEST['epm_reboot'])?$_REQUEST['epm_reboot']:null;
 
@@ -133,8 +132,9 @@ function endpointman_configpageinit($pagename) {
                     //Mac not set so delete
                     $sql = "SELECT mac_id,line FROM endpointman_line_list WHERE ext = ". $extdisplay;
                     $macid = $endpoint->db->getRow($sql,array(),DB_FETCHMODE_ASSOC);
-
-                    if($macid) {
+					
+                    if((isset($macid)) && (!is_object($macid))) {
+						
                         $sql = "SELECT * FROM endpointman_line_list WHERE mac_id = ".$macid['mac_id'];
                         $list = $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
                         $count = count($list);

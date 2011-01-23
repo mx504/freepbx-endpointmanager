@@ -22,21 +22,30 @@ class endpointmanager {
      * @global object $db Pear DB information, we move this into a public variable
      */
     function __construct() {
+        global $amp_conf;
         require('abstraction/freepbx.inc');
         $this->endpoint_data = new epm_data_abstraction();
 
         $this->global_cfg = $this->endpoint_data->get_stored_globals();
+
+        $this->global_cfg['disable_epm'] = FALSE;
 
         $this->db = $this->endpoint_data->db;
 
         //TODO: Need to have this change when the user changes timezones, for now we keep it set to my timezone
         date_default_timezone_set('America/Los_Angeles');
 
-        //Move all information from the global $amp_conf into our public space. This will help prevent security concerns
-        $this->amp_conf = $amp_conf;
-
         //Generate empty array
         $this->error = array();
+        $this->message = array();
+
+        //Move all information from the global $amp_conf into our public space. This will help prevent security concerns
+        if (isset($amp_conf) AND is_array($amp_conf)) {
+            $this->amp_conf = $amp_conf;
+        } else {
+            $this->error['amp_conf'] = "The Global Variable $amp_conf is empty or not set! Can't connect to the database.";
+            $this->global_cfg['disable_epm'] = TRUE;
+        }
 
         //TODO: Possibly remove these as I don't believe anything uses them anymore
         define("UPDATE_PATH", $this->global_cfg['update_server']);
@@ -44,7 +53,12 @@ class endpointmanager {
         //end possible removal
 
         //Define the location of phone modules, keeping it outside of the module directory so that when the user updates endpointmanager they don't lose all of their phones
-        define("PHONE_MODULES_PATH", dirname($_SERVER["SCRIPT_FILENAME"])."/modules/_ep_phone_modules/");
+        if(file_exists(dirname($_SERVER["SCRIPT_FILENAME"])."/modules/_ep_phone_modules/")) {
+            define("PHONE_MODULES_PATH", dirname($_SERVER["SCRIPT_FILENAME"])."/modules/_ep_phone_modules/");
+        } else {
+            $this->error['amp_conf'] = "Phone Modules Directory doesn't exist!";
+            $this->global_cfg['disable_epm'] = TRUE;
+        }
 
         //Get local path information
         define("WEB_PATH", dirname($_SERVER['SCRIPT_NAME'])."/modules/endpointman/");
@@ -63,17 +77,25 @@ class endpointmanager {
             if(is_dir($this->global_cfg['config_location'])) {
                 if(!is_writeable($this->global_cfg['config_location'])) {
                     $user = exec('whoami');
+                    $group = exec("groups");
                     $this->error['config_location'] = "Configuration Directory is not writable!".
                         "<br />Please change the location: <a href='config.php?type=tool&display=epm_advanced'>Here</a>".
-                        "<br />Or run this command on SSH: 'chown -R ".$user.":".$user." ".$this->global_cfg['config_location']."' then 'chmod -R 777 ".$this->global_cfg['config_location']."'";
+                        "<br />Or run this command on SSH: 'chown -R ".$user.":".$group." ".$this->global_cfg['config_location']."' then 'chmod -R 777 ".$this->global_cfg['config_location']."'";
+                    $this->global_cfg['diable_epm'] = TRUE;
                 }
             } else {
                 $this->error['config_location'] = "Configuration Directory is not a directory or does not exist! Please change the location here: <a href='config.php?type=tool&display=epm_advanced'>Here</a>";
+                $this->global_cfg['diable_epm'] = TRUE;
             }
         }
 
         //include the local template class
-        require(LOCAL_PATH."includes/rain.tpl.class.php");
+        if(file_exists(LOCAL_PATH."includes/rain.tpl.class.php")) {
+            require(LOCAL_PATH."includes/rain.tpl.class.php");
+        } else {
+            $this->error['rain_tpl'] = "Can't Load the Template Class";
+            $this->global_cfg['diable_epm'] = TRUE;
+        }
 
         $this->tpl = new RainTPL( LOCAL_PATH.'templates/freepbx', LOCAL_PATH.'templates/freepbx/compiled', '/admin/modules/endpointman/templates/images' );
 
@@ -94,8 +116,15 @@ class endpointmanager {
      * @param <type> $data The config file's data
      */
     function submit_config($brand,$product,$orig_name,$data) {
+        echo $data;
         $posturl = 'http://www.provisioner.net/submit_config.php';
-        $postvars = 'brand='.$brand.'&product='.$product.'&origname='.htmlentities(addslashes($orig_name)).'&config_data='.base64_encode($data);
+
+        $fp = fopen(LOCAL_PATH.'data.txt', 'w');
+        fwrite($fp, $data);
+        fclose($fp);
+        $file_name_with_full_path = LOCAL_PATH."data.txt";
+
+        $postvars = array('brand' => $brand, 'product' => $product, 'origname' => htmlentities(addslashes($orig_name)),  'file_contents'=>'@'.$file_name_with_full_path);
 
         $ch = curl_init($posturl);
         curl_setopt($ch, CURLOPT_POST, 1);
@@ -109,7 +138,9 @@ class endpointmanager {
         header("Content-Type: text/html");
         $Final_Out=ob_get_clean();
         curl_close($ch);
+        unlink($file_name_with_full_path);
 
+        return($Final_Out);
     }
 
     /**
@@ -191,14 +222,54 @@ class endpointmanager {
 
     }
 
-    function delete_line() {
+    /**
+     * This will either a. delete said line or b. delete said device from line
+     * @param <type> $line
+     * @return <type>
+     */
+    function delete_line($lineid,$allow_device_remove=FALSE) {
+        $sql = 'SELECT mac_id FROM endpointman_line_list WHERE luid = '.$lineid ;
+        $mac_id =& $this->db->getOne($sql,array(),DB_FETCHMODE_ASSOC);
+        $row = $this->get_phone_info($mac_id);
 
+        $sql = 'SELECT COUNT(*) FROM endpointman_line_list WHERE mac_id = '.$mac_id;
+        $num_lines =& $this->db->getOne($sql,array(),DB_FETCHMODE_ASSOC);
+        if($num_lines > 1) {
+            $sql = "DELETE FROM endpointman_line_list WHERE luid=".$lineid;
+            $this->db->query($sql);
+            return(TRUE);
+        } else {
+            if($allow_device_remove) {
+                $sql = "DELETE FROM endpointman_line_list WHERE luid=".$lineid;
+                $this->db->query($sql);
+
+                $sql = "DELETE FROM endpointman_mac_list WHERE id=". $mac_id;
+                $this->db->query($sql);
+                return(TRUE);
+            } else {
+                //$message = _("You can't remove the only line left")."!";
+                $this->message['delete_line'] = _("You can't remove the only line left")."!";
+                return(FALSE);
+            }
+        }
     }
 
-    function delete_device() {
+    function delete_device($mac_id) {
+        $sql = "DELETE FROM endpointman_mac_list WHERE id=".$mac_id;
+        $this->db->query($sql);
 
+        $sql = "DELETE FROM endpointman_line_list WHERE mac_id=".$mac_id;
+        $this->db->query($sql);
+        return(TRUE);
     }
 
+    function get_message($function_name) {
+        if(isset($this->message[$function_name])) {
+            return($this->message[$function_name]);
+        } else {
+            return("Unknown Message");
+        }
+    }
     /**
      * Send this function an ID from the mac devices list table and you'll get all the information we have on that particular phone
      * @param integer $mac_id ID number reference from the MySQL database referencing the table endpointman_mac_list

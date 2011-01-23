@@ -401,7 +401,7 @@ switch($_REQUEST['subpage']) {
             fclose($handle);
 
             if(isset($_REQUEST['sendid'])) {
-                $endpoint->submit_config($row['directory'],$row['cfg_dir'],$config_files[$_REQUEST['file']],$contents);
+                $error = $endpoint->submit_config($row['directory'],$row['cfg_dir'],$config_files[$_REQUEST['file']],$contents);
                 $message = 'Sent! Thanks :-)';
             }
 
@@ -427,14 +427,16 @@ switch($_REQUEST['subpage']) {
                     $message = "Saved to Database!";
                 }
             }
+            $sql = 'SELECT * FROM endpointman_custom_configs WHERE id =' . $_REQUEST['sql'];
+            $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+
             if(isset($_REQUEST['sendid'])) {
                 $sql = "SELECT cfg_dir,directory,config_files FROM endpointman_product_list,endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id = '". $_REQUEST['product_select'] ."'";
                 $row22 =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
-                $endpoint->submit_config($row22['directory'],$row22['cfg_dir'],$config_files[$_REQUEST['file']],$contents);
+                $endpoint->submit_config($row22['directory'],$row22['cfg_dir'],$row['original_name'],$row['data']);
                 $message = 'Sent! Thanks! :-)';
             }
-            $sql = 'SELECT * FROM endpointman_custom_configs WHERE id =' . $_REQUEST['sql'];
-            $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+
             $endpoint->tpl->assign("save_as_name_value", $row['name']);
             $endpoint->tpl->assign("filename", $row['original_name']);
             $endpoint->tpl->assign('sendid', $_REQUEST['sql']);
