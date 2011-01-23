@@ -116,7 +116,6 @@ class endpointmanager {
      * @param <type> $data The config file's data
      */
     function submit_config($brand,$product,$orig_name,$data) {
-        echo $data;
         $posturl = 'http://www.provisioner.net/submit_config.php';
 
         $fp = fopen(LOCAL_PATH.'data.txt', 'w');
