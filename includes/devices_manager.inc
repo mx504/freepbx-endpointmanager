@@ -292,15 +292,18 @@ switch ($sub_type) {
         break;
     case "rebuild_selected_phones":
         if(isset($_REQUEST['selected'])) {
+            $rebooted = NULL;
             foreach($_REQUEST['selected'] as $key => $data) {
                 $phone_info = $endpoint->get_phone_info($_REQUEST['selected'][$key]);
                 if(isset($_REQUEST['reboot'])) {
                     $endpoint->prepare_configs($phone_info);
+                    $rebooted = "& Rebooted";
                 } else {
                     $endpoint->prepare_configs($phone_info,FALSE);
+                    $rebooted = "For";
                 }
             }
-            $message = "Rebuilt Configs & Rebooted Selected Phones";
+            $message = "Rebuilt Configs ".$rebooted." Selected Phones";
         } else {
             $message = _("No Phones Selected")."!";
         }
@@ -308,6 +311,7 @@ switch ($sub_type) {
     case "rebuild_configs_for_all_phones" :
         $sql = "SELECT endpointman_mac_list.id FROM endpointman_mac_list, endpointman_brand_list, endpointman_product_list, endpointman_model_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_mac_list.model = endpointman_model_list.id ORDER BY endpointman_product_list.cfg_dir ASC";
         $mac_list =& $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
+        $rebooted = NULL;
         foreach($mac_list as $data) {
             $phone_info = $endpoint->get_phone_info($data['id']);
             foreach($phone_info['line'] as $line) {
@@ -316,11 +320,13 @@ switch ($sub_type) {
             }
             if(isset($_REQUEST['reboot'])) {
                 $endpoint->prepare_configs($phone_info);
+                $rebooted = "& Rebooted";
             } else {
                 $endpoint->prepare_configs($phone_info,FALSE);
+                $rebooted = "For";
             }
         }
-        $message = "Rebuilt Configs & Rebooted All Phones";
+        $message = "Rebuilt Configs ".$rebooted." All Phones";
         break;
     case "reboot_brand" :
         if($_REQUEST['rb_brand'] != "") {
@@ -451,7 +457,7 @@ switch ($sub_type) {
                     } else {
                         $endpoint->prepare_configs($phone_info,FALSE);
                     }
-                    $message = _("Saved").$rebooted."!";
+                    $message = _("Changed Model/Brand").$rebooted."!";
                 }
             } else {
                 $message = _("Please select a Brand and/or Model");
@@ -474,15 +480,17 @@ switch ($sub_type) {
                 $phone_info = $endpoint->get_phone_info($row['id']);
                 if(isset($_REQUEST['reboot'])) {
                     $endpoint->prepare_configs($phone_info);
+                    $rebooted = "& Rebooted";
                 } else {
                     $endpoint->prepare_configs($phone_info,FALSE);
+                    $rebooted = "";
                 }
                 foreach($phone_info['line'] as $line) {
                     $sql = "UPDATE endpointman_line_list SET description = '".$line['description']."' WHERE luid = ".$line['luid'];
                     $endpoint->db->query($sql);
                 }
             }
-            $message = "Rebuilt Configs";
+            $message = "Rebuilt Configs " .$rebooted;
         }
         break;
 }

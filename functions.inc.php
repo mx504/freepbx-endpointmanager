@@ -36,7 +36,7 @@ function endpointman_configpageinit($pagename) {
 	global $currentcomponent;
 
         $display = isset($_REQUEST['display'])?$_REQUEST['display']:null;
-        if($action == "add") {
+        if(isset($_REQUEST['extension'])) {
             $extdisplay = isset($_REQUEST['extension'])?$_REQUEST['extension']:null;
         } else {
             $extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
@@ -55,19 +55,19 @@ function endpointman_configpageinit($pagename) {
             ini_set('display_errors', 0);
 
             if ($action == "del") {        
-                $sql = "SELECT mac_id,line FROM endpointman_line_list WHERE ext = ". $extdisplay;
+                $sql = "SELECT mac_id,luid FROM endpointman_line_list WHERE ext = ". $extdisplay;
                 $macid = $endpoint->db->getRow($sql,array(),DB_FETCHMODE_ASSOC);
                 if($macid) {
-                    $endpoint->delete_line($macid['line'], TRUE);
+                    $endpoint->delete_line($macid['luid'], TRUE);
                 }
             }
 
             if(($action == "edit") OR ($action == "add")) {
                 if(isset($delete)) {
-                    $sql = "SELECT mac_id,line FROM endpointman_line_list WHERE ext = ". $extdisplay;
+                    $sql = "SELECT mac_id,luid FROM endpointman_line_list WHERE ext = ". $extdisplay;
                     $macid = $endpoint->db->getRow($sql,array(),DB_FETCHMODE_ASSOC);
                     if($macid) {
-                        $endpoint->delete_line($macid['line'], TRUE);
+                        $endpoint->delete_line($macid['luid'], TRUE);
                     }
                 }
 
@@ -110,6 +110,13 @@ function endpointman_configpageinit($pagename) {
 
                                 $sql = "UPDATE  endpointman_mac_list SET model = ".$model.", template_id =  ".$temp." WHERE id = ".$macid;
                                 $endpoint->db->query($sql);
+
+                                $row = $endpoint->get_phone_info($macid);
+                                if(isset($reboot)) {
+                                    $endpoint->prepare_configs($row);
+                                } else {
+                                    $endpoint->prepare_configs($row,FALSE);
+                                }
                             }
                         } elseif(!isset($delete)) {
                             //Add Extension/Phone to database
@@ -126,26 +133,17 @@ function endpointman_configpageinit($pagename) {
 
                             $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$extdisplay."', '".$line."', '".$name."')";
                             $endpoint->db->query($sql);
+
+                            $row = $endpoint->get_phone_info($ext_id);
+                            $endpoint->prepare_configs($row,FALSE);
                         }
                     }
                 } else {
                     //Mac not set so delete
-                    $sql = "SELECT mac_id,line FROM endpointman_line_list WHERE ext = ". $extdisplay;
+                    $sql = "SELECT mac_id,luid FROM endpointman_line_list WHERE ext = ". $extdisplay;
                     $macid = $endpoint->db->getRow($sql,array(),DB_FETCHMODE_ASSOC);
-					
-                    if((isset($macid)) && (!is_object($macid))) {
-						
-                        $sql = "SELECT * FROM endpointman_line_list WHERE mac_id = ".$macid['mac_id'];
-                        $list = $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
-                        $count = count($list);
-
-                        if($count == 1) {
-                            $sql = "DELETE FROM endpointman_mac_list WHERE id = ".$macid['mac_id'];
-                            $endpoint->db->query($sql);
-                        }
-
-                        $sql = "DELETE FROM endpointman_line_list WHERE mac_id = ".$macid['mac_id']." AND line = ".$macid['line'];
-                        $endpoint->db->query($sql);
+                    if($macid) {
+                        $endpoint->delete_line($macid['luid'], TRUE);
                     }
                 }
             }

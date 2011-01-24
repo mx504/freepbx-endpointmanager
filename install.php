@@ -61,7 +61,6 @@ out("Endpoint Manager Installer");
 define("PHONE_MODULES_PATH", $amp_conf['AMPWEBROOT'].'/admin/modules/_ep_phone_modules/');
 define("LOCAL_PATH", $amp_conf['AMPWEBROOT'].'/admin/modules/endpointman/');
 
-
 if(!file_exists(PHONE_MODULES_PATH)) {
 	mkdir(PHONE_MODULES_PATH, 0764);
         out("Creating Phone Modules Directory");
@@ -1174,47 +1173,66 @@ if ($new_install) {
         ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
         $db->query($sql);
 
-    if(file_exists($amp_conf['AMPWEBROOT']."/recordings")) {
-        out("Installing ARI Module");
-        copy(LOCAL_PATH. "install/phonesettings.module", $amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module");
-
-        mkdir($amp_conf['AMPWEBROOT']."/recordings/theme/js/");
-
-        copy(LOCAL_PATH. "templates/freepbx/javascript/jquery.coda-slider-2.0.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js");
-
-        copy(LOCAL_PATH. "templates/freepbx/javascript/jquery.easing.1.3.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
-
-        copy(LOCAL_PATH. "templates/freepbx/stylesheets/coda-slider-2.0a.css", $amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
-
-
-        out("Fixing permissions on ARI module");
-        chmod($amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module", 0664);
-    }
-
 } else {
     out("Update Version Number to ".$version);
     $sql = "UPDATE endpointman_global_vars SET value = '".$version."' WHERE var_name = 'version'";
     $db->query($sql);
 
-    if(file_exists($amp_conf['AMPWEBROOT']."/recordings")) {
-        out("Installing ARI Module");
-        copy(LOCAL_PATH. "install/phonesettings.module", $amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module");
 
-        if(!file_exists($amp_conf['AMPWEBROOT']."/recordings/theme/js/")) {
-            mkdir($amp_conf['AMPWEBROOT']."/recordings/theme/js/");
-        }
-
-        copy(LOCAL_PATH. "templates/freepbx/javascript/jquery.coda-slider-2.0.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js");
-
-        copy(LOCAL_PATH. "templates/freepbx/javascript/jquery.easing.1.3.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
-        
-        copy(LOCAL_PATH. "templates/freepbx/stylesheets/coda-slider-2.0a.css", $amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
-
-
-        out("Fixing permissions on ARI module");
-        chmod($amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module", 0664);
-
-    }
     $sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release3/' WHERE var_name = 'update_server'";
     $db->query($sql);
+}
+
+if(file_exists($amp_conf['AMPWEBROOT']."/recordings")) {
+    out("Installing ARI Module");
+    unlink($amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module");
+    symlink(LOCAL_PATH. "install/phonesettings.module", $amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module");
+
+    if(!file_exists($amp_conf['AMPWEBROOT']."/recordings/theme/js/")) {
+        mkdir($amp_conf['AMPWEBROOT']."/recordings/theme/js/");
+    }
+
+    unlink($amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js");
+    unlink($amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
+    unlink($amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
+    symlink(LOCAL_PATH. "templates/freepbx/javascript/jquery.coda-slider-2.0.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js");
+    symlink(LOCAL_PATH. "templates/freepbx/javascript/jquery.easing.1.3.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
+    symlink(LOCAL_PATH. "templates/freepbx/stylesheets/coda-slider-2.0a.css", $amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
+    
+    out("Fixing permissions on ARI module");
+    chmod($amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module", 0664);
+    
+}
+
+out("Updating Symbolic Links for Images");
+foreach (glob(LOCAL_PATH."templates/images/*.*") as $filename) {
+    //echo "$filename size " . filesize($filename) . "<br />";
+    $newloc = str_replace(stristr($filename, 'admin/'), '', $filename) . "admin/images/".basename($filename);
+    //echo "\t". $newloc ."<br />";
+    unlink($newloc);
+    if((!file_exists($newloc)) && (readlink($newloc) != $filename)) {
+        symlink($filename, $newloc);
+    }
+}
+
+out("Updating Symbolic Links for Javascripts");
+foreach (glob(LOCAL_PATH."templates/freepbx/javascript/*.*") as $filename) {
+    //echo "$filename size " . filesize($filename) . "<br />";
+    $newloc = str_replace(stristr($filename, 'admin/'), '', $filename) . "admin/common/".basename($filename);
+    //echo "\t". $newloc ."<br />";
+    unlink($newloc);
+    if((!file_exists($newloc)) && (readlink($newloc) != $filename)) {
+        symlink($filename, $newloc);
+    }
+}
+
+out("Updating Symbolic Links for Stylesheets");
+foreach (glob(LOCAL_PATH."templates/freepbx/stylesheets/*.*") as $filename) {
+    //echo "$filename size " . filesize($filename) . "<br />";
+    $newloc = str_replace(stristr($filename, 'admin/'), '', $filename) . "admin/common/".basename($filename);
+    //echo "\t". $newloc ."<br />";
+    unlink($newloc);
+    if((!file_exists($newloc)) && (readlink($newloc) != $filename)) {
+        symlink($filename, $newloc);
+    }
 }

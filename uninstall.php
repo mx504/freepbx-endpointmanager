@@ -69,3 +69,33 @@ unlink($amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js")
 unlink($amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
 
 unlink($amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
+
+out("Removing Symbolic Links for Images");
+foreach (glob(LOCAL_PATH."templates/images/*.*") as $filename) {
+    //echo "$filename size " . filesize($filename) . "<br />";
+    $newloc = str_replace(stristr($filename, 'admin/'), '', $filename) . "admin/images/".basename($filename);
+    //echo "\t". $newloc ."<br />";
+    if((file_exists($newloc)) && (is_link($newloc))) {
+        unlink($newloc);
+    }
+}
+
+out("Removing Symbolic Links for Javascripts");
+foreach (glob(LOCAL_PATH."templates/freepbx/javascript/*.*") as $filename) {
+    //echo "$filename size " . filesize($filename) . "<br />";
+    $newloc = str_replace(stristr($filename, 'admin/'), '', $filename) . "admin/common/".basename($filename);
+    //echo "\t". $newloc ."<br />";
+    if((file_exists($newloc)) && (is_link($newloc))) {
+        unlink($newloc);
+    }
+}
+
+out("Removing Symbolic Links for Stylesheets");
+foreach (glob(LOCAL_PATH."templates/freepbx/stylesheets/*.*") as $filename) {
+    //echo "$filename size " . filesize($filename) . "<br />";
+    $newloc = str_replace(stristr($filename, 'admin/'), '', $filename) . "admin/common/".basename($filename);
+    //echo "\t". $newloc ."<br />";
+    if((file_exists($newloc)) && (is_link($newloc))) {
+        unlink($newloc);
+    }
+}

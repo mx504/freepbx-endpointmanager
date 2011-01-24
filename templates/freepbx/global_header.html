@@ -1,16 +1,15 @@
 <html>
 <head>
 	<title>PBX Endpoint Configuration Manager</title>
-        <script type="text/javascript" src="<?=WEB_PATH?>templates/freepbx/javascript/jquery.tools.min.js"></script>
+        <script type="text/javascript" src="common/jquery.tools.min.js"></script>
         {if condition="isset($silent_mode)"}
-                <script type="text/javascript" src="<?=WEB_PATH?>templates/freepbx/javascript/jquery-1.3.2.min.js"></script>
-                	<link href="common/mainstyle.css" rel="stylesheet" type="text/css" />
-	<link rel="shortcut icon" type="image/vnd.microsoft.icon" href="favicon.ico" />
+        <script type="text/javascript" src="common/jquery-1.3.2.js"></script>
+        <link href="common/mainstyle.css" rel="stylesheet" type="text/css" />
         {/if}
         <style>
             .tooltip {
                 display:none;
-                background:transparent url(<?=WEB_PATH?>templates/images/black_arrow.png);
+                background:transparent url('images/black_arrow.png');
                 font-size:12px;
                 height:70px;
                 width:160px;
@@ -19,12 +18,12 @@
             }
         </style>
 	{if condition="isset($template_editor_display)"}
-		<link href="/admin/modules/endpointman/templates/freepbx/stylesheets/coda-slider-2.0a.css" media="screen, projection" rel="stylesheet" type="text/css" />
+		<link href="common/coda-slider-2.0a.css" media="screen, projection" rel="stylesheet" type="text/css" />
 
  
 		<!-- Begin JavaScript --> 
-			<script type="text/javascript" src="<?=WEB_PATH?>templates/freepbx/javascript/jquery.easing.1.3.js"></script>
-			<script type="text/javascript" src="<?=WEB_PATH?>templates/freepbx/javascript/jquery.coda-slider-2.0.js"></script>
+			<script type="text/javascript" src="common/jquery.easing.1.3.js"></script>
+			<script type="text/javascript" src="common/jquery.coda-slider-2.0.js"></script>
 			 <script type="text/javascript"> 
 	            $().ready(function() {
 	            	$('#coda-slider-9').codaSlider({
@@ -124,14 +123,14 @@
                         if ((tblRows[i].className != tblClass) && (tblRows[i].className == rowClass)) {
                             if( tblRows[i].style.display=='none' ){
                                 tblRows[i].style.display = '';
-                                document.getElementById("img"+rowClass).src= '{$web_path}templates/images/bullet_minus.png';
-                                document.getElementById("img2"+rowClass).src= '{$web_path}templates/images/collapse.png';
-                                document.getElementById("img3"+rowClass).src= '{$web_path}templates/images/collapse.png';
+                                document.getElementById("img"+rowClass).src= 'images/bullet_minus.png';
+                                document.getElementById("img2"+rowClass).src= 'images/collapse.png';
+                                document.getElementById("img3"+rowClass).src= 'images/collapse.png';
                             }else{
                                 tblRows[i].style.display = 'none';
-                                document.getElementById("img"+rowClass).src= '{$web_path}templates/images/bullet_plus.png';
-                                document.getElementById("img2"+rowClass).src= '{$web_path}templates/images/expand.png';
-                                document.getElementById("img3"+rowClass).src= '{$web_path}templates/images/expand.png';
+                                document.getElementById("img"+rowClass).src= 'images/bullet_plus.png';
+                                document.getElementById("img2"+rowClass).src= 'images/expand.png';
+                                document.getElementById("img3"+rowClass).src= 'images/expand.png';
                             }
                         }
                     }

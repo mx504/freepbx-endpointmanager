@@ -111,7 +111,14 @@ class phonesettings {
 
         //refresh the data before we prepare so we get acurate data
         $row['global_user_cfg_data'] = $custom_cfg_data;
-        $endpoint->prepare_configs($row);
+
+        $reboot = isset($_REQUEST['epm_reboot'])?$_REQUEST['epm_reboot']:null;
+
+        if(isset($reboot)) {
+            $endpoint->prepare_configs($row);
+        } else {
+            $endpoint->prepare_configs($row,FALSE);
+        }
 
         $m = "phonesettings";
 
@@ -184,7 +191,7 @@ class phonesettings {
 
                 if(!empty($out)) {
                     $out[0]['data'] = array_values($out[0]['data']);
-                    $button = "<input name='submit' type='submit' value='Save & Reboot'>";
+                    $button = "<input type='checkbox' NAME='epm_reboot'>Reboot Device<br /><input name='submit' type='submit' value='Save & Reboot'>";
                 } else {
                     $out[0]['title'] = "Your Phone Settings have not been enabled. Please talk to your administrator.";
                     $out[0]['data'] = NULL;

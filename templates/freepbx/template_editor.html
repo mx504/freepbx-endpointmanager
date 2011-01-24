@@ -16,9 +16,8 @@
     </head>
     <body>
 {else}
-<script type="text/javascript" src="<?=WEB_PATH?>templates/freepbx/javascript/jquery.tooltip.v.1.1.js"></script>
-<script type="text/javascript" src="<?=WEB_PATH?>templates/freepbx/javascript/jquery.tooltip.execute.js"></script>
-<link href="<?=WEB_PATH?>templates/freepbx/stylesheets/simpletooltip.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="common/jquery.tooltip.v.1.1.js"></script>
+<script type="text/javascript" src="common/jquery.tooltip.execute.js"></script>
 <script language="javascript" type="text/javascript">
         function popitup(url, name) {
             newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=' + document.getElementById('altconfig_'+ name).value + '&rand=' + new Date().getTime(),'name','height=710,width=750');
