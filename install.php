@@ -61,24 +61,25 @@ out("Endpoint Manager Installer");
 define("PHONE_MODULES_PATH", $amp_conf['AMPWEBROOT'].'/admin/modules/_ep_phone_modules/');
 define("LOCAL_PATH", $amp_conf['AMPWEBROOT'].'/admin/modules/endpointman/');
 
+
 if(!file_exists(PHONE_MODULES_PATH)) {
-	mkdir(PHONE_MODULES_PATH, 0764);
-        out("Creating Phone Modules Directory");
+    mkdir(PHONE_MODULES_PATH, 0764);
+    out("Creating Phone Modules Directory");
 }
 
 if(!file_exists(PHONE_MODULES_PATH."setup.php")) {
-	copy(LOCAL_PATH."install/setup.php",PHONE_MODULES_PATH."setup.php");
-        out("Moving Auto Provisioner Class");
+    copy(LOCAL_PATH."install/setup.php",PHONE_MODULES_PATH."setup.php");
+    out("Moving Auto Provisioner Class");
 }
 
 if(!file_exists(PHONE_MODULES_PATH."temp/")) {
-	mkdir(PHONE_MODULES_PATH."temp/", 0764);
-        out("Creating temp folder");
+    mkdir(PHONE_MODULES_PATH."temp/", 0764);
+    out("Creating temp folder");
 }
 //Detect Version
 
 function ep_table_exists ($table) {
-	global $db;
+    global $db;
     $sql = "SHOW TABLES FROM asterisk";
     $result = $db->getAll($sql);
 
@@ -93,7 +94,7 @@ function ep_table_exists ($table) {
 $version = "2.9.0.4";
 
 if(ep_table_exists("endpointman_global_vars")) {
-        $global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
+    $global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
 } else {
     $global_cfg['version'] = '?';
 }
@@ -903,8 +904,8 @@ if(!$new_install) {
 
 if ($new_install) {
 
-        out("Creating Brand List Table");
-        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_brand_list` (
+    out("Creating Brand List Table");
+    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_brand_list` (
                   `id` varchar(11) NOT NULL,
                   `name` varchar(255) NOT NULL,
                   `directory` varchar(255) NOT NULL,
@@ -913,11 +914,11 @@ if ($new_install) {
                   `hidden` int(1) NOT NULL DEFAULT '0',
                   PRIMARY KEY (`id`)
                 ) ENGINE=MyISAM DEFAULT CHARSET=latin1";
-        $db->query($sql);
+    $db->query($sql);
 
-        out("Creating Line List Table");
+    out("Creating Line List Table");
 
-        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_line_list` (
+    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_line_list` (
   `luid` int(11) NOT NULL AUTO_INCREMENT,
   `mac_id` int(11) NOT NULL,
   `line` smallint(2) NOT NULL,
@@ -929,22 +930,22 @@ if ($new_install) {
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;";
     $db->query($sql);
 
-        out("Creating Global Variables Table");
-        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_global_vars` (
+    out("Creating Global Variables Table");
+    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_global_vars` (
                   `idnum` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Index',
                   `var_name` varchar(25) NOT NULL COMMENT 'Variable Name',
                   `value` text NOT NULL COMMENT 'Data',
                   PRIMARY KEY (`idnum`)
                 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=17";
-        $db->query($sql);
+    $db->query($sql);
 
-        out("Locating NMAP + ARP + ASTERISK Executables");
-        $nmap = find_exec("nmap");
-        $arp = find_exec("arp");
-        $asterisk = find_exec("asterisk");
+    out("Locating NMAP + ARP + ASTERISK Executables");
+    $nmap = find_exec("nmap");
+    $arp = find_exec("arp");
+    $asterisk = find_exec("asterisk");
 
-        out("Inserting data into the global vars Table");
-        $sql = "INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES
+    out("Inserting data into the global vars Table");
+    $sql = "INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES
             (1, 'srvip', ''),
             (2, 'tz', ''),
             (3, 'gmtoff', ''),
@@ -962,10 +963,10 @@ if ($new_install) {
             (15, 'disable_htaccess', ''),
             (16, 'endpoint_vers', '0'),
             (17, 'disable_help', '0')";
-        $db->query($sql);
+    $db->query($sql);
 
-        out("Creating mac list Table");
-        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_mac_list` (
+    out("Creating mac list Table");
+    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_mac_list` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `mac` varchar(12) DEFAULT NULL,
   `model` varchar(11) NOT NULL,
@@ -976,10 +977,10 @@ if ($new_install) {
   PRIMARY KEY (`id`),
   UNIQUE KEY `mac` (`mac`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
-        $db->query($sql);
+    $db->query($sql);
 
-        out("Creating model List Table");
-        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_model_list` (
+    out("Creating model List Table");
+    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_model_list` (
   `id` varchar(11) NOT NULL COMMENT 'Key ',
   `brand` int(11) NOT NULL COMMENT 'Brand',
   `model` varchar(25) NOT NULL COMMENT 'Model',
@@ -991,10 +992,10 @@ if ($new_install) {
   `hidden` int(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1";
-        $db->query($sql);
+    $db->query($sql);
 
-        out("Creating oui List Table");
-        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_oui_list` (
+    out("Creating oui List Table");
+    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_oui_list` (
           `id` int(30) NOT NULL AUTO_INCREMENT,
           `oui` varchar(30) DEFAULT NULL,
           `brand` int(11) NOT NULL,
@@ -1002,10 +1003,10 @@ if ($new_install) {
           PRIMARY KEY (`id`),
           UNIQUE KEY `oui` (`oui`)
         ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
-        $db->query($sql);
+    $db->query($sql);
 
-        out("Creating product List Table");
-        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_product_list` (
+    out("Creating product List Table");
+    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_product_list` (
   `id` varchar(11) NOT NULL,
   `brand` int(11) NOT NULL,
   `long_name` varchar(255) NOT NULL,
@@ -1019,10 +1020,10 @@ if ($new_install) {
   `special_cfgs` blob NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1";
-        $db->query($sql);
+    $db->query($sql);
 
-        out("Creating Template List Table");
-        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_template_list` (
+    out("Creating Template List Table");
+    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_template_list` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `product_id` varchar(11) NOT NULL,
   `model_id` varchar(10) NOT NULL,
@@ -1031,20 +1032,20 @@ if ($new_install) {
   `config_files_override` text,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
-        $db->query($sql);
+    $db->query($sql);
 
-        out("Creating Time Zone List Table");
-        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_time_zones` (
+    out("Creating Time Zone List Table");
+    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_time_zones` (
 	  `idnum` int(11) NOT NULL auto_increment COMMENT 'Record Number',
 	  `tz` varchar(10) NOT NULL COMMENT 'Time Zone',
 	  `gmtoff` varchar(10) NOT NULL COMMENT 'Offset in Seconds',
 	  `gmthr` varchar(10) NOT NULL,
 	  PRIMARY KEY  (`idnum`)
 	) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=116";
-        $db->query($sql);
+    $db->query($sql);
 
-        out("Inserting Data into table Table");
-        $sql = "INSERT INTO `endpointman_time_zones` (`idnum`, `tz`, `gmtoff`, `gmthr`) VALUES
+    out("Inserting Data into table Table");
+    $sql = "INSERT INTO `endpointman_time_zones` (`idnum`, `tz`, `gmtoff`, `gmthr`) VALUES
 	(1, 'USA-10', '-36000', 'GMT-10:00'),
 	(2, 'USA-9', '-32400', 'GMT-09:00'),
 	(3, 'CAN-8', '-28800', 'GMT-08:00'),
@@ -1160,10 +1161,10 @@ if ($new_install) {
 	(113, 'RUS+12', '43200', 'GMT+12:00'),
 	(114, 'NZL+12.75', '45900', 'GMT+12:00'),
 	(115, 'TON+13', '46800', 'GMT+13:00')";
-        $db->query($sql);
+    $db->query($sql);
 
-        out("Create Custom Configs Table");
-        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_custom_configs` (
+    out("Create Custom Configs Table");
+    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_custom_configs` (
           `id` int(11) NOT NULL AUTO_INCREMENT,
           `name` varchar(255) NOT NULL,
           `original_name` varchar(255) NOT NULL,
@@ -1171,68 +1172,134 @@ if ($new_install) {
           `data` longblob NOT NULL,
           PRIMARY KEY (`id`)
         ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
-        $db->query($sql);
-
-} else {
-    out("Update Version Number to ".$version);
-    $sql = "UPDATE endpointman_global_vars SET value = '".$version."' WHERE var_name = 'version'";
     $db->query($sql);
 
-
-    $sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release3/' WHERE var_name = 'update_server'";
-    $db->query($sql);
 }
 
-if(file_exists($amp_conf['AMPWEBROOT']."/recordings")) {
-    out("Installing ARI Module");
+out("Update Version Number to ".$version);
+$sql = "UPDATE endpointman_global_vars SET value = '".$version."' WHERE var_name = 'version'";
+$db->query($sql);
+
+$sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release3/' WHERE var_name = 'update_server'";
+$db->query($sql);
+
+$sql = 'SELECT value FROM `admin` WHERE `variable` LIKE CONVERT(_utf8 \'version\' USING latin1) COLLATE latin1_swedish_ci';
+$amp_version = $db->getOne($sql);
+
+if(file_exists($amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module")) {
     unlink($amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module");
-    symlink(LOCAL_PATH. "install/phonesettings.module", $amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module");
+}
 
-    if(!file_exists($amp_conf['AMPWEBROOT']."/recordings/theme/js/")) {
-        mkdir($amp_conf['AMPWEBROOT']."/recordings/theme/js/");
-    }
-
+if(file_exists($amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js")) {
     unlink($amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js");
+}
+
+if(file_exists($amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js")) {
     unlink($amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
+}
+
+if(file_exists($amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css")) {
     unlink($amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
-    symlink(LOCAL_PATH. "templates/freepbx/javascript/jquery.coda-slider-2.0.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.coda-slider-2.0.js");
-    symlink(LOCAL_PATH. "templates/freepbx/javascript/jquery.easing.1.3.js", $amp_conf['AMPWEBROOT']."/recordings/theme/js/jquery.easing.1.3.js");
-    symlink(LOCAL_PATH. "templates/freepbx/stylesheets/coda-slider-2.0a.css", $amp_conf['AMPWEBROOT']."/recordings/theme/coda-slider-2.0a.css");
-    
-    out("Fixing permissions on ARI module");
-    chmod($amp_conf['AMPWEBROOT']."/recordings/modules/phonesettings.module", 0664);
-    
 }
 
-out("Updating Symbolic Links for Images");
-foreach (glob(LOCAL_PATH."templates/images/*.*") as $filename) {
-    //echo "$filename size " . filesize($filename) . "<br />";
-    $newloc = str_replace(stristr($filename, 'admin/'), '', $filename) . "admin/images/".basename($filename);
-    //echo "\t". $newloc ."<br />";
-    unlink($newloc);
-    if((!file_exists($newloc)) && (readlink($newloc) != $filename)) {
-        symlink($filename, $newloc);
+if($amp_version < "2.9.0") {
+    //Do symlinks ourself because retrieve_conf is OLD
+
+    //images
+    $dir = $amp_conf['AMPWEBROOT'].'/admin/assets/endpointman/images';
+    if(!file_exists($dir)) {
+        mkdir($dir, 0777, TRUE);
     }
-}
-
-out("Updating Symbolic Links for Javascripts");
-foreach (glob(LOCAL_PATH."templates/freepbx/javascript/*.*") as $filename) {
-    //echo "$filename size " . filesize($filename) . "<br />";
-    $newloc = str_replace(stristr($filename, 'admin/'), '', $filename) . "admin/common/".basename($filename);
-    //echo "\t". $newloc ."<br />";
-    unlink($newloc);
-    if((!file_exists($newloc)) && (readlink($newloc) != $filename)) {
-        symlink($filename, $newloc);
+    foreach (glob(LOCAL_PATH."assets/images/*.*") as $filename) {
+        if(file_exists($dir.'/'.basename($filename))) {
+            unlink($dir.'/'.basename($filename));
+            symlink($filename, $dir.'/'.basename($filename));
+        } else {
+            symlink($filename, $dir.'/'.basename($filename));
+        }
     }
-}
 
-out("Updating Symbolic Links for Stylesheets");
-foreach (glob(LOCAL_PATH."templates/freepbx/stylesheets/*.*") as $filename) {
-    //echo "$filename size " . filesize($filename) . "<br />";
-    $newloc = str_replace(stristr($filename, 'admin/'), '', $filename) . "admin/common/".basename($filename);
-    //echo "\t". $newloc ."<br />";
-    unlink($newloc);
-    if((!file_exists($newloc)) && (readlink($newloc) != $filename)) {
-        symlink($filename, $newloc);
+    //javascripts
+    $dir = $amp_conf['AMPWEBROOT'].'/admin/assets/endpointman/js';
+    if(!file_exists($dir)) {
+        mkdir($dir, 0777, TRUE);
+    }
+    foreach (glob(LOCAL_PATH."assets/js/*.*") as $filename) {
+        if(file_exists($dir.'/'.basename($filename))) {
+            unlink($dir.'/'.basename($filename));
+            symlink($filename, $dir.'/'.basename($filename));
+        } else {
+            symlink($filename, $dir.'/'.basename($filename));
+        }
+    }
+
+    //theme (css/stylesheets)
+    $dir = $amp_conf['AMPWEBROOT'].'/admin/assets/endpointman/theme';
+    if(!file_exists($dir)) {
+        mkdir($dir, 0777, TRUE);
+    }
+    foreach (glob(LOCAL_PATH."assets/theme/*.*") as $filename) {
+        if(file_exists($dir.'/'.basename($filename))) {
+            unlink($dir.'/'.basename($filename));
+            symlink($filename, $dir.'/'.basename($filename));
+        } else {
+            symlink($filename, $dir.'/'.basename($filename));
+        }
+    }
+
+    //ari-theme (css/stylesheets)
+    $dir = $amp_conf['AMPWEBROOT'].'/recordings/theme';
+    if(!file_exists($dir)) {
+        mkdir($dir, 0777, TRUE);
+    }
+    foreach (glob(LOCAL_PATH."ari/theme/*.*") as $filename) {
+        if(file_exists($dir.'/'.basename($filename))) {
+            unlink($dir.'/'.basename($filename));
+            symlink($filename, $dir.'/'.basename($filename));
+        } else {
+            symlink($filename, $dir.'/'.basename($filename));
+        }
+    }
+
+    //ari-images
+    $dir = $amp_conf['AMPWEBROOT'].'/recordings/theme/images';
+    if(!file_exists($dir)) {
+        mkdir($dir, 0777, TRUE);
+    }
+    foreach (glob(LOCAL_PATH."ari/images/*.*") as $filename) {
+        if(file_exists($dir.'/'.basename($filename))) {
+            unlink($dir.'/'.basename($filename));
+            symlink($filename, $dir.'/'.basename($filename));
+        } else {
+            symlink($filename, $dir.'/'.basename($filename));
+        }
+    }
+
+    //ari-js
+    $dir = $amp_conf['AMPWEBROOT'].'/recordings/theme/js';
+    if(!file_exists($dir)) {
+        mkdir($dir, 0777, TRUE);
+    }
+    foreach (glob(LOCAL_PATH."ari/js/*.*") as $filename) {
+        if(file_exists($dir.'/'.basename($filename))) {
+            unlink($dir.'/'.basename($filename));
+            symlink($filename, $dir.'/'.basename($filename));
+        } else {
+            symlink($filename, $dir.'/'.basename($filename));
+        }
+    }
+
+    //ari-modules
+    $dir = $amp_conf['AMPWEBROOT'].'/recordings/modules';
+    if(!file_exists($dir)) {
+        mkdir($dir, 0777, TRUE);
+    }
+    foreach (glob(LOCAL_PATH."ari/modules/*.*") as $filename) {
+        if(file_exists($dir.'/'.basename($filename))) {
+            unlink($dir.'/'.basename($filename));
+            symlink($filename, $dir.'/'.basename($filename));
+        } else {
+            symlink($filename, $dir.'/'.basename($filename));
+        }
     }
 }

@@ -41,9 +41,9 @@
     <td>{$value.model_class}</td>
     <td>{$value.model_clone}</td>
 
-	<td align='center' width='9%'><a href="config.php?edit_template=true&display=epm_templates&custom={$value.custom}&id={$value.id}"><img src='images/edit.png' ALT='<?=_('Edit')?>' border='0'></a></td>
+	<td align='center' width='9%'><a href="config.php?type=tool&edit_template=true&display=epm_templates&custom={$value.custom}&id={$value.id}"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a></td>
 	<td align='center' width='5%'>{if condition="$value.custom == 0"}
-	<a href="config.php?delete_template=true&display=epm_templates&id={$value.id}"><img src='images/delete.png' ALT='<?=_('Delete')?>' border='0'></a>{/if}</td>
+	<a href="config.php?type=tool&delete_template=true&display=epm_templates&id={$value.id}"><img src='assets/endpointman/images/delete.png' ALT='<?=_('Delete')?>' border='0'></a>{/if}</td>
   </tr>
 {/loop}
 </table>

@@ -135,7 +135,11 @@ function endpointman_configpageinit($pagename) {
                             $endpoint->db->query($sql);
 
                             $row = $endpoint->get_phone_info($ext_id);
-                            $endpoint->prepare_configs($row,FALSE);
+                            if(isset($reboot)) {
+                                $endpoint->prepare_configs($row);
+                            } else {
+                                $endpoint->prepare_configs($row,FALSE);
+                            }
                         }
                     }
                 } else {

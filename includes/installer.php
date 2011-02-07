@@ -6,14 +6,17 @@
  * @license MPL / GPLv2 / LGPL
  * @package Provisioner
  */
+
 require 'functions.inc';
 
 $endpoint = new endpointmanager();
 
 echo "<html><head><title>Installer</title></head><body>";
 
-function out($text){
-    echo $text."<br />";
+if(!function_exists("out")) {
+    function out($text){
+        echo $text."<br />";
+    }
 }
 
 if($_REQUEST['type'] == "brand") {

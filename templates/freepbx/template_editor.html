@@ -1,10 +1,10 @@
 {if condition="isset($in_ari)"}
 <html>
     <head>
-        <link href="/recordings/theme/coda-slider-2.0a.css" rel="stylesheet" type="text/css" />
+        <link href="theme/coda-slider-2.0a.css" rel="stylesheet" type="text/css" />
         <!-- Begin JavaScript -->
-        <script type="text/javascript" src="/recordings/theme/js/jquery.easing.1.3.js"></script>
-        <script type="text/javascript" src="/recordings/theme/js/jquery.coda-slider-2.0.js"></script>
+        <script type="text/javascript" src="theme/js/jquery.easing.1.3.js"></script>
+        <script type="text/javascript" src="theme/js/jquery.coda-slider-2.0.js"></script>
         <script type="text/javascript">
             $().ready(function() {
                 $('#coda-slider-9').codaSlider({
@@ -16,8 +16,9 @@
     </head>
     <body>
 {else}
-<script type="text/javascript" src="common/jquery.tooltip.v.1.1.js"></script>
-<script type="text/javascript" src="common/jquery.tooltip.execute.js"></script>
+<script type="text/javascript" src="assets/endpointman/js/jquery.tooltip.v.1.1.js"></script>
+<script type="text/javascript" src="assets/endpointman/js/jquery.tooltip.execute.js"></script>
+<link href="assets/endpointman/theme/simpletooltip.css" rel="stylesheet" type="text/css" />
 <script language="javascript" type="text/javascript">
         function popitup(url, name) {
             newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=' + document.getElementById('altconfig_'+ name).value + '&rand=' + new Date().getTime(),'name','height=710,width=750');
@@ -35,14 +36,14 @@
         <strong><?=_('Product Line')?>:</strong> {$product}<br />
         <strong><?=_('Clone of Model')?>:</strong> {$model}<br />
         <strong><?=_('Display')?></strong>
-        <select name="area_list" onchange="window.location.href='config.php?edit_template=true&display=epm_templates&custom='+ document.getElementById('custom').value +'&id='+ document.getElementById('id').value +'&maxlines='+this.options[this.selectedIndex].value">
+        <select name="area_list" onchange="window.location.href='config.php?type=tool&edit_template=true&display=epm_templates&custom='+ document.getElementById('custom').value +'&id='+ document.getElementById('id').value +'&maxlines='+this.options[this.selectedIndex].value">
         {loop name="area_ava"}
         <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
         {/loop}
         </select>
         <strong><?=_('Lines')?></strong>
 	{/if}
-        <form action="config.php?display=epm_templates" method="post">
+        <form action="config.php?type=tool&display=epm_templates" method="post">
         {if condition="isset($silent_mode)"}
         <input name="silent_mode" id="silent_mode" type="hidden" value="1">
         {/if}
@@ -56,7 +57,7 @@
         {/loop}
         </select><br/>
         <strong><?=_('Display')?></strong>
-        <select name="area_list" onchange="window.location.href='config.php?edit_template=true&display=epm_templates&custom='+ document.getElementById('custom').value +'&id='+ document.getElementById('id').value +'&maxlines='+this.options[this.selectedIndex].value">
+        <select name="area_list" onchange="window.location.href='config.php?type=tool&edit_template=true&display=epm_templates&custom='+ document.getElementById('custom').value +'&id='+ document.getElementById('id').value +'&maxlines='+this.options[this.selectedIndex].value">
         {loop name="area_ava"}
         <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
         {/loop}
@@ -74,14 +75,14 @@
                 <option value="{$value.id}_{$value.name}" {if condition="isset($value.selected)"}selected{/if}>{$value.name}</option>';
             {/loop}
             </select>
-            <a href="#" onclick="return popitup('config.php?display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=alt_cfg_edit', '{$value.name}')"><img src='{$web_path}templates/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
+            <a href="#" onclick="return popitup('config.php?type=tool&display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=alt_cfg_edit', '{$value.name}')"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
             <br/>
         {/loop}
             <br/>
 	{/if}
         {loop name="only_configs"}
             <strong><?=_('Edit File Configurations for:')?></strong> {$value.name}
-            <a href="#" onclick="return popitup2('config.php?display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=alt_cfg_edit', '{$value.name}')"><img src='{$web_path}templates/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
+            <a href="#" onclick="return popitup2('config.php?type=tool&display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=alt_cfg_edit', '{$value.name}')"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
             <br/>
         {/loop}
             <br />

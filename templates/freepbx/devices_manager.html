@@ -9,6 +9,7 @@
         document.adding.submit();
     }
     function submit_go() {
+        $('#spinner').toggle();
         $('#go').append('<input type="hidden" name="sub_type" value="go"/>');
         document.go.submit();
     }
@@ -58,10 +59,10 @@
 
 <center>
     {if condition="$no_add == FALSE"}
-    <form id='go' action='config.php{$web_var}&display=epm_devices' method='POST'>
+    <form id='go' action='config.php?type=tool&display=epm_devices' method='POST'>
         <label><?=_('Search for new devices in netmask')?>
             <input name="netmask" type="text" value="{$srvip}/24">
-            <input type="Submit" name="button_go" onclick="submit_go();" value="<?=_('Go')?>">
+            <input type="Submit" name="button_go" id="button_go" onclick="submit_go();" value="<?=_('Go')?>">
         </label>
         <label>
             <input name="nmap" type="checkbox" value="1" checked><?=_('Use NMAP')?>
@@ -82,7 +83,7 @@
         <td width="234" align='center'></td>
         <td align='center'></td>
     </tr>
-        <form name="adding" id="adding" action='config.php{$web_var}&display=epm_devices' method='POST' />
+        <form name="adding" id="adding" action='config.php?type=tool&display=epm_devices' method='POST' />
 
 	{if condition="$no_add == FALSE"}
     <tr>
@@ -125,7 +126,7 @@
                 <option value="{$value.value}" {if condition="isset($value.selected)"}selected{/if}>{$value.text}</option>
                 {/loop}
             </select>
-            <a href="#" onclick="return popitup('config.php?display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=edit_template&amp;edit_id={$edit_id}', 'Template Editor')"><img src='images/edit.png' title="Edit Template Selected on the Left"></a></div>
+            <a href="#" onclick="return popitup('config.php?display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=edit_template&amp;edit_id={$edit_id}', 'Template Editor')"><img src='assets/endpointman/images/edit.png' title="Edit Template Selected on the Left" border="0"></a></div>
         </label></td>
     <td align='center'>
 	{if condition="$mode == 'EDIT'"}
@@ -161,7 +162,7 @@
         </label>
     </td>
     <td align='center'></td>
-    <td align='center'>{if condition="!isset($disabled_delete_line)"}<div id="demo"><a href="#" onclick="submit_wtype_sub('edit',{$value.luid},'delete');"><img src="images/delete.png" title="Delete Line from Device to the Left"></div>{/if}</a></td>
+    <td align='center'>{if condition="!isset($disabled_delete_line)"}<div id="demo"><a href="#" onclick="submit_wtype_sub('edit',{$value.luid},'delete');"><img src="assets/endpointman/images/delete.png" title="Delete Line from Device to the Left"></div>{/if}</a></td>
     <td align='center'></td>
 </tr>
 {/loop}
@@ -200,7 +201,7 @@
     <td align='center'>&nbsp;</td>
     <td align='center'>&nbsp;</td>
     <td align='center'></td>
-    <td align='center'><div id="demo"><a href="#" onclick="submit_wtype_sub('edit',{$edit_id},'add_line_x');"><img src="images/add.png" alt="Add Line" border="0" width="24" height="24" title="Add a Line to the device currently being edited"></a></div></td>
+    <td align='center'><div id="demo"><a href="#" onclick="submit_wtype_sub('edit',{$edit_id},'add_line_x');"><img src="assets/endpointman/images/add.png" alt="Add Line" border="0" width="24" height="24" title="Add a Line to the device currently being edited"></a></div></td>
     <td align='center'></td>
 </tr> 
 {else}
@@ -212,7 +213,7 @@
     <td align='center'>&nbsp;</td>
     <td align='center'>&nbsp;</td>
     <td align='center'></td>
-    <td align='center'><a href="#" onclick="add_line();"><img src="images/add.png" alt="Add Line" border="0" width="24" height="24"></a></td>
+    <td align='center'><a href="#" onclick="add_line();"><img src="assets/endpointman/images/add.png" alt="Add Line" border="0" width="24" height="24"></a></td>
     <td align='center'></td>
 </tr>
 {/if}
@@ -302,18 +303,18 @@
         <td align='center'><h3>Edit</h3></td>
         <td align='center'><h3>Delete</h3></td>
     </tr>
-    <form id="managed" action='config.php{$web_var}&display=epm_devices' method='POST'>
+    <form id="managed" action='config.php?type=tool&display=epm_devices' method='POST'>
 	{loop name="list"}
         <tr class="headerRow">
-            <td align='center' ><div id="demo"><a><img src="images/bullet_plus.png" id="imgrowGroup{$value.master_id}" alt="" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"><input type="checkbox" name="selected[]" value="{$value.id}"></a></div></td>
+            <td align='center' ><div id="demo"><a><img src="assets/endpointman/images/bullet_plus.png" id="imgrowGroup{$value.master_id}" alt="" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"><input type="checkbox" name="selected[]" value="{$value.id}"></a></div></td>
             <td align='center' width='11%'>{$value.mac}</td>
             <td width="13%" align='center'>{$value.name}</td>
             <td width="14%" align='center'>{$value.model}</td>
-            <td width="10%" align='center'><div id="demo"><a><img src="images/expand.png" id="img2rowGroup{$value.master_id}" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"></a></div></td>
-            <td width="19%" align='center'><div id="demo"><a><img src="images/expand.png" id="img3rowGroup{$value.master_id}" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"></a></div></td>
+            <td width="10%" align='center'><div id="demo"><a><img src="assets/endpointman/images/expand.png" id="img2rowGroup{$value.master_id}" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"></a></div></td>
+            <td width="19%" align='center'><div id="demo"><a><img src="assets/endpointman/images/expand.png" id="img3rowGroup{$value.master_id}" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"></a></div></td>
             <td align='center' width='15%'>{$value.template_name}</td>
-            <td align='center' width='9%'><div id="demo"><a href="#" onclick="submit_wtype('edit',{$value.id});"><img src='images/edit.png' ALT='<?=_('Edit')?>' title='Edit Device' border='0'></a></div></td>
-            <td align='center' width='7%'><div id="demo"><a href="#" onclick="delete_device({$value.id});"><img src='images/delete.png' ALT='<?=_('Delete')?>' title='Delete Device' border='0'></a></div></td>
+            <td align='center' width='9%'><div id="demo"><a href="#" onclick="submit_wtype('edit',{$value.id});"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' title='Edit Device' border='0'></a></div></td>
+            <td align='center' width='7%'><div id="demo"><a href="#" onclick="delete_device({$value.id});"><img src='assets/endpointman/images/delete.png' ALT='<?=_('Delete')?>' title='Delete Device' border='0'></a></div></td>
         </tr>
         {loop name="value.line"}
         <tr class="rowGroup{$value.master_id}" style="display:none;">
@@ -325,7 +326,7 @@
             <td width="19%" align='center'>{$value.ext} - {$value.description}</td>
             <td align='center' width='15%'></td>
             <td align='center' width='9%'></td>
-            <td align='center' width='7%'><div id="demo"><a href="#" onclick="submit_wtype('delete_line',{$value.luid});"><img src='images/delete.png' ALT='<?=_('Delete')?>' title='Delete Line' border='0'></a></div></td>
+            <td align='center' width='7%'><div id="demo"><a href="#" onclick="submit_wtype('delete_line',{$value.luid});"><img src='assets/endpointman/images/delete.png' ALT='<?=_('Delete')?>' title='Delete Line' border='0'></a></div></td>
         </tr>
         {/loop}
 	{/loop}
@@ -371,7 +372,7 @@
                     <select name="template_selector" id="template_selector">
                         <option></option>
                     </select>
-                    <input type="submit" name="button_rebuild_reboot" onclick="submit_global3('rebuild_reboot');" value="<?=_('Rebuild & Reboot')?>"><br /><input type="checkbox" name="reboot" checked>Reboot Phones
+                    <input type="submit" name="button_rebuild_reboot" onclick="submit_global3('rebuild_reboot');" value="<?=_('Rebuild')?>"><br /><input type="checkbox" name="reboot" checked>Reboot Phones
                 </label></td>
     </tr>
 </table>

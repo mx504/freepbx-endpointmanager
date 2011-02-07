@@ -52,17 +52,28 @@ class endpointmanager {
         define("VER", $this->global_cfg['version']);
         //end possible removal
 
+		define("MODULES_PATH", $this->get_modules_dir());
+
         //Define the location of phone modules, keeping it outside of the module directory so that when the user updates endpointmanager they don't lose all of their phones
-        if(file_exists(dirname($_SERVER["SCRIPT_FILENAME"])."/modules/_ep_phone_modules/")) {
-            define("PHONE_MODULES_PATH", dirname($_SERVER["SCRIPT_FILENAME"])."/modules/_ep_phone_modules/");
-        } else {
-            $this->error['amp_conf'] = "Phone Modules Directory doesn't exist!";
-            $this->global_cfg['disable_epm'] = TRUE;
+        if(file_exists(MODULES_PATH."_ep_phone_modules/")) {
+            define("PHONE_MODULES_PATH", MODULES_PATH."_ep_phone_modules/");
+        } else {	
+            die("Phone Modules Directory doesn't exist!");
         }
 
-        //Get local path information
-        define("WEB_PATH", dirname($_SERVER['SCRIPT_NAME'])."/modules/endpointman/");
-        define("LOCAL_PATH", dirname($_SERVER["SCRIPT_FILENAME"])."/modules/endpointman/");
+		//Determine if local path is correct!
+		if(file_exists(MODULES_PATH."endpointman/")) {
+			define("LOCAL_PATH", MODULES_PATH."endpointman/");
+		} else {
+			die("Can't Load Local Endpoint Manager Directory!");
+		}        	
+
+        //include the local template class
+        if(file_exists(LOCAL_PATH."includes/rain.tpl.class.php")) {
+            require(LOCAL_PATH."includes/rain.tpl.class.php");
+        } else {
+            die("Can't Load the Template Class");
+        }
 
         //Define error reporting
         if(($this->global_cfg['debug']) AND (!isset($_REQUEST['quietmode']))) {
@@ -89,22 +100,32 @@ class endpointmanager {
             }
         }
 
-        //include the local template class
-        if(file_exists(LOCAL_PATH."includes/rain.tpl.class.php")) {
-            require(LOCAL_PATH."includes/rain.tpl.class.php");
-        } else {
-            $this->error['rain_tpl'] = "Can't Load the Template Class";
-            $this->global_cfg['diable_epm'] = TRUE;
-        }
 
         $this->tpl = new RainTPL( LOCAL_PATH.'templates/freepbx', LOCAL_PATH.'templates/freepbx/compiled', '/admin/modules/endpointman/templates/images' );
+
 
         if($this->global_cfg['disable_help']) {
             $this->tpl->assign("disable_help", 1);
         }
-        
-        $this->tpl->assign("web_path", WEB_PATH);
     }
+
+	function get_modules_dir() {
+		
+		$file_name = "endpointman/includes/functions.inc";
+		
+	   $includes = get_included_files(); 
+	   	foreach($includes as $key => $data) {
+			if(strripos($data,$file_name)) {
+				$keyout = $key;
+				break;
+			}
+		}
+
+		$stripped_path = str_replace("endpointman/includes/functions.inc", "", $includes[$keyout]);
+
+	   return $stripped_path;
+	}
+	
 
     /**
      * Used to send sample configurations to provisioner.net
@@ -246,7 +267,6 @@ class endpointmanager {
                 $this->db->query($sql);
                 return(TRUE);
             } else {
-                //$message = _("You can't remove the only line left")."!";
                 $this->message['delete_line'] = _("You can't remove the only line left")."!";
                 return(FALSE);
             }
