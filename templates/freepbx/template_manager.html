@@ -4,7 +4,7 @@
 {/if}
 {if condition="$no_add == FALSE"}
 <center>
-	<h3><?=_('Add New Template')?>:</h3><form action="config.php?display=epm_templates&Submit=EditTemplate" method="POST">
+	<h3><?=_('Add New Template')?>:</h3><form action="config.php?type=tool&amp;display=epm_templates&amp;Submit=EditTemplate" method="POST">
 	  <?=_('Template Name')?>:
 	  <label>
 	    <input type="text" name="template_name" id="template_name">
@@ -41,9 +41,9 @@
     <td>{$value.model_class}</td>
     <td>{$value.model_clone}</td>
 
-	<td align='center' width='9%'><a href="config.php?type=tool&edit_template=true&display=epm_templates&custom={$value.custom}&id={$value.id}"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a></td>
+	<td align='center' width='9%'><a href="config.php?type=tool&amp;edit_template=true&amp;display=epm_templates&amp;custom={$value.custom}&amp;id={$value.id}"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a></td>
 	<td align='center' width='5%'>{if condition="$value.custom == 0"}
-	<a href="config.php?type=tool&delete_template=true&display=epm_templates&id={$value.id}"><img src='assets/endpointman/images/delete.png' ALT='<?=_('Delete')?>' border='0'></a>{/if}</td>
+	<a href="config.php?type=tool&amp;delete_template=true&amp;display=epm_templates&amp;id={$value.id}"><img src='assets/endpointman/images/delete.png' ALT='<?=_('Delete')?>' border='0'></a>{/if}</td>
   </tr>
 {/loop}
 </table>

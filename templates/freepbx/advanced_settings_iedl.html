@@ -4,7 +4,7 @@
 <p><?=_('Export CSV file of devices')?>:
   <br>
   <a href="{$exporter_address}"><?=_('Export CSV')?></a></p>
-<p><?=_('Import CSV file of devices')?>:<form name="form1" enctype="multipart/form-data" method="post" action="config.php{$web_vars}&display=epm_advanced&subpage=iedl&action=import">
+<p><?=_('Import CSV file of devices')?>:<form name="form1" enctype="multipart/form-data" method="post" action="config.php?type=tool&display=epm_advanced&subpage=iedl&action=import">
   <label>
 	<input type="hidden" name="MAX_FILE_SIZE" value="30000" />
     <input type="file" name="import_csv" id="fileField">

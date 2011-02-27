@@ -158,32 +158,13 @@ switch($_REQUEST['subpage']) {
             } else {
                 $endpoint->error['manual_upload'] = "Invalid File Extension";
             }
-            
-
-        } elseif(isset($_REQUEST['upload_master_xml'])) {
-            $extension = pathinfo($_FILES["xml"]["name"],PATHINFO_EXTENSION);
-            if($extension == "xml") {
-                if ($_FILES['xml']['error'] == UPLOAD_ERR_OK) {
-                    $tmp_name = $_FILES['xml']["tmp_name"];
-                    $name = $_FILES['xml']["name"];
-                    move_uploaded_file($tmp_name, "$uploads_dir/$name");
-                    $endpoint->tpl->assign("show_installer", 1);
-                    $endpoint->tpl->assign("package", 0);
-                    $endpoint->tpl->assign("type", "upload_master_xml");
-                    $endpoint->tpl->assign("xml", $name);
-                } else {
-                    $endpoint->error['manual_upload'] = $endpoint->file_upload_error_message($_FILES['xml']['error']);
-                }
-            } else {
-                $endpoint->error['manual_upload'] = "Invalid File Extension";
-            }
         } elseif(isset($_REQUEST['upload_brand'])) {
             $error = FALSE;
             $files_list = array();
             $i = 0;
             foreach($_FILES as $files) {
                 $extension = pathinfo($files["name"],PATHINFO_EXTENSION);
-                if(($extension == "xml") OR ($extension == "tgz")) {
+                if($extension == "tgz") {
                     if ($files['error'] == UPLOAD_ERR_OK) {
                         $tmp_name = $files["tmp_name"];
                         $name = $files["name"];
@@ -201,9 +182,8 @@ switch($_REQUEST['subpage']) {
             }
             if(!$error){
                 $endpoint->tpl->assign("show_installer", 1);
-                $endpoint->tpl->assign("package", $files_list[1]);
+                $endpoint->tpl->assign("package", $files_list[0]);
                 $endpoint->tpl->assign("type", "upload_brand");
-                $endpoint->tpl->assign("xml", $files_list[0]);
             } else {
                 $message = $error_message;
             }
@@ -337,46 +317,6 @@ switch($_REQUEST['subpage']) {
             $endpoint->db->query($sql);
             $message = "Deleted!";
         }
-        if(1 == 0) {
-            $file = $_REQUEST['temp_file'];
-
-            $sql = "SELECT cfg_dir,directory,config_files FROM endpointman_product_list,endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id = '". $_REQUEST['product_select'] ."'";
-            $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
-
-            $file=PHONE_MODULES_PATH.'endpoint/'.$row['directory']."/".$row['cfg_dir']."/".$file;
-
-            if(isset($_REQUEST['config_text'])) {
-                if(isset($_REQUEST['button_save'])) {
-                    $wfh=fopen($file,'w');
-                    fwrite($wfh,$_REQUEST['config_text']);
-                    fclose($wfh);
-                }
-            }
-
-            if(!file_exists($file)) {
-                $fp = fopen($file, 'w');
-                fwrite($fp, '
-<!--<template_data>
-    <item>
-            <description>General Settings</description>
-            <type>group</type>
-    </item>
-    <item>
-            <variable>$sip_digit_timeout</variable>
-            <default_value>4</default_value>
-            <description>SIP Digit Timeout</description>
-            <type>input</type>
-    </item>
-</template_data>-->
-                            ');
-                fclose($fp);
-            }
-            $handle = fopen($file, "rb");
-            $contents = fread($handle, filesize($file));
-            fclose($handle);
-            $endpoint->tpl->assign("location", $file);
-            $endpoint->tpl->assign("config_data", $contents);
-        }
         if(isset($_REQUEST['file'])) {
             $sql = "SELECT cfg_dir,directory,config_files FROM endpointman_product_list,endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id = '". $_REQUEST['product_select'] ."'";
             $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
@@ -406,6 +346,9 @@ switch($_REQUEST['subpage']) {
             }
 
             $endpoint->tpl->assign("save_as_name_value", $config_files[$_REQUEST['file']]);
+
+            $contents = $endpoint->display_htmlspecialchars($contents);
+
             $endpoint->tpl->assign("config_data", $contents);
             $endpoint->tpl->assign("filename", $config_files[$_REQUEST['file']]);
             $endpoint->tpl->assign('sendid', $_REQUEST['file']);
@@ -436,6 +379,8 @@ switch($_REQUEST['subpage']) {
                 $endpoint->submit_config($row22['directory'],$row22['cfg_dir'],$row['original_name'],$row['data']);
                 $message = 'Sent! Thanks! :-)';
             }
+
+            $row['data'] = $endpoint->display_htmlspecialchars($row['data']);
 
             $endpoint->tpl->assign("save_as_name_value", $row['name']);
             $endpoint->tpl->assign("filename", $row['original_name']);
@@ -573,6 +518,14 @@ switch($_REQUEST['subpage']) {
             } else {
                 $_POST['disable_help'] = 0;
             }
+            if((isset($_POST['allow_dupext'])) AND ($_POST['allow_dupext'] == "on")) {
+                $_POST['allow_dupext'] = 1;
+            } else {
+                $_POST['allow_dupext'] = 0;
+            }
+
+            $sql="UPDATE endpointman_global_vars SET value='" . $_POST['allow_dupext'] . "' WHERE var_name='show_all_registrations'";
+            $endpoint->db->query($sql);
 
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['enable_ari'] . "' WHERE var_name='enable_ari'";
             $endpoint->db->query($sql);
@@ -605,6 +558,11 @@ switch($_REQUEST['subpage']) {
         //Because we are working with global variables we probably updated them, so lets refresh those variables
         $endpoint->global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
 
+        if($endpoint->global_cfg['show_all_registrations']) {
+            $dupext_selected= "checked";
+        } else {
+            $dupext_selected = "";
+        }
 
         if($endpoint->global_cfg['enable_ari']) {
             $ari_selected = "checked";
@@ -627,6 +585,7 @@ switch($_REQUEST['subpage']) {
             $debug_selected = "";
         }
         $endpoint->tpl->assign("help_selected", $help_selected);
+        $endpoint->tpl->assign("dupext_selected", $dupext_selected);
 
         $endpoint->tpl->assign("ari_selected", $ari_selected);
         $endpoint->tpl->assign("debug_selected", $debug_selected);

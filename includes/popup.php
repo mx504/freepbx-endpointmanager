@@ -44,6 +44,7 @@ if($_REQUEST['pop_type'] == "alt_cfg_edit") {
                 $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
                 $endpoint->tpl->assign("save_as_name_value", $row['name']);
                 $endpoint->tpl->assign("filename", $row['original_name']);
+                $row['data'] = $endpoint->display_htmlspecialchars($row['data']);
                 $endpoint->tpl->assign("config_data", $row['data']);
             } else {
                 $sql = "SELECT endpointman_brand_list.directory, endpointman_product_list.cfg_dir FROM endpointman_brand_list, endpointman_product_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = (SELECT product_id FROM endpointman_template_list WHERE id = ".$_REQUEST['tid'].")";
@@ -61,6 +62,7 @@ if($_REQUEST['pop_type'] == "alt_cfg_edit") {
                 $handle = fopen($file, "rb");
                 $contents = fread($handle, filesize($file));
                 fclose($handle);
+                $contents = $endpoint->display_htmlspecialchars($contents);
                 $endpoint->tpl->assign("config_data", $contents);
             }
         } else {
@@ -75,6 +77,7 @@ if($_REQUEST['pop_type'] == "alt_cfg_edit") {
                 $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
                 $endpoint->tpl->assign("save_as_name_value", $row['name']);
                 $endpoint->tpl->assign("filename", $row['original_name']);
+                $row['data'] = $endpoint->display_htmlspecialchars($row['data']);
                 $endpoint->tpl->assign("config_data", $row['data']);
             } else {
                 $sql = "SELECT endpointman_brand_list.directory, endpointman_product_list.cfg_dir FROM endpointman_brand_list, endpointman_product_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = (SELECT endpointman_model_list.product_id FROM endpointman_model_list, endpointman_mac_list WHERE endpointman_mac_list.model = endpointman_model_list.id AND endpointman_mac_list.id = ".$_REQUEST['tid'].")";
@@ -92,6 +95,7 @@ if($_REQUEST['pop_type'] == "alt_cfg_edit") {
                 $handle = fopen($file, "rb");
                 $contents = fread($handle, filesize($file));
                 fclose($handle);
+                $contents = $endpoint->display_htmlspecialchars($contents);
                 $endpoint->tpl->assign("config_data", $contents);
             }
         }

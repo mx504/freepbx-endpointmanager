@@ -16,7 +16,7 @@ function close_module_actions(goback) {
 	//freepbx_modal_close('moduleBox');
 	freepbx_modal_hide('moduleBox');
 	if (goback) {
-  		location.href = 'config.php?type=tool&display=epm_advanced&subpage=manual_upload';
+  		location.href = 'config.php?type=tool&amp;display=epm_advanced&amp;subpage=manual_upload';
 	}
 }
 process_module_actions();
@@ -34,24 +34,10 @@ process_module_actions();
     <input type="submit" name="upload_provisioner" value="<?=_('Upload')?>">
 </form>
     <br /><br />
-{if condition="1 == 0"}
 <form action="" method="post" enctype="multipart/form-data" name="form1">
-    <label>Master List File (.xml):
-        <input type="file" name="xml" id="fileField">
-    </label> Local Date Last Modified: {$master_ver}
-        <br/>
-    <input type="submit" name="upload_master_xml" value="<?=_('Upload')?>">
-</form>
-    <br /><br />
-{/if}
-<form action="" method="post" enctype="multipart/form-data" name="form1">
-    <label>Brand XML File (.xml):
-        <input type="file" name="xml" id="fileField">
-    </label>
-    <br />
     <label>Brand Package (.tgz):
         <input type="file" name="package" id="fileField">
     </label>
-        <br/>
+    <br /><font style="font-size: small">Note: The Brand XML File is no longer needed as it is contained within the Brand Package.<br /><br />Learn How to Create your own brand package here: <a target="_blank" href="http://www.provisioner.net/adding_new_phones">http://www.provisioner.net/adding_new_phones</a></font><br />
     <input type="submit" name="upload_brand" value="<?=_('Upload')?>">
 </form>

@@ -11,14 +11,14 @@
 {if condition="isset($oui_list_custom)"}
 	{loop name="oui_list_custom"}
 	</tr><tr>
-	<td align='center'>{$value.oui}</td><td align='center'>{$value.name}</td><td align='center'><a href="config.php{$web_vars}&display=epm_advanced&subpage=oui_manager&delete=yes&id={$value.id}"><img src='images/delete.gif' ALT='Delete' border='0'></a></td>
+	<td align='center'>{$value.oui}</td><td align='center'>{$value.name}</td><td align='center'><a href="config.php?type=tool&amp;display=epm_advanced&amp;subpage=oui_manager&amp;delete=yes&amp;id={$value.id}"><img src='images/delete.gif' ALT='Delete' border='0'></a></td>
 	</tr><tr>
 	{/loop}
 {/if}
 <td colspan='4'><hr><tr>
     <td colspan="2" align='center'><h3><?=_('Add Custom')?> OUI</h3></td>
 </form>
-<form action='config.php{$web_vars}&display=epm_advanced&subpage=oui_manager' method='POST'>
+<form action='config.php?type=tool&amp;display=epm_advanced&amp;subpage=oui_manager' method='POST'>
 	</tr><tr>
 	<td align='center'><input name="oui" type="text"  maxlength="6"/></td><td align='center'>	<select name="rb_brand">
 			{loop name="brand_ava"}

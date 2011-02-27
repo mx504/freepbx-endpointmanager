@@ -43,7 +43,7 @@ if((isset($_REQUEST['button_install'])) OR (isset($_REQUEST['button_update']))) 
 		$endpoint->remove_brand($_REQUEST['brand']);
 	}
 } elseif(isset($_REQUEST['button_check_for_updates'])) {
-	$brand_up = $endpoint->brand_update_check();
+	$brand_up = $endpoint->update_check();
         $endpoint->tpl->assign("update_check", 1);
 
 	$check_for_updates = TRUE;

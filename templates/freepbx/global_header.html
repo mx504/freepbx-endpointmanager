@@ -1,10 +1,17 @@
 <html>
     <head>
         <title>PBX Endpoint Configuration Manager</title>
-        <script type="text/javascript" src="assets/endpointman/js/jquery.tools.min.js"></script>
         {if condition="isset($silent_mode)"}
-        <script type="text/javascript" src="assets/endpointman/js/jquery-1.3.2.min.js"></script>
+        <script type="text/javascript" src="common/libfreepbx.javascripts.js" language="javascript"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.tools.min.js"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.easing.1.3.js"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.coda-slider-2.0.js"></script>
         <link href="common/mainstyle.css" rel="stylesheet" type="text/css" />
+        {/if}
+        {if condition="$amp_ver < 2.9"}
+        <script type="text/javascript" src="assets/endpointman/js/jquery.tools.min.js"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.easing.1.3.js"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.coda-slider-2.0.js"></script>
         {/if}
         <style>
             .tooltip {
@@ -39,10 +46,6 @@
 	{if condition="isset($template_editor_display)"}
         <link href="assets/endpointman/theme/coda-slider-2.0a.css" media="screen, projection" rel="stylesheet" type="text/css" />
 
-
-        <!-- Begin JavaScript -->
-        <script type="text/javascript" src="assets/endpointman/js/jquery.easing.1.3.js"></script>
-        <script type="text/javascript" src="assets/endpointman/js/jquery.coda-slider-2.0.js"></script>
         <script type="text/javascript">
             $().ready(function() {
                 $('#coda-slider-9').codaSlider({
@@ -50,7 +53,6 @@
                 });
             });
         </script>
-        <!-- End JavaScript -->
 	{/if}
 	{if condition="isset($amp_conf_serial)"}
         <script type="text/javascript" charset="utf-8">

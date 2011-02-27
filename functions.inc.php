@@ -33,22 +33,28 @@ function endpointman_get_config($engine) {
   }
 }
 function endpointman_configpageinit($pagename) {
-	global $currentcomponent;
+	global $currentcomponent, $amp_conf;
 
         $display = isset($_REQUEST['display'])?$_REQUEST['display']:null;
-        if(isset($_REQUEST['extension'])) {
-            $extdisplay = isset($_REQUEST['extension'])?$_REQUEST['extension']:null;
-        } else {
+
+        if($display == "extensions") {
+            if(isset($_REQUEST['extension'])) {
+                $extdisplay = isset($_REQUEST['extension'])?$_REQUEST['extension']:null;
+            } else {
+                $extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
+            }
+        } elseif($display == "devices") {
             $extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
         }
+
         $action = isset($_REQUEST['action'])?$_REQUEST['action']:null;
         $delete = isset($_REQUEST['epm_delete'])?$_REQUEST['epm_delete']:null;
         $tech = isset($_REQUEST['tech_hardware'])?$_REQUEST['tech_hardware']:null;
 
-        if(($display == "extensions") && (isset($extdisplay) OR ($tech == "sip_generic"))) {
+        if((($display == "extensions") OR ($display == "devices")) && (isset($extdisplay) OR ($tech == "sip_generic"))) {
             global $endpoint;
 
-            $doc_root =	$_SERVER["DOCUMENT_ROOT"] ."/admin/modules/endpointman/";
+            $doc_root =	$amp_conf['AMPWEBROOT'] ."/admin/modules/endpointman/";
             require($doc_root . "includes/functions.inc");
 
             $endpoint = new endpointmanager();
@@ -79,7 +85,11 @@ function endpointman_configpageinit($pagename) {
                     $model = isset($_REQUEST['epm_model'])?$_REQUEST['epm_model']:null;
                     $line = isset($_REQUEST['epm_line'])?$_REQUEST['epm_line']:null;
                     $temp = isset($_REQUEST['epm_temps'])?$_REQUEST['epm_temps']:null;
-                    $name = isset($_REQUEST['name'])?$_REQUEST['name']:null;
+                    if(isset($_REQUEST['name'])) {
+                        $name = isset($_REQUEST['name'])?$_REQUEST['name']:null;
+                    } else {
+                        $name = isset($_REQUEST['description'])?$_REQUEST['description']:null;
+                    }
                     $reboot = isset($_REQUEST['epm_reboot'])?$_REQUEST['epm_reboot']:null;
 
                     if($endpoint->mac_check_clean($mac)) {
@@ -165,6 +175,8 @@ function endpointman_applyhooks() {
 function endpointman_configpageload() {
 	global $currentcomponent, $endpoint, $db;
 
+        $display = isset($_REQUEST['display'])?$_REQUEST['display']:null;
+
 	// Init vars from $_REQUEST[]
 	$action = isset($_REQUEST['action'])?$_REQUEST['action']:null;
 	$extdisplay = isset($_REQUEST['extdisplay'])?$_REQUEST['extdisplay']:null;
@@ -235,8 +247,8 @@ function endpointman_configpageload() {
 
                 $currentcomponent->addguielem($section, new gui_checkbox('epm_delete', $checked, 'Delete','Delete this Extension from Endpoint Manager'),9);
                 $currentcomponent->addguielem($section, new gui_textbox('epm_mac', $info['mac'], 'MAC Address', 'The MAC Address of the Phone Assigned to this Extension/Device. <br />(Leave Blank to Remove from Endpoint Manager)', '', 'Please enter a valid MAC Address', true, 17, false),9);
-                $currentcomponent->addguielem($section, new gui_selectbox('epm_brand', $brand_list, $info['brand_id'], 'Brand', 'The Brand of this Phone.', false, 'frm_extensions_brand_change(this.options[this.selectedIndex].value)', false),9);
-                $currentcomponent->addguielem($section, new gui_selectbox('epm_model', $model_list, $info['model_id'], 'Model', 'The Model of this Phone.', false, 'frm_extensions_model_change(this.options[this.selectedIndex].value,\''.$line_info['luid'].'\')', false),9);
+                $currentcomponent->addguielem($section, new gui_selectbox('epm_brand', $brand_list, $info['brand_id'], 'Brand', 'The Brand of this Phone.', false, 'frm_'.$display.'_brand_change(this.options[this.selectedIndex].value)', false),9);
+                $currentcomponent->addguielem($section, new gui_selectbox('epm_model', $model_list, $info['model_id'], 'Model', 'The Model of this Phone.', false, 'frm_'.$display.'_model_change(this.options[this.selectedIndex].value,\''.$line_info['luid'].'\')', false),9);
                 $currentcomponent->addguielem($section, new gui_selectbox('epm_line', $line_list, $line_info['line'], 'Line', 'The Line of this Extension/Device.', false, '', false),9);
                 $currentcomponent->addguielem($section, new gui_selectbox('epm_temps', $template_list, $info['template_id'], 'Template', 'The Template of this Phone.', false, '', false),9);
                 $currentcomponent->addguielem($section, new gui_checkbox('epm_reboot', $checked, 'Reboot','Reboot this Phone on Submit'),9);
@@ -271,8 +283,8 @@ function endpointman_configpageload() {
                 $template_list = array();
 
                 $currentcomponent->addguielem($section, new gui_textbox('epm_mac', $info['mac'], 'MAC Address', 'The MAC Address of the Phone Assigned to this Extension/Device. <br />(Leave Blank to Remove from Endpoint Manager)', '', 'Please enter a valid MAC Address', true, 17, false),9);
-                $currentcomponent->addguielem($section, new gui_selectbox('epm_brand', $brand_list, $info['brand_id'], 'Brand', 'The Brand of this Phone.', false, 'frm_extensions_brand_change(this.options[this.selectedIndex].value)', false),9);
-                $currentcomponent->addguielem($section, new gui_selectbox('epm_model', $model_list, $info['model_id'], 'Model', 'The Model of this Phone.', false, 'frm_extensions_model_change(this.options[this.selectedIndex].value,document.getElementById(\'epm_mac\').value)', false),9);
+                $currentcomponent->addguielem($section, new gui_selectbox('epm_brand', $brand_list, $info['brand_id'], 'Brand', 'The Brand of this Phone.', false, 'frm_'.$display.'_brand_change(this.options[this.selectedIndex].value)', false),9);
+                $currentcomponent->addguielem($section, new gui_selectbox('epm_model', $model_list, $info['model_id'], 'Model', 'The Model of this Phone.', false, 'frm_'.$display.'_model_change(this.options[this.selectedIndex].value,document.getElementById(\'epm_mac\').value)', false),9);
                 $currentcomponent->addguielem($section, new gui_selectbox('epm_line', $line_list, $line_info['line'], 'Line', 'The Line of this Extension/Device.', false, '', false),9);
                 $currentcomponent->addguielem($section, new gui_selectbox('epm_temps', $template_list, $info['template_id'], 'Template', 'The Template of this Phone.', false, '', false),9);
             }

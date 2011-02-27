@@ -91,7 +91,7 @@ function ep_table_exists ($table) {
     return FALSE;
 }
 
-$version = "2.9.0.4";
+$version = "2.9.0.6";
 
 if(ep_table_exists("endpointman_global_vars")) {
     $global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
@@ -899,6 +899,16 @@ if(!$new_install) {
         $db->query($sql);
     }
 
+    if($ver <= "2.9.0.4") {
+        $sql = 'ALTER TABLE  `endpointman_brand_list` ADD  `local` INT( 1 ) NOT NULL DEFAULT  \'0\' AFTER  `cfg_ver`';
+        $db->query($sql);
+    }
+
+    if($ver <= "2.9.0.5") {
+        $sql = "INSERT INTO  `asterisk`.`endpointman_global_vars` (`idnum` ,`var_name` ,`value`)VALUES (NULL ,  'show_all_registrations',  '0')";
+        $db->query($sql);
+    }
+
 }
 
 
@@ -911,6 +921,7 @@ if ($new_install) {
                   `directory` varchar(255) NOT NULL,
                   `cfg_ver` varchar(255) NOT NULL,
                   `installed` int(1) NOT NULL DEFAULT '0',
+                    `local` int(1) NOT NULL DEFAULT '0',
                   `hidden` int(1) NOT NULL DEFAULT '0',
                   PRIMARY KEY (`id`)
                 ) ENGINE=MyISAM DEFAULT CHARSET=latin1";
@@ -962,7 +973,8 @@ if ($new_install) {
             (14, 'check_updates', '0'),
             (15, 'disable_htaccess', ''),
             (16, 'endpoint_vers', '0'),
-            (17, 'disable_help', '0')";
+            (17, 'disable_help', '0'),
+            (17, 'show_all_registrations', '0')";
     $db->query($sql);
 
     out("Creating mac list Table");

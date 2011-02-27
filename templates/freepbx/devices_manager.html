@@ -59,7 +59,7 @@
 
 <center>
     {if condition="$no_add == FALSE"}
-    <form id='go' action='config.php?type=tool&display=epm_devices' method='POST'>
+    <form id='go' action='config.php?type=tool&amp;display=epm_devices' method='POST'>
         <label><?=_('Search for new devices in netmask')?>
             <input name="netmask" type="text" value="{$srvip}/24">
             <input type="Submit" name="button_go" id="button_go" onclick="submit_go();" value="<?=_('Go')?>">
@@ -83,7 +83,7 @@
         <td width="234" align='center'></td>
         <td align='center'></td>
     </tr>
-        <form name="adding" id="adding" action='config.php?type=tool&display=epm_devices' method='POST' />
+        <form name="adding" id="adding" action='config.php?type=tool&amp;display=epm_devices' method='POST' />
 
 	{if condition="$no_add == FALSE"}
     <tr>
@@ -303,7 +303,7 @@
         <td align='center'><h3>Edit</h3></td>
         <td align='center'><h3>Delete</h3></td>
     </tr>
-    <form id="managed" action='config.php?type=tool&display=epm_devices' method='POST'>
+    <form id="managed" action='config.php?type=tool&amp;display=epm_devices' method='POST'>
 	{loop name="list"}
         <tr class="headerRow">
             <td align='center' ><div id="demo"><a><img src="assets/endpointman/images/bullet_plus.png" id="imgrowGroup{$value.master_id}" alt="" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"><input type="checkbox" name="selected[]" value="{$value.id}"></a></div></td>

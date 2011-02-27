@@ -72,9 +72,22 @@ if($_REQUEST['type'] == "brand") {
             }
             break;
         case "upload_brand":
-            if ((file_exists(PHONE_MODULES_PATH."temp/".$_REQUEST['package'])) AND (file_exists(PHONE_MODULES_PATH."temp/".$_REQUEST['xml']))) {
-                $temp = $endpoint->xml2array(PHONE_MODULES_PATH."temp/".$_REQUEST['xml']);
-                $endpoint->update_brand($temp);
+            if (file_exists(PHONE_MODULES_PATH."temp/".$_REQUEST['package'])) {
+                echo "Extracting Tarball........";
+                exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $_REQUEST['package'] ." -C ".PHONE_MODULES_PATH."temp/");
+                echo "Done!<br />";
+
+                $package = basename($_REQUEST['package'], ".tgz");                
+                $package = explode("-",$package);
+
+                if(file_exists(PHONE_MODULES_PATH."temp/".$package[0])) {
+                    $endpoint->update_brand($package[0],FALSE);
+                    unlink(PHONE_MODULES_PATH.'temp/'. $_REQUEST['package']);
+                } else {
+                    echo "Please name the Package the same name as your brand!";
+                }       
+            } else {
+                $endpoint->error['upload'] = "No File Provided";
             }
             break;
     }
