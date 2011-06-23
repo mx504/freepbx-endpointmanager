@@ -1,0 +1,8 @@
+RewriteEngine on
+RewriteRule ([^/]+\.cfg) provision_processing.php?request=$1 [L]
+RewriteRule ([^/]+\.tuz) provision_processing.php?request=$1 [L]
+RewriteRule ([^/]+\.xml) provision_processing.php?request=$1 [L]
+RewriteRule ([0-9a-f]{12}.*) provision_processing.php?request=$1 [L]
+
+RewriteCond %{THE_REQUEST} ^PUT*
+RewriteRule /prov/[^/]+/([^/]+)\.log /prov/polycom_log.php?file=$1

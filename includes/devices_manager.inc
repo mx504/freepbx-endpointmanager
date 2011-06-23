@@ -26,11 +26,11 @@ $full_device_list =& $endpoint->endpoint_data->all_devices();
 $ava_exts = $endpoint->display_registration_list();
 
 if((empty($family_list)) && (empty($full_device_list))) {
-    $message = _("Welcome to Endpoint Manager")."!<br />"._("You have no products (Modules) installed, click")." <a href=\"config.php?display=epm_config&type=$type\">"._("here")."</a> "._("to install some");
+    $endpoint->message['page:devices_manager'] = _("Welcome to Endpoint Manager")."!<br />"._("You have no products (Modules) installed, click")." <a href=\"config.php?display=epm_config&type=$type\">"._("here")."</a> "._("to install some");
     $no_add = TRUE;
     $endpoint->global_cfg['new'] = 1;
 } elseif($endpoint->global_cfg['srvip'] == "") {
-    $message = "Your Global Variables are not set! Please head on over to <a href=\"config.php?type=$type&display=epm_advanced\">\"Advanced Settings\"</a> to setup your configuration";
+    $endpoint->error['page:devices_manager'] = "Your Global Variables are not set! Please head on over to <a href=\"config.php?type=$type&display=epm_advanced\">\"Advanced Settings\"</a> to setup your configuration";
     $no_add = TRUE;
 } elseif(empty($ava_exts)) {
     //$message = "You have no more devices or extensions avalible to configure!";
@@ -54,38 +54,11 @@ switch ($sub_type) {
         switch ($sub_type_sub) {
             case "add_line_x":
                 $_REQUEST['id'] = $_REQUEST['edit_id'];
-                if($endpoint->linesAvailable(NULL,$_REQUEST['id'])) {
-                    if($endpoint->endpoint_data->all_unused_registrations()) {
-                        $sql = 'SELECT * FROM `endpointman_line_list` WHERE `mac_id` = '. $_REQUEST['id'];
-                        $lines_list =& $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
-
-                        foreach($lines_list as $row) {
-                            $sql = "SELECT description FROM devices WHERE id = ".$_REQUEST['ext_list_'.$row['luid']];
-                            $name=$endpoint->db->getOne($sql);
-
-                            $sql = "UPDATE endpointman_line_list SET line = '".$_REQUEST['line_list_'.$row['luid']]."', ext = ".$_REQUEST['ext_list_'.$row['luid']].", description = '".$name."' WHERE luid =  ". $row['luid'];
-                            $endpoint->db->query($sql);
-                        }
-
-                        $reg = array_values($endpoint->display_registration_list());
-                        $lines = array_values($endpoint->linesAvailable(NULL,$_REQUEST['id']));
-
-                        $sql = "SELECT description FROM devices WHERE id = ".$reg[0]['value'];
-                        $name=$endpoint->db->getOne($sql);
-
-                        $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$_REQUEST['id']."', '".$reg[0]['value']."', '".$lines[0]['value']."', '".$name."')";
-                        $endpoint->db->query($sql);
-                        $message = "Configuration Files will not be Generated until you click Save!";
-                    } else {
-                        $message = _("No Devices/Extensions Left to Add")."!";
-                    }
-                } else {
-                    $message = _("No Lines Left to Add")."!";
-                }
+                $mac_id = $endpoint->add_line($_REQUEST['id']);
                 break;
             case "button_edit":
                 if(empty($_REQUEST['edit_id'])) {
-                    $message = _("No Device Selected to Edit!")."!";
+                    $endpoint->error['page:devices_manager'] = _("No Device Selected to Edit!")."!";
                 } else {
                     $template_editor = TRUE;
                     $sql = "UPDATE  endpointman_mac_list SET  model =  '".$_REQUEST['model_list']."' WHERE  id =".$_REQUEST['edit_id'];
@@ -98,35 +71,35 @@ switch ($sub_type) {
                 }
                 break;
             case "button_save":
+                
                 $sql = 'SELECT * FROM endpointman_line_list WHERE mac_id = '. $_REQUEST['edit_id'];
 
-                $lines_list =& $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
+                $lines_list = $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
 
                 foreach($lines_list as $row) {
                     $sql = "SELECT description FROM devices WHERE id = ".$_REQUEST['ext_list_'.$row['luid']];
-                    $name=$endpoint->db->getOne($sql);
+                    $name = $endpoint->db->getOne($sql);
 
-                    $sql = "UPDATE endpointman_line_list SET line = '".$_REQUEST['line_list_'.$row['luid']]."', ext = ".$_REQUEST['ext_list_'.$row['luid']].", description = '".$name."' WHERE luid =  ". $row['luid'];
+                    $sql = "UPDATE endpointman_line_list SET line = '".$_REQUEST['line_list_'.$row['luid']]."', ext = '".$_REQUEST['ext_list_'.$row['luid']]."', description = '".$name."' WHERE luid =  ". $row['luid'];
                     $endpoint->db->query($sql);
                 }
 
                 $sql = "UPDATE endpointman_mac_list SET template_id = '".$_REQUEST['template_list']."', model = '".$_REQUEST['model_list']."' WHERE id =  ". $_REQUEST['edit_id'];
                 $endpoint->db->query($sql);
 
+
                 $row = $endpoint->get_phone_info($_REQUEST['edit_id']);
                 $endpoint->prepare_configs($row);
 
-                $message = _("Saved")."!";
+                $endpoint->message['edit_save'] = _("Saved")."!";
                 break;
             case "delete":
                 $sql = 'SELECT mac_id FROM endpointman_line_list WHERE luid = '.$_REQUEST['edit_id'] ;
-                $mac_id =& $endpoint->db->getOne($sql,array(),DB_FETCHMODE_ASSOC);
+                $mac_id = $endpoint->db->getOne($sql,array(),DB_FETCHMODE_ASSOC);
                 $row = $endpoint->get_phone_info($mac_id);
 
-                $sql = "DELETE FROM endpointman_line_list WHERE luid=".$_REQUEST['edit_id'];
-                $endpoint->db->query($sql);
+                $endpoint->delete_line($_REQUEST['edit_id'],FALSE);
                 $_REQUEST['edit_id'] = $mac_id;
-                $message = _("Deleted")."!";
                 break;
         }
         $edit_row=$endpoint->get_phone_info($_REQUEST['edit_id']);
@@ -134,94 +107,15 @@ switch ($sub_type) {
         $mode = "EDIT";
         break;
     case "add" :
-        $mac = $endpoint->mac_check_clean($_REQUEST['mac']);
-        if($mac) {
-            if($endpoint->sync_model($_REQUEST['model_list'])) {
-                if(empty($_REQUEST['brand_list'])) {
-                    $message = _("You Must Select A Brand From the Drop Down")."!";
-                } elseif(empty($_REQUEST['model_list'])) {
-                    $message = _("You Must Select A Model From the Drop Down")."!";
-                } elseif(empty($_REQUEST['line_list'])) {
-                    $message = _("You Must Select A Line From the Drop Down")."!";
-                } elseif(empty($_REQUEST['ext_list'])) {
-                    $message = _("You Must Select an Extension/Device From the Drop Down")."!";
-                } elseif(!isset($_REQUEST['template_list'])) {
-                    $message = _("You Must Select A Template From the Drop Down")."!";
-                } else {
-                    $sql = 'SELECT description FROM devices WHERE id = '.$_REQUEST['ext_list'];
-                    $name =& $endpoint->db->getOne($sql);
-
-                    $sql = 'SELECT endpointman_product_list. * , endpointman_model_list.template_data, endpointman_brand_list.directory FROM endpointman_model_list, endpointman_brand_list, endpointman_product_list WHERE endpointman_model_list.id =  \''.$_REQUEST['model_list'].'\' AND endpointman_model_list.brand = endpointman_brand_list.id AND endpointman_model_list.product_id = endpointman_product_list.id';
-
-                    $row =& $endpoint->db->getRow($sql,array(),DB_FETCHMODE_ASSOC);
-
-                    $sql = "INSERT INTO `endpointman_mac_list` (`mac`, `model`, `template_id`) VALUES ('".$mac."', '".$_REQUEST['model_list']."', '".$_REQUEST['template_list']."')";
-                    $endpoint->db->query($sql);
-
-                    $sql = 'SELECT last_insert_id()';
-                    $ext_id =& $endpoint->db->getOne($sql);
-
-                    if(!isset($_REQUEST['line_list'])) {
-                        $_REQUEST['line_list'] = 1;
-                    }
-
-                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$_REQUEST['ext_list']."', '".$_REQUEST['line_list']."', '".$name."')";
-                    $endpoint->db->query($sql);
-
-                    if(!isset($_REQUEST['image_x'])) {
-                        $mac_id = $endpoint->get_phone_info($ext_id);
-                        if($endpoint->prepare_configs($mac_id)) {
-                            $message = _("Saved")."!";
-                        }
-                    } else {
-                        $_REQUEST['edit_id'] = $ext_id;
-                        $edit_row=$endpoint->get_phone_info($ext_id);
-                        $edit_row['id'] = $_REQUEST['edit_id'];
-                        $mode = "EDIT";
-                        $_REQUEST['id'] = $_REQUEST['edit_id'];
-                        if($endpoint->linesAvailable(NULL,$_REQUEST['id'])) {
-                            if($endpoint->endpoint_data->all_unused_registrations()) {
-                                $sql = 'SELECT * FROM `endpointman_line_list` WHERE `mac_id` = '. $_REQUEST['id'];
-                                $lines_list =& $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
-
-                                foreach($lines_list as $row) {
-                                    $sql = "SELECT description FROM devices WHERE id = ".$_REQUEST['ext_list'];
-                                    $name=$endpoint->db->getOne($sql);
-
-                                    $sql = "UPDATE endpointman_line_list SET line = '".$_REQUEST['line_list']."', ext = ".$_REQUEST['ext_list'].", description = '".$name."' WHERE luid =  ". $row['luid'];
-                                    $endpoint->db->query($sql);
-                                }
-
-                                $reg = array_values($endpoint->display_registration_list());
-                                $lines = array_values($endpoint->linesAvailable(NULL,$_REQUEST['id']));
-
-                                $sql = "SELECT description FROM devices WHERE id = ".$reg[0]['value'];
-                                $name=$endpoint->db->getOne($sql);
-
-                                $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$_REQUEST['id']."', '".$reg[0]['value']."', '".$lines[0]['value']."', '".$name."')";
-                                $endpoint->db->query($sql);
-
-                                $edit_row=$endpoint->get_phone_info($ext_id);
-                                $edit_row['id'] = $_REQUEST['edit_id'];
-                                $message = "Configuration Files will not be Generated until you click Save!";
-                            } else {
-                                $message = _("No Devices/Extensions Left to Add")."!";
-                            }
-                        } else {
-                            $message = _("No Lines Left to Add")."!";
-                        }
-                    }
-                }
-            } else {
-                $endpoint->error['Sync_Model'] = _("Invalid Model Selected, Can't Sync System")."!";
-            }
-        } else {
-            $message = _("Invalid MAC Address")."!";
+        $mac_id = $endpoint->add_device($_REQUEST['mac'],$_REQUEST['model_list'],$_REQUEST['ext_list'],$_REQUEST['template_list'],$_REQUEST['line_list']);
+        if($mac_id) {
+            $phone_info = $endpoint->get_phone_info($mac_id);
+            $endpoint->prepare_configs($phone_info);
         }
         break;
     case "edit_template" :
         if(empty($_REQUEST['edit_id'])) {
-            $message = _("No Device Selected to Edit!")."!";
+            $endpoint->error['page:devices_manager'] = _("No Device Selected to Edit!")."!";
         } else {
             $template_editor = TRUE;
             $sql = "UPDATE  endpointman_mac_list SET  model =  '".$_REQUEST['model_list']."' WHERE  id =".$_REQUEST['edit_id'];
@@ -236,59 +130,17 @@ switch ($sub_type) {
     case "delete_selected_phones":
         if(isset($_REQUEST['selected'])) {
             foreach($_REQUEST['selected'] as $key => $data) {
-                /**
-                $sql = "DELETE FROM endpointman_mac_list WHERE id=".$_REQUEST['selected'][$key];
-                $endpoint->db->query($sql);
-                $sql = "DELETE FROM endpointman_line_list WHERE mac_id=".$_REQUEST['selected'][$key];
-                $endpoint->db->query($sql);
-                 *
-                 */
-                if($endpoint->delete_device($_REQUEST['selected'][$key])) {
-                    $message = "Deleted!";
-                }
+                $endpoint->delete_device($_REQUEST['selected'][$key]);
             }
         } else {
-            $message = _("No Phones Selected")."!";
+            $endpoint->error['page:devices_manager'] = _("No Phones Selected")."!";
         }
         break;
     case "delete_device":
-        /**
-        $row = $endpoint->get_phone_info($_REQUEST['edit_id']);
-        $sql = "DELETE FROM endpointman_mac_list WHERE id=".$_REQUEST['edit_id'];
-        $endpoint->db->query($sql);
-        $sql = "DELETE FROM endpointman_line_list WHERE mac_id=".$_REQUEST['edit_id'];
-        $endpoint->db->query($sql);
-        $message = _("Deleted")."!";
-         *
-         */
-        if($endpoint->delete_device($_REQUEST['edit_id'])) {
-            $message = "Deleted!";
-        } else {
-            $message = $endpoint->get_message("delete_device");
-        }
+        $endpoint->delete_device($_REQUEST['edit_id']);
         break;
     case "delete_line" :
-        /**
-        $sql = 'SELECT mac_id FROM endpointman_line_list WHERE luid = '.$_REQUEST['edit_id'] ;
-        $mac_id =& $endpoint->db->getOne($sql,array(),DB_FETCHMODE_ASSOC);
-        $row = $endpoint->get_phone_info($mac_id);
-
-        $sql = 'SELECT COUNT(*) FROM endpointman_line_list WHERE mac_id = '.$mac_id;
-        $num_lines =& $endpoint->db->getOne($sql,array(),DB_FETCHMODE_ASSOC);
-        if($num_lines > 1) {
-            $sql = "DELETE FROM endpointman_line_list WHERE luid=".$_REQUEST['edit_id'];
-            $endpoint->db->query($sql);
-            $message = _("Deleted")."!";
-        } else {
-            $message = _("You can't remove the only line left")."!";
-        }
-         *
-         */
-        if($endpoint->delete_line($_REQUEST['edit_id'])) {
-            $message = "Deleted!";
-        } else {
-            $message = $endpoint->get_message("delete_line");
-        }
+        $endpoint->delete_line($_REQUEST['edit_id']);
         break;
     case "rebuild_selected_phones":
         if(isset($_REQUEST['selected'])) {
@@ -302,9 +154,9 @@ switch ($sub_type) {
                     $rebooted_msg = "For";
                 }
             }
-            $message = "Rebuilt Configs ".$rebooted_msg." Selected Phones";
+            $endpoint->message['page:devices_manager'] = "Rebuilt Configs ".$rebooted_msg." Selected Phones";
         } else {
-            $message = _("No Phones Selected")."!";
+            $endpoint->message['page:devices_manager'] = _("No Phones Selected")."!";
         }
         break;
     case "rebuild_configs_for_all_phones" :
@@ -324,7 +176,7 @@ switch ($sub_type) {
                     $rebooted_msg = "For";
                 }
             }
-            $message = "Rebuilt Configs ".$rebooted_msg." All Phones";
+            $endpoint->message['page:devices_manager'] = "Rebuilt Configs ".$rebooted_msg." All Phones";
         break;
     case "reboot_brand" :
         if($_REQUEST['rb_brand'] != "") {
@@ -338,6 +190,21 @@ switch ($sub_type) {
                     $phone_info = $endpoint->get_phone_info($row['id']);
 
                     $class = "endpoint_" . $phone_info['directory'] . "_" . $phone_info['cfg_dir'] . '_phone';
+					$base_class = "endpoint_" . $phone_info['directory']. '_base'; 
+					$master_class = "endpoint_base"; 
+					/**Fix for FreePBX Distro 
+					* I seriously want to figure out why ONLY the FreePBX Distro can't do autoloads.
+					**/ 
+					if(!class_exists($master_class)) { 
+						ProvisionerConfig::endpointsAutoload($master_class); 
+					} 
+					if(!class_exists($base_class)) { 
+						ProvisionerConfig::endpointsAutoload($base_class); 
+					} 
+					if(!class_exists($class)) { 
+						ProvisionerConfig::endpointsAutoload($class); 
+					} 
+					//end quick fix 
 
                     $provisioner_lib = new $class();
 
@@ -354,12 +221,12 @@ switch ($sub_type) {
                     $provisioner_lib->reboot();
                     unset($provisioner_lib);
                 }
-                $message = "Rebooted all ". $phone_info['name'] . " phones";
+                $endpoint->message['page:devices_manager'] = "Rebooted all ". $phone_info['name'] . " phones";
             } else {
-                $message = _("No Phones to Reboot");
+                $endpoint->error['page:devices_manager'] = _("No Phones to Reboot");
             }
         } else {
-            $message = _("No Brand Selected for Reboot");
+            $endpoint->error['page:devices_manager'] = _("No Brand Selected for Reboot");
         }
         break;
     case "go" :
@@ -383,58 +250,23 @@ switch ($sub_type) {
             }
         }
 
-        if($final) {
-            //$final = array_values($final);
-        } else {
+        if(!$final) {
             $final = NULL;
-            $message = _("No Devices Found");
+            $endpoint->message['page:devices_manager'] = _("No Devices Found");
         }
         $searched = 1;
         break;
     case "add_selected_phones" :
         if(isset($_REQUEST['add'])) {
             foreach($_REQUEST['add'] as $num) {
-                if($mac = $endpoint->mac_check_clean($_REQUEST['mac_'.$num])) {
-                    $sql = "SELECT * FROM endpointman_line_list WHERE ext = ".$_REQUEST['ext_list_'.$num];
-                    $res =& $endpoint->db->query($sql);
-                    $count_macs = $res->numRows();
-                    if(!$count_macs) {
-                        $sql = 'SELECT `name` FROM `users` WHERE `extension` = '.$_REQUEST['ext_list_'.$num];
-                        $name =& $endpoint->db->getOne($sql,array(),DB_FETCHMODE_ASSOC);
-
-
-                        //$sql = 'SELECT endpointman_product_list. * , endpointman_brand_list.directory FROM endpointman_model_list, endpointman_brand_list, endpointman_product_list WHERE endpointman_model_list.id =  \''.$_REQUEST['model_list_'.$num].'\' AND endpointman_model_list.brand = endpointman_brand_list.id AND endpointman_model_list.product_id = endpointman_product_list.id';
-                        //$row =& $endpoint->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
-
-
-                        $sql = "INSERT INTO `endpointman_mac_list` (`mac`, `model`, `template_id`) VALUES ('".$mac."', '".$_REQUEST['model_list_'.$num]."', '0')";
-                        $endpoint->db->query($sql);
-
-                        $sql = 'SELECT last_insert_id()';
-                        $ext_id =& $endpoint->db->getOne($sql);
-
-                        if(!isset($_REQUEST['line_list_'.$num])) {
-                            $_REQUEST['line_list_'.$num] = 1;
-                        }
-
-                        $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$_REQUEST['ext_list_'.$num]."', '".$_REQUEST['line_list_'.$num]."', '".$name."')";
-                        $endpoint->db->query($sql);
-
-                        $row_new = $endpoint->get_phone_info($ext_id);
-                        $rebooted = "";
-                        if(isset($_REQUEST['reboot_sel'])) {
-                            $endpoint->prepare_configs($row_new);
-                            $rebooted = " & Rebooted";
-                        } else {
-                            $endpoint->prepare_configs($row_new,FALSE);
-                        }
-                        $message = _("Saved").$rebooted."!";
+                $mac_id = $endpoint->add_device($_REQUEST['mac_'.$num],$_REQUEST['model_list_'.$num],$_REQUEST['ext_list_'.$num]);
+                if($mac_id) {
+                    $phone_info = $endpoint->get_phone_info($mac_id);
+                    if(isset($_REQUEST['reboot_sel'])) {
+                        $endpoint->prepare_configs($phone_info,TRUE);
                     } else {
-                        $message = _("One or more selected phones had the same extension as a phone already added, these devices were not added");
+                        $endpoint->prepare_configs($phone_info,FALSE);
                     }
-
-                } else {
-                    $message = _("Invalid MAC Address");
                 }
             }
         }
@@ -455,13 +287,13 @@ switch ($sub_type) {
                     } else {
                         $endpoint->prepare_configs($phone_info,FALSE);
                     }
-                    $message = _("Saved").$rebooted."!";
+                    $endpoint->message['page:devices_manager'] = _("Saved").$rebooted."!";
                 }
             } else {
-                $message = _("Please select a Brand and/or Model");
+                $endpoint->error['page:devices_manager'] = _("Please select a Brand and/or Model");
             }
         } else {
-            $message = _("No Phones Selected!");
+            $endpoint->error['page:devices_manager'] = _("No Phones Selected!");
         }
         break;
     case "rebuild_reboot" :
@@ -488,7 +320,7 @@ switch ($sub_type) {
                     $endpoint->db->query($sql);
                 }
             }
-            $message = "Rebuilt Configs " . $rebooted_msg;
+            $endpoint->message['page:devices_manager'] = "Rebuilt Configs " . $rebooted_msg;
         }
         break;
 }
@@ -601,8 +433,6 @@ if (isset($template_editor)) {
 
             $endpoint->tpl->assign("brand_id", $edit_row['brand_id']);
             $endpoint->tpl->assign("models_ava", $ma);
-            //$endpoint->tpl->assign("display_ext", $endpoint->display_registration_list($edit_row['line'][2]['luid']));
-            //$endpoint->tpl->assign("display_ext", $edit_row['line']);
 
             $endpoint->tpl->assign("display_templates", $endpoint->display_templates($edit_row['product_id'],$edit_row['template_id']));
             $endpoint->tpl->assign("edit_id", $edit_row['id']);
@@ -612,21 +442,8 @@ if (isset($template_editor)) {
         }
     }
 
-    foreach($endpoint->error as $key => $error) {
-        $error_message .= $error;
-        if($endpoint->global_cfg['debug']) {
-            $error_message .= " Function: [".$key."]";
-        }
-        $error_message .= "<br />";
-    }
-
-    if(isset($message)) {
-        $endpoint->display_message_box($message,$endpoint->tpl,0);
-    }
-
-    if(isset($error_message)) {
-        $endpoint->display_message_box($error_message,$endpoint->tpl,1);
-    }
+    //Prepare Message Box
+    $endpoint->prepare_message_box();
 
     //draw the template
     echo $endpoint->tpl->draw( 'devices_manager' );

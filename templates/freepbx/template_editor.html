@@ -30,12 +30,17 @@
                 if (window.focus) {newwindow.focus()}
                 return false;
         }
+        function popitup3(url) {
+            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=0_' + name + '&rand=' + new Date().getTime(),'name','height=700,width=770');
+                if (window.focus) {newwindow.focus()}
+                return false;
+        }
         </script>
 	{if condition="$custom != 0"}
         <strong><?=_('Template Name')?>:</strong> <i>Custom Template: Extension {$ext}</i><br />
         <strong><?=_('Product Line')?>:</strong> {$product}<br />
         <strong><?=_('Clone of Model')?>:</strong> {$model}<br />
-        <strong><?=_('Display')?></strong>
+        <strong><?=_('Display Options For')?></strong>
         {if condition="isset($silent_mode)"}
         <select name="area_list" onchange="window.location.href='config.php?display=epm_config&quietmode=1&handler=file&file=popup.html.php&module=endpointman&pop_type=edit_template&edit_id={$hidden_id}&model_list=126&template_list=0&rand='+ new Date().getTime() + '&maxlines='+this.options[this.selectedIndex].value">
         {else}
@@ -45,7 +50,7 @@
         <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
         {/loop}
         </select>
-        <strong><?=_('Lines')?></strong>
+        <strong><?=_('Lines')?></strong><i><font size="-2"> (Note: This is NOT the number of supported lines on the phone(s))</font></i>
 	{/if}
         <form action="config.php?type=tool&display=epm_templates" method="post">
         {if condition="isset($silent_mode)"}
@@ -72,6 +77,8 @@
         </select>
         <strong><?=_('Lines')?></strong>
 	{/if}
+        <br />
+        <strong><?=_('Edit Global Settings Overrides')?>: </strong> <a href="#" onclick="return popitup3('config.php?type=tool&display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=global_over')"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>
         <br />
 	{if condition="$alt != 0"}
             <br/>

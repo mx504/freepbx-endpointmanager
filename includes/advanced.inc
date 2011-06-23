@@ -6,13 +6,6 @@
  * @license MPL / GPLv2 / LGPL
  * @package Provisioner
  */
-
-//Set the message variable to nothing, however we can set it later and it will show up on the page
-$message = NULL;
-$error_message = NULL;
-$endpoint->tpl->assign("message", $message);
-$endpoint->tpl->assign("web_vars", "?type=$type");
-
 echo $endpoint->tpl->draw( 'global_header' );
 if(!isset($_REQUEST['subpage'])) {
     $_REQUEST['subpage'] = "";
@@ -33,7 +26,7 @@ switch($_REQUEST['subpage']) {
             foreach ($_FILES as $file) {
                 if ($file['tmp_name'] > '') {
                     if (!in_array(end(explode(".", strtolower($file['name']))), $allowedExtensions)) {
-                        $endpoint->tpl->assign("message", "We support only CVS and TXT files");
+                        $endpoint->message['iedl'] =  "We support only CVS and TXT files";
                     } else {
                         $uploaddir = LOCAL_PATH;
                         $uploadfile = $uploaddir . basename($_FILES['import_csv']['name']);
@@ -70,62 +63,36 @@ switch($_REQUEST['subpage']) {
                                                     $description = $ext['name'];
                                                     $ext = $ext['extension'];
 
-                                                    $sql_mac = "SELECT id FROM endpointman_mac_list WHERE mac = '".$mac."'";
-                                                    $res_mac =& $endpoint->db->query($sql_mac);
-                                                    if($res_mac->numRows()) {
-                                                        $ext_id = $endpoint->db->getOne($sql_mac);
-                                                    } else {
-                                                        $sql = "INSERT INTO  endpointman_mac_list (mac, model) VALUES ('".$mac."','".$model_id."')";
-                                                        $endpoint->db->query($sql);
-
-                                                        $sql = 'SELECT last_insert_id()';
-                                                        $ext_id =& $endpoint->db->getOne($sql);
-                                                    }
-
-                                                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$ext."', '".$line_id."','".$description."')";
-                                                    $endpoint->db->query($sql);
-
-                                                    $message .= "Inserted Mac Address: ".$mac." & Line: ".$line_id."<br/>";
+                                                    $endpoint->add_device($mac,$model_id,$ext,0,$line_id,$description);
                                                 } else {
-                                                    $endpoint->error['csv_upload'] = 'Invalid Extension Specified';
+                                                    $endpoint->error['csv_upload'] .= "Invalid Extension Specified on line ". $i. "<br />";
                                                 }
                                             } else {
-                                                $endpoint->error['csv_upload'] = 'Invalid Model Specified';
+                                                $endpoint->error['csv_upload'] .= "Invalid Model Specified on line ". $i. "<br />";
                                             }
                                         } else {
-                                            $endpoint->error['csv_upload'] = 'Invalid Brand Specified';
+                                            $endpoint->error['csv_upload'] .= "Invalid Brand Specified on line ". $i. "<br />";
                                         }
                                     } else {
-                                        $endpoint->error['csv_upload'] = "Invalid Mac on line ". $i. "<br />";
+                                        $endpoint->error['csv_upload'] .= "Invalid Mac on line ". $i. "<br />";
                                     }
                                 }
                                 $i++;
                             }
                             fclose($handle);
                             unlink(LOCAL_PATH.$_FILES['import_csv']['name']);
-                            $message .= "Please reboot & rebuild all imported phones<br />";
+                            $endpoint->message['file_upload'] = "Please reboot & rebuild all imported phones<br />";
                         } else {
-                            $this->error['file_upload'] = "Possible file upload attack!";
+                            $endpoint->error['file_upload'] = "Possible file upload attack!";
 
                         }
                     }
                 }
             }
+        } elseif(isset($_REQUEST['action'])) {
+            $endpoint->error['iedl'] = "No File uploaded";
         }
-        $error_message = NULL;
-        foreach($endpoint->error as $key => $error) {
-            $error_message .= $error;
-            if($endpoint->global_cfg['debug']) {
-                $error_message .= " Function: [".$key."]";
-            }
-            $error_message .= "<br />";
-        }
-        if(isset($message)) {
-            $endpoint->display_message_box($message,$endpoint->tpl,0);
-        }
-        if(isset($error_message)) {
-            $endpoint->display_message_box($error_message,$endpoint->tpl,1);
-        }
+        $endpoint->prepare_message_box();
         echo $endpoint->tpl->draw( 'advanced_settings_iedl' );
         break;
     case "manual_upload":
@@ -133,6 +100,8 @@ switch($_REQUEST['subpage']) {
         $provisioner_ver = $endpoint->db->getOne($sql);
         $provisioner_ver = date("n-j-y",$provisioner_ver) . " at " . date("g:ia",$provisioner_ver);
         $endpoint->tpl->assign("provisioner_ver", $provisioner_ver);
+        $endpoint->tpl->assign("brand_ava", $endpoint->brands_available());
+
 
         //$provisioner_ver = filemtime(PHONE_MODULES_PATH."master.xml");
         //$provisioner_ver = date("n-j-y",$provisioner_ver) . " at " . date("g:ia",$provisioner_ver);
@@ -184,26 +153,13 @@ switch($_REQUEST['subpage']) {
                 $endpoint->tpl->assign("show_installer", 1);
                 $endpoint->tpl->assign("package", $files_list[0]);
                 $endpoint->tpl->assign("type", "upload_brand");
-            } else {
-                $message = $error_message;
-            }
-
+            } 
+        } elseif(isset($_REQUEST['export_brand'])) {
+            $endpoint->tpl->assign("show_installer", 1);
+            $endpoint->tpl->assign("type", "export_brand");
+            $endpoint->tpl->assign("package", $_REQUEST['exp_brand']);
         }
-        $error_message = NULL;
-        foreach($endpoint->error as $key => $error) {
-            $error_message .= $error;
-            if($endpoint->global_cfg['debug']) {
-                $error_message .= " Function: [".$key."]";
-            }
-            $error_message .= "<br />";
-        }
-        if(isset($message)) {
-            $endpoint->display_message_box($message,$endpoint->tpl,0);
-        }
-        if(isset($error_message)) {
-            $endpoint->display_message_box($error_message,$endpoint->tpl,1);
-        }
-
+        $endpoint->prepare_message_box();
         echo $endpoint->tpl->draw( 'advanced_settings_manual_upload' );
         break;
     case "sh_manager":
@@ -252,16 +208,21 @@ switch($_REQUEST['subpage']) {
             $i++;
         }
         $endpoint->tpl->assign("brand2_list", $row_out);
+        $endpoint->prepare_message_box();
         echo $endpoint->tpl->draw( 'advanced_settings_sh_manager' );
         break;
     case "oui_manager":
         if((isset($_REQUEST['oui_sub'])) AND ($_REQUEST['rb_brand'] > 0) AND ($_REQUEST['oui'] != "")) {
             $sql = "INSERT INTO  endpointman_oui_list (oui, brand, custom) VALUES ('".$_REQUEST['oui']."',  '".$_REQUEST['rb_brand']."',  '1')";
             $endpoint->db->query($sql);
+            $endpoint->message['oui_manager'] = "Added!";
+        } elseif(isset($_REQUEST['oui_sub'])) {
+            $endpoint->error['oui_manager'] = "No OUI Set!";
         }
         if((isset($_REQUEST['delete'])) AND ($_REQUEST['id'] > 0)) {
             $sql = "DELETE FROM endpointman_oui_list WHERE id = ". $_REQUEST['id'];
             $endpoint->db->query($sql);
+            $endpoint->message['oui_manager'] = "Deleted!";
         }
         $sql = 'SELECT endpointman_oui_list.id, endpointman_oui_list.oui , endpointman_brand_list.name FROM endpointman_oui_list , endpointman_brand_list WHERE endpointman_oui_list.brand = endpointman_brand_list.id AND endpointman_oui_list.custom = 0';
         $data =& $endpoint->db->getAll($sql, array(), DB_FETCHMODE_ASSOC);
@@ -282,22 +243,7 @@ switch($_REQUEST['subpage']) {
         }
         $endpoint->tpl->assign("oui_list_custom", $row_out_custom);
         $endpoint->tpl->assign("brand_ava", $endpoint->brands_available());
-
-        $error_message = NULL;
-        foreach($endpoint->error as $key => $error) {
-            $error_message .= $error;
-            if($endpoint->global_cfg['debug']) {
-                $error_message .= " Function: [".$key."]";
-            }
-            $error_message .= "<br />";
-        }
-        if(isset($message)) {
-            $endpoint->display_message_box($message,$endpoint->tpl,0);
-        }
-        if(isset($error_message)) {
-            $endpoint->display_message_box($error_message,$endpoint->tpl,1);
-        }
-
+        $endpoint->prepare_message_box();
         echo $endpoint->tpl->draw( 'advanced_settings_oui' );
         break;
     case "poce":
@@ -315,7 +261,7 @@ switch($_REQUEST['subpage']) {
         if(isset($_REQUEST['delete'])) {
             $sql = "DELETE FROM endpointman_custom_configs WHERE id =". $_REQUEST['sql'];
             $endpoint->db->query($sql);
-            $message = "Deleted!";
+            $endpoint->message['poce'] = "Deleted!";
         }
         if(isset($_REQUEST['file'])) {
             $sql = "SELECT cfg_dir,directory,config_files FROM endpointman_product_list,endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id = '". $_REQUEST['product_select'] ."'";
@@ -328,11 +274,11 @@ switch($_REQUEST['subpage']) {
                     $wfh=fopen($file,'w');
                     fwrite($wfh,$_REQUEST['config_text']);
                     fclose($wfh);
-                    $message = "Saved to Hard Drive!";
+                    $endpoint->message['poce'] = "Saved to Hard Drive!";
                 }elseif(isset($_REQUEST['button_save_as'])) {
                     $sql = 'INSERT INTO endpointman_custom_configs (name, original_name, product_id, data) VALUES ("'.addslashes($_REQUEST['save_as_name']).'","'.addslashes($config_files[$_REQUEST['file']]).'","'.$_REQUEST['product_select'].'","'.addslashes($_REQUEST['config_text']).'")';
                     $endpoint->db->query($sql);
-                    $message = "Saved to Database!";
+                    $endpoint->message['poce'] = "Saved to Database!";
                 }
             }
 
@@ -342,7 +288,7 @@ switch($_REQUEST['subpage']) {
 
             if(isset($_REQUEST['sendid'])) {
                 $error = $endpoint->submit_config($row['directory'],$row['cfg_dir'],$config_files[$_REQUEST['file']],$contents);
-                $message = 'Sent! Thanks :-)';
+                $endpoint->message['poce'] = 'Sent! Thanks :-)';
             }
 
             $endpoint->tpl->assign("save_as_name_value", $config_files[$_REQUEST['file']]);
@@ -360,14 +306,14 @@ switch($_REQUEST['subpage']) {
                 if(isset($_REQUEST['button_save'])) {
                     $sql = "UPDATE endpointman_custom_configs SET data = '".addslashes($_REQUEST['config_text'])."' WHERE id = ".$_REQUEST['sql'];
                     $endpoint->db->query($sql);
-                    $message = "Saved to Database!";
+                    $endpoint->message['poce'] = "Saved to Database!";
                 }elseif(isset($_REQUEST['button_save_as'])) {
                     $sql = 'SELECT original_name FROM endpointman_custom_configs WHERE id = '.$_REQUEST['sql'];
                     $file_name = $endpoint->db->getOne($sql);
 
                     $sql = "INSERT INTO endpointman_custom_configs (name, original_name, product_id, data) VALUES ('".addslashes($_REQUEST['save_as_name'])."','".addslashes($file_name)."','".$_REQUEST['product_select']."','".addslashes($_REQUEST['config_text'])."')";
                     $endpoint->db->query($sql);
-                    $message = "Saved to Database!";
+                    $endpoint->message['poce'] = "Saved to Database!";
                 }
             }
             $sql = 'SELECT * FROM endpointman_custom_configs WHERE id =' . $_REQUEST['sql'];
@@ -377,7 +323,7 @@ switch($_REQUEST['subpage']) {
                 $sql = "SELECT cfg_dir,directory,config_files FROM endpointman_product_list,endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id = '". $_REQUEST['product_select'] ."'";
                 $row22 =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
                 $endpoint->submit_config($row22['directory'],$row22['cfg_dir'],$row['original_name'],$row['data']);
-                $message = 'Sent! Thanks! :-)';
+                $endpoint->message['poce'] = 'Sent! Thanks! :-)';
             }
 
             $row['data'] = $endpoint->display_htmlspecialchars($row['data']);
@@ -413,12 +359,27 @@ switch($_REQUEST['subpage']) {
             } else {
                 $sql_file_list = NULL;
             }
-
             require(PHONE_MODULES_PATH.'setup.php');
 
             $class = "endpoint_" . $row['directory'] . "_" . $row['cfg_dir'] . '_phone';
+            $base_class = "endpoint_" . $row['directory']. '_base';
+            $master_class = "endpoint_base";
+            /**Quick Fix for FreePBX Distro
+            * I seriously want to figure out why ONLY the FreePBX Distro can't do autoloads.
+            **/
+            if(!class_exists($master_class)) {
+                ProvisionerConfig::endpointsAutoload($master_class);
+            }
+            if(!class_exists($base_class)) {
+                ProvisionerConfig::endpointsAutoload($base_class);
+            }
+            if(!class_exists($class)) {
+                ProvisionerConfig::endpointsAutoload($class);
+            }
+            //end quick fix
 
             $phone_config = new $class();
+
 
             if((method_exists($phone_config,'display_options')) AND (method_exists($phone_config,'process_options'))) {
                 if(isset($_REQUEST['phone_options'])) {
@@ -453,22 +414,7 @@ switch($_REQUEST['subpage']) {
             $endpoint->tpl->assign("product_selected", $_REQUEST['product_select']);
         }
         $endpoint->tpl->assign("product_list", $product_list);
-
-        $error_message = NULL;
-        foreach($endpoint->error as $key => $error) {
-            $error_message .= $error;
-            if($endpoint->global_cfg['debug']) {
-                $error_message .= " Function: [".$key."]";
-            }
-            $error_message .= "<br />";
-        }
-        if(isset($message)) {
-            $endpoint->display_message_box($message,$endpoint->tpl,0);
-        }
-        if(isset($error_message)) {
-            $endpoint->display_message_box($error_message,$endpoint->tpl,1);
-        }
-
+        $endpoint->prepare_message_box();
         echo $endpoint->tpl->draw( 'advanced_settings_poce' );
         break;
     case "settings":
@@ -533,15 +479,10 @@ switch($_REQUEST['subpage']) {
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['enable_debug'] . "' WHERE var_name='debug'";
             $endpoint->db->query($sql);
 
-            $sql="SELECT gmtoff,gmthr FROM endpointman_time_zones WHERE tz='" . $_POST['tz'] . "'";
-            $row =& $db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
-
-            $sql="UPDATE endpointman_global_vars SET value='" . $row['gmtoff'] . "' where var_name='gmtoff'";
-            $endpoint->db->query($sql);
-            $sql="UPDATE endpointman_global_vars SET value='" . $row['gmthr'] . "' where var_name='gmthr'";
+            $sql="UPDATE endpointman_global_vars SET value='" . $_POST['enable_debug'] . "' WHERE var_name='debug'";
             $endpoint->db->query($sql);
 
-            $sql="UPDATE endpointman_global_vars SET value='" . $_POST['asterisk_loc'] . "' WHERE var_name='asterisk_location'";
+            $sql="UPDATE endpointman_global_vars SET value='" . $_POST['ntp_server'] . "' WHERE var_name='ntp'";
             $endpoint->db->query($sql);
 
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['nmap_loc'] . "' WHERE var_name='nmap_location'";
@@ -553,7 +494,7 @@ switch($_REQUEST['subpage']) {
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['disable_help'] . "' WHERE var_name='disable_help'";
             $endpoint->db->query($sql);
 
-            $message .= "Updated!";
+            $endpoint->message['advanced_settings'] = "Updated!";
         }
         //Because we are working with global variables we probably updated them, so lets refresh those variables
         $endpoint->global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
@@ -595,25 +536,13 @@ switch($_REQUEST['subpage']) {
         $endpoint->tpl->assign("arp_location", $endpoint->global_cfg['arp_location']);
         $endpoint->tpl->assign("nmap_location", $endpoint->global_cfg['nmap_location']);
         $endpoint->tpl->assign("asterisk_location", $endpoint->global_cfg['asterisk_location']);
+        $endpoint->tpl->assign("ntp_server", $endpoint->global_cfg['ntp']);
 
         $endpoint->tpl->assign("config_location", $endpoint->global_cfg['config_location']);
         $endpoint->tpl->assign("list_tz", $endpoint->listTZ($endpoint->global_cfg['tz']));
         $endpoint->tpl->assign("brand_list", $endpoint->brands_available());
 
-        $error_message = NULL;
-        foreach($endpoint->error as $key => $error) {
-            $error_message .= $error;
-            if($endpoint->global_cfg['debug']) {
-                $error_message .= " Function: [".$key."]";
-            }
-            $error_message .= "<br />";
-        }
-        if(isset($message)) {
-            $endpoint->display_message_box($message,$endpoint->tpl,0);
-        }
-        if(isset($error_message)) {
-            $endpoint->display_message_box($error_message,$endpoint->tpl,1);
-        }
+        $endpoint->prepare_message_box();
 
         echo $endpoint->tpl->draw( 'advanced_settings_settings' );
         break;

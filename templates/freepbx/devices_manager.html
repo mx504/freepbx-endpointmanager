@@ -236,6 +236,7 @@
     <form id="unmanaged" action='' method='POST'>
 		{loop name="unmanaged"}
         <input name="mac_{$value.id}" type="hidden" value="{$value.mac_strip}">
+        <input name="brand_{$value.id}" type="hidden" value="{$value.brand_id}">
         <tr>
             <td align='center' width='20'><input type="checkbox" name="add[]" value="{$value.id}"></td>
             <td align='center' width='148'>{$value.mac_strip}<br />({$value.ip})</td>

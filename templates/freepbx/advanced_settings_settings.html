@@ -10,17 +10,21 @@
 <tr>
   <td align='right'><?=_("Configuration Type")?></td>
   <td align='left'>
-        <select name="cfg_type" id="cfg_type">
+      <select name="cfg_type" id="cfg_type" disabled>
             <option value="file">File (TFTP/FTP)</option>
             <option value="web">Web (HTTP)</option>
         </select>
   </td>
 </tr>
 <tr>
-  <td align='right'><?=_("Default Final Configuration Directory")?></td>
+  <td align='right'><?=_("Global Final Config & Firmware Directory")?></td>
   <td align='left'><label>
     <input type="text" name="config_loc" value="{$config_location}">
   </label></td>
+</tr>
+<tr>
+  <td align='right'><br/></td>
+  <td align='left'></td>
 </tr>
 <tr>
 <td width='50%' align='right'><?=_("Time Zone")?> (<?=_('like')?> USA-5)</td>
@@ -29,8 +33,17 @@
 	<option value="{$value.value}" {if condition="$value.selected == 1"}selected='selected'{/if}>{$value.text}</option>
 	{/loop}
 </select>
-
 </td>
+</tr>
+<tr>
+<td width='50%' align='right'><?=_("Time Server (NTP Server)")?></td>
+  <td align='left'><label>
+    <input type="text" name="ntp_server" value="{$ntp_server}">
+  </label></td>
+</tr>
+<tr>
+  <td align='right'><br/></td>
+  <td align='left'></td>
 </tr>
 <tr>
   <td align='right'>NMAP <?=_("executable path")?>:</td>
@@ -49,6 +62,10 @@
   <td align='left'><label>
     <input type="text" name="asterisk_loc" value="{$asterisk_location}">
   </label></td>
+</tr>
+<tr>
+  <td align='right'><br/></td>
+  <td align='left'></td>
 </tr>
 <tr>
   <td align='right'><?=_("Enable FreePBX ARI Module")?> (<a href="http://projects.colsolgrp.net/documents/29" target="_blank">What?</a>)</td>
