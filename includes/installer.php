@@ -32,6 +32,17 @@ if($_REQUEST['type'] == "brand") {
     $endpoint->install_firmware($_REQUEST['id']);
 } elseif($_REQUEST['type'] == "manual_install") {
     switch($_REQUEST['install_type']) {
+        case "export_brand":
+            $sql = 'SELECT `name`, `directory` FROM `endpointman_brand_list` WHERE `id` = '.$_REQUEST['package'].'';
+            $row = $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+            echo "Exporting ". $row['name']."<br/>";
+            if(!file_exists(PHONE_MODULES_PATH."/temp/export/")) {
+                mkdir(PHONE_MODULES_PATH."/temp/export/");
+            }
+            $time = time();
+            exec("tar zcf ".PHONE_MODULES_PATH."temp/export/".$row['directory']."-".$time.".tgz --exclude .svn --exclude firmware -C ".PHONE_MODULES_PATH."/endpoint ".$row['directory']);
+            echo "Done! Click this link to download:<a href='modules/_ep_phone_modules/temp/export/".$row['directory']."-".$time.".tgz'>Here</a>";
+            break;
         case "upload_master_xml":
             if (file_exists(PHONE_MODULES_PATH."temp/master.xml")) {
                 $handle = fopen(PHONE_MODULES_PATH."temp/master.xml", "rb");
@@ -61,8 +72,6 @@ if($_REQUEST['type'] == "brand") {
                 }
 
                 $endpoint_last_mod = filemtime(PHONE_MODULES_PATH."temp/endpoint/base.php");
-
-                //rename(PHONE_MODULES_PATH."temp/setup.php", PHONE_MODULES_PATH."setup.php");
 
                 rename(PHONE_MODULES_PATH."temp/endpoint/base.php", PHONE_MODULES_PATH."endpoint/base.php");
 

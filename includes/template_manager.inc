@@ -6,9 +6,6 @@
  * @license MPL / GPLv2 / LGPL
  * @package Provisioner
  */
-$message = NULL;
-$error_message = NULL;
-
 $no_add = FALSE;
 $default_display = FALSE;
 
@@ -19,10 +16,10 @@ $mac_list = "SELECT * FROM endpointman_mac_list";
 $mac_list =& $db->getAll($mac_list, array(), DB_FETCHMODE_ASSOC);
 
 if((!$product_list) && (!$mac_list)) {
-    $message = _("Welcome to Endpoint Manager")."!<br />"._("You have no products (Modules) installed, click")." <a href=\"config.php?display=epm_config&type=$type\">"._("here")."</a> "._("to install some");
+    $endpoint->message['general'] = _("Welcome to Endpoint Manager")."!<br />"._("You have no products (Modules) installed, click")." <a href=\"config.php?display=epm_config&type=$type\">"._("here")."</a> "._("to install some");
     $no_add = TRUE;
 } elseif(!$product_list) {
-    $message = "Thanks for upgrading to version 2.0! Please head on over to <a href=\"config.php?display=epm_config&type=$type\">\"Brand Configurations/Setup\"</a> to setup and install phone configurations";
+    $endpoint->message['general'] = "Thanks for upgrading to version 2.0! Please head on over to <a href=\"config.php?display=epm_config&type=$type\">\"Brand Configurations/Setup\"</a> to setup and install phone configurations";
     $no_add = TRUE;
 }
 
@@ -30,7 +27,7 @@ if(isset($_REQUEST['edit_template'])) {
     $endpoint->edit_template_display($_REQUEST['id'],$_REQUEST['custom']);
 } elseif(isset($_REQUEST['button_save'])) {
     if(($_REQUEST['model_class'] == 0) OR (empty($_REQUEST['template_name'])) OR ($_REQUEST['model_clone'] == 0)) {
-        $message = "No Valid Model/Template/Name Selected!";
+        $endpoint->error['general'] = "No Valid Model/Template/Name Selected!";
         $default_display = TRUE;
     } else {
         $sql = "INSERT INTO endpointman_template_list (product_id, name, model_id) VALUES ('".$_REQUEST['model_class']."','".$_REQUEST['template_name']."','".$_REQUEST['model_clone']."')";
@@ -45,12 +42,12 @@ if(isset($_REQUEST['edit_template'])) {
     $sql = "UPDATE endpointman_mac_list SET custom_cfg_template = 0 WHERE custom_cfg_template = ".$_REQUEST['id'];
     $endpoint->db->query($sql);
     $default_display = TRUE;
-    $message = _('Deleted');
+    $endpoint->message['general'] = _('Deleted');
 } elseif((isset($_REQUEST['button_save_template'])) AND (isset($_REQUEST['custom']))) {
     $endpoint->save_template($_REQUEST['id'],$_REQUEST['custom'],$_REQUEST);
     $default_display = TRUE;
     if(empty($endpoint->error)) {
-        $message = _('Saved');
+        $endpoint->message['general'] = _('Saved');
     }
 } else {
     $default_display = TRUE;
@@ -107,20 +104,7 @@ if($default_display) {
     $endpoint->tpl->assign("class_list", $class_row);
     $endpoint->tpl->assign("no_add", $no_add);
     $endpoint->tpl->assign("debug", $debug);
-
-    foreach($endpoint->error as $key => $error) {
-        $error_message .= $error;
-        if($endpoint->global_cfg['debug']) {
-            $error_message .= " Function: [".$key."]";
-        }
-        $error_message .= "<br />";
-    }
-    if(isset($error_message)) {
-        $endpoint->display_message_box($error_message,$endpoint->tpl,1);
-    }
-    if(isset($message)) {
-        $endpoint->display_message_box($message,$endpoint->tpl,0);
-    }
-
+    
+    $endpoint->prepare_message_box();
     echo $endpoint->tpl->draw( 'template_manager' );
 }

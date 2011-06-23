@@ -91,94 +91,23 @@ function ep_table_exists ($table) {
     return FALSE;
 }
 
-$version = "2.9.0.6";
+$epm_module_xml = epm_install_xml2array(LOCAL_PATH."module.xml");
 
-if(ep_table_exists("endpointman_global_vars")) {
+$version = $epm_module_xml['module']['version'];
+
+$sql = 'SELECT `version` FROM `modules` WHERE `modulename` = CONVERT(_utf8 \'endpointman\' USING latin1) COLLATE latin1_swedish_ci';
+
+$db_version = $db->getOne($sql);
+
+if($db_version) {
     $global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
+    $global_cfg['version'] = $db_version;
 } else {
     $global_cfg['version'] = '?';
 }
 $new_install = FALSE;
-if(!isset($global_cfg['version'])) {
-    $ver = "1.0.3";
-} elseif($global_cfg['version'] == '2.0') {
-    $ver = "1.9.0";
-} elseif($global_cfg['version'] == '1.9.1') {
-    $ver = "1.9.1";
-} elseif($global_cfg['version'] == '1.9.2') {
-    $ver = "1.9.2";
-} elseif($global_cfg['version'] == '1.9.3') {
-    $ver = "1.9.3";
-} elseif($global_cfg['version'] == '1.9.4') {
-    $ver = "1.9.4";
-} elseif($global_cfg['version'] == '1.9.5') {
-    $ver = "1.9.5";
-} elseif($global_cfg['version'] == '1.9.6') {
-    $ver = "1.9.6";
-} elseif($global_cfg['version'] == '1.9.7') {
-    $ver = "1.9.7";
-} elseif($global_cfg['version'] == '1.9.8') {
-    $ver = "1.9.8";
-} elseif($global_cfg['version'] == '1.9.9') {
-    $ver = "1.9.9";
-} elseif($global_cfg['version'] == '2.0.0') {
-    $ver = "2.0.0";
-} elseif($global_cfg['version'] == '2.2.0') {
-    $ver = "2.2.0";
-} elseif($global_cfg['version'] == '2.2.1') {
-    $ver = "2.2.1";
-} elseif($global_cfg['version'] == '2.2.2') {
-    $ver = "2.2.2";
-} elseif($global_cfg['version'] == '2.2.3') {
-    $ver = "2.2.3";
-} elseif($global_cfg['version'] == '2.2.4') {
-    $ver = "2.2.4";
-} elseif($global_cfg['version'] == '2.2.5') {
-    $ver = "2.2.5";
-} elseif($global_cfg['version'] == '2.2.6') {
-    $ver = "2.2.6";
-} elseif($global_cfg['version'] == '2.2.7') {
-    $ver = "2.2.7";
-} elseif($global_cfg['version'] == '2.2.8') {
-    $ver = "2.2.8";
-} elseif($global_cfg['version'] == '2.2.9') {
-    $ver = "2.2.9";
-} elseif($global_cfg['version'] == '2.3.0') {
-    $ver = "2.3.0";
-} elseif($global_cfg['version'] == '2.3.1') {
-    $ver = "2.3.1";
-} elseif($global_cfg['version'] == '2.3.2') {
-    $ver = "2.3.2";
-} elseif($global_cfg['version'] == '2.3.3') {
-    $ver = "2.3.3";
-} elseif($global_cfg['version'] == '2.3.4') {
-    $ver = "2.3.4";
-} elseif($global_cfg['version'] == '2.3.5') {
-    $ver = "2.3.5";
-} elseif($global_cfg['version'] == '2.3.6') {
-    $ver = "2.3.6";
-} elseif($global_cfg['version'] == '2.3.7') {
-    $ver = "2.3.7";
-} elseif($global_cfg['version'] == '2.3.8') {
-    $ver = "2.3.8";
-} elseif($global_cfg['version'] == '2.4.0') {
-    $ver = "2.4.0";
-} elseif($global_cfg['version'] == '2.4.1') {
-    $ver = "2.4.1";
-} elseif($global_cfg['version'] == '2.4.2') {
-    $ver = "2.4.2";
-} elseif($global_cfg['version'] == '2.9.0.0') {
-    $ver = "2.9.0.0";
-} elseif($global_cfg['version'] == '2.9.0.1') {
-    $ver = "2.9.0.1";
-} elseif($global_cfg['version'] == '2.9.0.2') {
-    $ver = "2.9.0.2";
-} elseif($global_cfg['version'] == '2.9.0.3') {
-    $ver = "2.9.0.3";
-} elseif($global_cfg['version'] == '2.9.0.4') {
-    $ver = "2.9.0.4";
-} elseif($global_cfg['version'] == '2.9.0.5') {
-    $ver = "2.9.0.5";
+if($global_cfg['version'] != "?") {
+    $ver = $global_cfg['version'];
 } else {
     $ver = "1000";
     $new_install = TRUE;
@@ -207,7 +136,7 @@ if(!$new_install) {
         //Add new Vars into database
         $sql_update_vars = "INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES
 		(5, 'config_location', '/tftpboot/'),
-		(6, 'update_server', 'http://www.provisioner.net/release3/'),
+		(6, 'update_server', 'http://mirror.freepbx.org/provisioner/'),
 		(7, 'version', '2.0.0'),
 		(8, 'enable_ari', '0'),
 		(9, 'debug', '0'),
@@ -866,7 +795,7 @@ if(!$new_install) {
         out("Uninstalling All Installed Brands (You'll just simply have to update again, no loss of data)");
         $db->query("UPDATE endpointman_brand_list SET  installed =  '0'");
         out("Changing update server");
-        $sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release3/' WHERE var_name ='update_server'";
+        $sql = "UPDATE endpointman_global_vars SET value = 'http://mirror.freepbx.org/provisioner/' WHERE var_name ='update_server'";
         $db->query($sql);
         $sql = "UPDATE  endpointman_model_list SET  enabled =  '0', template_data = '".serialize(array())."'";
         $db->query($sql);
@@ -900,12 +829,45 @@ if(!$new_install) {
     }
 
     if($ver <= "2.9.0.4") {
+        out("Adding 'local' column to brand_list");
         $sql = 'ALTER TABLE  `endpointman_brand_list` ADD  `local` INT( 1 ) NOT NULL DEFAULT  \'0\' AFTER  `cfg_ver`';
         $db->query($sql);
     }
 
-    if($ver <= "2.9.0.5") {
-        $sql = "INSERT INTO  `asterisk`.`endpointman_global_vars` (`idnum` ,`var_name` ,`value`)VALUES (NULL ,  'show_all_registrations',  '0')";
+    if($ver <= "2.9.0.7") {
+        out("Adding UNIQUE key to table global_vars for var_name");
+        $sql = "ALTER TABLE `asterisk`.`endpointman_global_vars` ADD UNIQUE `unique` (`var_name`)";
+        $db->query($sql);
+
+        out("Adding show_all_registrations to global_vars table");
+        $sql = 'INSERT INTO asterisk.endpointman_global_vars (idnum, var_name, value) VALUES (NULL, "show_all_registrations", "0")';
+        $db->query($sql);
+    }
+
+    if($ver <= "2.9.0.9") {
+        out("Successfully  Migrated to the new Installer!");
+        $sql = "UPDATE endpointman_global_vars SET value = 'http://mirror.freepbx.org/provisioner/' WHERE var_name ='update_server'";
+        $db->query($sql);
+        out("Mirgrated to FreePBX Mirror");
+    }
+
+    if($ver <= "2.9.1.0") {
+        out("Fix again to the 'Allow Duplicate Extensions' Error");
+        $sql = 'ALTER TABLE `endpointman_global_vars` ADD UNIQUE `var_name` (`var_name`)';
+        $db->query($sql);
+        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'show_all_registrations\', \'0\');';
+        $db->query($sql);
+    }
+
+    if($ver <= "2.9.1.2") {
+        out("Adding new Network Time Protocol Setting");
+        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'ntp\', \'\');';
+        $db->query($sql);
+        out("Upgrading all timezone data to new improved simplified system");
+
+        $sql = 'ALTER TABLE `endpointman_mac_list` ADD `global_settings_override` LONGBLOB NULL;';
+        $db->query($sql);
+        $sql = 'ALTER TABLE `endpointman_template_list` ADD `global_settings_override` LONGBLOB NULL;';
         $db->query($sql);
     }
 
@@ -946,7 +908,8 @@ if ($new_install) {
                   `idnum` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Index',
                   `var_name` varchar(25) NOT NULL COMMENT 'Variable Name',
                   `value` text NOT NULL COMMENT 'Data',
-                  PRIMARY KEY (`idnum`)
+                  PRIMARY KEY (`idnum`),
+                  UNIQUE KEY `var_name` (`var_name`)
                 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=17";
     $db->query($sql);
 
@@ -962,7 +925,7 @@ if ($new_install) {
             (3, 'gmtoff', ''),
             (4, 'gmthr', ''),
             (5, 'config_location', '/tftpboot/'),
-            (6, 'update_server', 'http://www.provisioner.net/release3/'),
+            (6, 'update_server', 'http://mirror.freepbx.org/provisioner/'),
             (7, 'version', '".$version."'),
             (8, 'enable_ari', '0'),
             (9, 'debug', '0'),
@@ -974,7 +937,8 @@ if ($new_install) {
             (15, 'disable_htaccess', ''),
             (16, 'endpoint_vers', '0'),
             (17, 'disable_help', '0'),
-            (17, 'show_all_registrations', '0')";
+            (18, 'show_all_registrations', '0'),
+            (19, 'ntp', '')";
     $db->query($sql);
 
     out("Creating mac list Table");
@@ -986,6 +950,7 @@ if ($new_install) {
   `global_custom_cfg_data` longblob NOT NULL,
   `global_user_cfg_data` longblob NOT NULL,
   `config_files_override` text NOT NULL,
+  `global_settings_override` longblob,
   PRIMARY KEY (`id`),
   UNIQUE KEY `mac` (`mac`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
@@ -1042,6 +1007,7 @@ if ($new_install) {
   `name` varchar(255) NOT NULL,
   `global_custom_cfg_data` longblob,
   `config_files_override` text,
+  `global_settings_override` longblob,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
     $db->query($sql);
@@ -1192,7 +1158,7 @@ out("Update Version Number to ".$version);
 $sql = "UPDATE endpointman_global_vars SET value = '".$version."' WHERE var_name = 'version'";
 $db->query($sql);
 
-$sql = "UPDATE endpointman_global_vars SET value = 'http://www.provisioner.net/release3/' WHERE var_name = 'update_server'";
+$sql = "UPDATE endpointman_global_vars SET value = 'http://mirror.freepbx.org/provisioner/' WHERE var_name = 'update_server'";
 $db->query($sql);
 
 $sql = 'SELECT value FROM `admin` WHERE `variable` LIKE CONVERT(_utf8 \'version\' USING latin1) COLLATE latin1_swedish_ci';
@@ -1314,4 +1280,120 @@ if($amp_version < "2.9.0") {
             symlink($filename, $dir.'/'.basename($filename));
         }
     }
+}
+
+function epm_install_xml2array($url, $get_attributes = 1, $priority = 'tag') {
+    $contents = "";
+    if (!function_exists('xml_parser_create')) {
+        return array ();
+    }
+    $parser = xml_parser_create('');
+    if(!($fp = @ fopen($url, 'rb'))) {
+        return array ();
+    }
+    while(!feof($fp)) {
+        $contents .= fread($fp, 8192);
+    }
+    fclose($fp);
+    xml_parser_set_option($parser, XML_OPTION_TARGET_ENCODING, "UTF-8");
+    xml_parser_set_option($parser, XML_OPTION_CASE_FOLDING, 0);
+    xml_parser_set_option($parser, XML_OPTION_SKIP_WHITE, 1);
+    xml_parse_into_struct($parser, trim($contents), $xml_values);
+    xml_parser_free($parser);
+    if(!$xml_values) {
+        return; //Hmm...
+    }
+    $xml_array = array ();
+    $parents = array ();
+    $opened_tags = array ();
+    $arr = array ();
+    $current = & $xml_array;
+    $repeated_tag_index = array ();
+    foreach ($xml_values as $data) {
+        unset ($attributes, $value);
+        extract($data);
+        $result = array ();
+        $attributes_data = array ();
+        if (isset ($value)) {
+            if($priority == 'tag') {
+                $result = $value;
+            }
+            else {
+                $result['value'] = $value;
+            }
+        }
+        if(isset($attributes) and $get_attributes) {
+            foreach($attributes as $attr => $val) {
+                if($priority == 'tag') {
+                    $attributes_data[$attr] = $val;
+                }
+                else {
+                    $result['attr'][$attr] = $val; //Set all the attributes in a array called 'attr'
+                }
+            }
+        }
+        if ($type == "open") {
+            $parent[$level -1] = & $current;
+            if(!is_array($current) or (!in_array($tag, array_keys($current)))) {
+                $current[$tag] = $result;
+                if($attributes_data) {
+                    $current[$tag . '_attr'] = $attributes_data;
+                }
+                $repeated_tag_index[$tag . '_' . $level] = 1;
+                $current = & $current[$tag];
+            }
+            else {
+                if (isset ($current[$tag][0])) {
+                    $current[$tag][$repeated_tag_index[$tag . '_' . $level]] = $result;
+                    $repeated_tag_index[$tag . '_' . $level]++;
+                }
+                else {
+                    $current[$tag] = array($current[$tag],$result);
+                    $repeated_tag_index[$tag . '_' . $level] = 2;
+                    if(isset($current[$tag . '_attr'])) {
+                        $current[$tag]['0_attr'] = $current[$tag . '_attr'];
+                        unset ($current[$tag . '_attr']);
+                    }
+                }
+                $last_item_index = $repeated_tag_index[$tag . '_' . $level] - 1;
+                $current = & $current[$tag][$last_item_index];
+            }
+        }
+        else if($type == "complete") {
+            if(!isset ($current[$tag])) {
+                $current[$tag] = $result;
+                $repeated_tag_index[$tag . '_' . $level] = 1;
+                if($priority == 'tag' and $attributes_data) {
+                    $current[$tag . '_attr'] = $attributes_data;
+                }
+            }
+            else {
+                if (isset ($current[$tag][0]) and is_array($current[$tag])) {
+                    $current[$tag][$repeated_tag_index[$tag . '_' . $level]] = $result;
+                    if ($priority == 'tag' and $get_attributes and $attributes_data) {
+                        $current[$tag][$repeated_tag_index[$tag . '_' . $level] . '_attr'] = $attributes_data;
+                    }
+                    $repeated_tag_index[$tag . '_' . $level]++;
+                }
+                else {
+                    $current[$tag] = array($current[$tag],$result);
+                    $repeated_tag_index[$tag . '_' . $level] = 1;
+                    if ($priority == 'tag' and $get_attributes) {
+                        if (isset ($current[$tag . '_attr'])) {
+                            $current[$tag]['0_attr'] = $current[$tag . '_attr'];
+                            unset ($current[$tag . '_attr']);
+                        }
+                        if ($attributes_data) {
+                            $current[$tag][$repeated_tag_index[$tag . '_' . $level] . '_attr'] = $attributes_data;
+                        }
+                    }
+                    $repeated_tag_index[$tag . '_' . $level]++; //0 and 1 index is already taken
+                }
+            }
+        }
+        else if($type == 'close') {
+            $current = & $parent[$level -1];
+        }
+    }
+    return ($xml_array);
 }

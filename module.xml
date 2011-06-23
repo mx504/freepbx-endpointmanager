@@ -2,7 +2,7 @@
 	<rawname>endpointman</rawname>
 	<repo>standard</repo>
 	<name>PBX End Point Manager</name>
-	<version>2.9.0.3RC7</version>
+	<version>2.9.1.2</version>
 	<type>tool</type>
 	<category>End Point Manager</category>
 	<publisher>Andrew Nagy</publisher>
@@ -15,14 +15,23 @@
 	</menuitems>
 	 <description>PBX End Point Manager supports automated deployment of multiple manufacturers IP telephones.</description>
 	 <changelog>
-                *2.9.0.3RC6* Fixed Device & User Mode (http://www.freepbx.org/forum/freepbx/users/device-user-mode), #4792
-		*2.9.0.0* bumped for 2.9, removed errors in module.xml causing erors for online xml parsing
-                *2.3.2* Various Bug Fixes
-                *2.3.1* Install directory case corrections
-                *2.3.0* No Changes
+                *2.9.1.3* Remove Firmware upon uninstall of Endpoint Manager, Force Firmware install for certain phones (#5155), Better Timezone Support (#4895)
+                *2.9.1.2* Added ability to export phone modules.
+                *2.9.1.0* Fixed various issues
+                *2.9.0.9* #4950
+                *2.9.0.8* Fixed #5068, Took off RC status. Fixed Version Numbering.
+                *2.9.0.3RC9* Fixed #4878, #4956, #4946, #4950
+                *2.9.0.3RC6* Fixed Device + User Mode (http://www.freepbx.org/forum/freepbx/users/device-user-mode), #4792
+                *2.9.0.0* bumped for 2.9, removed errors in module.xml causing erors for online xml parsing
         </changelog>
 	<info>http://projects.colsolgrp.net/projects/show/endpointman</info>
-	<location>release/2.9/endpointman-2.9.0.3RC2.tgz</location>
-
-<md5sum>f4aed8221b1398a65438454786ce8089</md5sum>
+	<location>release/2.9/endpointman-2.9.0.8.tgz</location>
+	<depends>
+		<version>2.8.0</version>
+	</depends>
+	<requirements>
+		<module>core</module>
+		<module>fw_ari</module>
+	</requirements>
+<md5sum>e6d7296848c9bd8c13b31dbe3b21f478</md5sum>
 </module>
