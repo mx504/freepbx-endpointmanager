@@ -279,6 +279,7 @@ class endpointmanager {
     }
 
     function add_device($mac,$model,$ext,$template=NULL,$line=NULL,$displayname=NULL) {
+
         $mac = $this->mac_check_clean($mac);
         if($mac) {
             if(empty($model)) {
@@ -296,6 +297,7 @@ class endpointmanager {
                         if(!isset($template)) {
                             $template = $dup['template_id'];
                         }
+
                         $sql = "UPDATE endpointman_mac_list SET model = ".$model.", template_id =  ".$template." WHERE id = ".$dup['id'];
                         $this->db->query($sql);
                         $return = $this->add_line($dup['id'], $line, $ext);
@@ -338,7 +340,7 @@ class endpointmanager {
                             $line = 1;
                         }
 
-                        $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$ext."', '".$line."', '".$name."')";
+                        $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$ext."', '".$line."', '".addslashes($name)."')";
                         $this->db->query($sql);
 
                         $this->message['add_device'] = "Added ".$name." to line ".$line;
@@ -1209,6 +1211,7 @@ class endpointmanager {
      * @param bool  $write  Write out Directory structure.
      */
     function prepare_configs($phone_info,$reboot=TRUE,$write=TRUE) {
+
         if(file_exists(PHONE_MODULES_PATH.'setup.php')) {
             if(!class_exists('ProvisionerConfig')) {
                 require(PHONE_MODULES_PATH.'setup.php');
@@ -1231,6 +1234,7 @@ class endpointmanager {
                 ProvisionerConfig::endpointsAutoload($class);
             }
             //end quick fix
+            
             if(class_exists($class)) {
                 $provisioner_lib = new $class();
 
@@ -1254,6 +1258,8 @@ class endpointmanager {
                         $settings['tz'] = $this->global_cfg['tz'];
                     }
                 }
+
+
 
                 //Tell the system who we are and were to find the data.
                 $provisioner_lib->root_dir = PHONE_MODULES_PATH;
