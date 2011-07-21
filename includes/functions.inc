@@ -1596,35 +1596,45 @@ class endpointmanager {
             echo "<div style='float: left'>Downloading firmware...</div><div style='float: left' id=\"DivExample\">.</div>";
             $this->download_file_with_progress_bar(UPDATE_PATH.$row['directory']."/". $temp['data']['firmware_pkg'], PHONE_MODULES_PATH."temp/".$temp['data']['firmware_pkg']);
             echo "<script type='text/javascript'>document.getElementById('DivExample').innerHTML='Done!';</script><br />";
-            if(!file_exists(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware")) {
-                mkdir(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
-            }
-            echo "Installing Firmware...";
-            exec("rm -Rf ".PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
-            mkdir(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
-            exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $temp['data']['firmware_pkg'] ." -C ".PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']);
-            $i = 0;
-            foreach (glob(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware/*.*") as $filename) {
-                $file = basename($filename);
-                $list[$i] = $file;
-                if (!@copy($filename, $this->global_cfg['config_location'].$file)) {
-                    echo "<BR />--Failed To Copy $file...<BR />";
-                    $copy_error = TRUE;
+            $md5_xml = $temp['data']['firmware_md5sum'];
+            $md5_pkg = md5_file(PHONE_MODULES_PATH.'temp/'. $temp['data']['firmware_pkg']);
+            echo "Checking MD5sum of Package...";
+            if ($md5_xml == $md5_pkg) {
+                echo "Matches!<br />";
+                if(!file_exists(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware")) {
+                    mkdir(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
                 }
-                $i++;
-            }
-            $list = implode(",", $list);
-            $sql = "UPDATE endpointman_product_list SET firmware_vers = '".$temp['data']['firmware_ver']."', firmware_files = '".$list."' WHERE id = ". $row['id'];
-            $this->db->query($sql);
-            if(isset($copy_error)) {
-                echo "Copy Error Detected! Aborting Install!";
-                $this->remove_firmware($product_id);
-                echo "<BR />Please Check Directory/Permissions";
+                echo "Installing Firmware...";
+                exec("rm -Rf ".PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
+                mkdir(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
+                exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $temp['data']['firmware_pkg'] ." -C ".PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']);
+                $i = 0;
+                foreach (glob(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware/*.*") as $filename) {
+                    $file = basename($filename);
+                    $list[$i] = $file;
+                    if (!@copy($filename, $this->global_cfg['config_location'].$file)) {
+                        echo "<br />--Failed To Copy $file...";
+                        $copy_error = TRUE;
+                    } elseif($this->global_cfg['debug']) {
+                        echo"<br />--Copied ".$file." to ". $this->global_cfg['config_location'];
+                    }
+                    $i++;
+                }
+                $list = implode(",", $list);
+                $sql = "UPDATE endpointman_product_list SET firmware_vers = '".$temp['data']['firmware_ver']."', firmware_files = '".$list."' WHERE id = ". $row['id'];
+                $this->db->query($sql);
+                if(isset($copy_error)) {
+                    echo "<BR />Copy Error Detected! Aborting Install!";
+                    $this->remove_firmware($product_id);
+                    echo "<BR />Please Check Directory/Permissions";
+                } else {
+                    echo "<BR />Done!";
+                }
             } else {
-                echo "Done!";
+                echo "<BR />Firmware MD5 didn't match<br />";
             }
         } else {
-            echo "Your Firmware is already up to date";
+            echo "<BR />Your Firmware is already up to date";
 
         }
     }
@@ -1836,16 +1846,25 @@ class endpointmanager {
             echo "<script type='text/javascript'>document.getElementById('DivExample').innerHTML='Done!';</script><br />";
 
             if(file_exists(PHONE_MODULES_PATH.'temp/'. $package)) {
-                echo "Extracting Tarball........";
-                exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $package ." -C ".PHONE_MODULES_PATH."temp/");
-                echo "Done!<br />";
+                $md5_xml = $temp['data']['brands']['md5sum'];
+                $md5_pkg = md5_file(PHONE_MODULES_PATH.'temp/'. $package);
 
-                //Update File in directory
-                copy(PHONE_MODULES_PATH.'endpoint/'. $row[0]['directory'].'/brand_data.xml', PHONE_MODULES_PATH.'temp/'. $row[0]['directory'].'/brand_data.xml');
+                echo "Checking MD5sum of Package....";
+                if($md5_xml == $md5_pkg) {
+                    echo "Done!<br/>";
+                    echo "Extracting Tarball........";
+                    exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $package ." -C ".PHONE_MODULES_PATH."temp/");
+                    echo "Done!<br />";
 
-                $package = basename($package, ".tgz");
-                $package = explode("-",$package);
-                $this->update_brand($package[0]);
+                    //Update File in directory
+                    copy(PHONE_MODULES_PATH.'endpoint/'. $row[0]['directory'].'/brand_data.xml', PHONE_MODULES_PATH.'temp/'. $row[0]['directory'].'/brand_data.xml');
+
+                    $package = basename($package, ".tgz");
+                    $package = explode("-",$package);
+                    $this->update_brand($package[0]);
+                } else {
+                    echo "MD5 Did not match!";
+                }
             } else {
                 $this->error['uploader'] = "Can't Find Downloaded File!";
             }
@@ -1898,6 +1917,23 @@ class endpointmanager {
                     }
                 }
                 echo "Done!<br />";
+
+                if($remote) {
+                    $local = 0;
+                } else {
+                    $local = 1;
+                }
+                $brand_version = max($last_mod, $brand_last_mod);
+
+                $b_data = $this->db->getOne("SELECT id FROM endpointman_brand_list WHERE id='".$brand_id."'", array(), DB_FETCHMODE_ASSOC);
+                if($b_data) {
+                    echo "Updating data..........";
+                    $sql = "UPDATE endpointman_brand_list SET local = '".$local."', name = '".$brand_name."', cfg_ver = '".$brand_version."', installed = 1, hidden = 0 WHERE id = ".$brand_id;
+                    $this->db->query($sql);
+                } else {
+                    $sql = "INSERT INTO endpointman_brand_list (id, name, directory, cfg_ver, local, installed) VALUES ('".$brand_id."', '".$brand_name."', '".$directory."', '".$brand_version."', '1', '1')";
+                    $this->db->query($sql);
+                }
 
                 $last_mod = "";
                 $temp['data']['brands']['family_list']['family'] = $this->fix_single_array_keys($temp['data']['brands']['family_list']['family']);
@@ -2043,22 +2079,6 @@ class endpointmanager {
                     }
                     //TODO: Phone Models Move Here
                 }
-                if($remote) {
-                    $local = 0;
-                } else {
-                    $local = 1;
-                }
-                $brand_version = max($last_mod, $brand_last_mod);
-
-                $b_data = $this->db->getOne("SELECT id FROM endpointman_brand_list WHERE id='".$brand_id."'", array(), DB_FETCHMODE_ASSOC);
-                if($b_data) {
-                    echo "Updating data..........";
-                    $sql = "UPDATE endpointman_brand_list SET local = '".$local."', name = '".$brand_name."', cfg_ver = '".$brand_version."', installed = 1, hidden = 0 WHERE id = ".$brand_id;
-                    $this->db->query($sql);
-                } else {
-                    $sql = "INSERT INTO endpointman_brand_list (id, name, directory, cfg_ver, local, installed) VALUES ('".$brand_id."', '".$brand_name."', '".$directory."', '".$brand_version."', '1', '1')";
-                    $this->db->query($sql);
-                }
 
                 foreach($temp['data']['brands']['oui_list']['oui'] as $oui) {
                     $sql = "INSERT INTO endpointman_oui_list (`oui`, `brand`, `custom`) VALUES ('".$oui."', '".$brand_id."', '0')";
@@ -2128,9 +2148,23 @@ class endpointmanager {
 
             $sql = "SELECT * FROM  endpointman_brand_list WHERE id=".$model_row['brand'];
 
-
             $brand_row = $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
 
+			if(!file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'])) {
+				$this->error['sync_model'] = "Brand Directory '".$brand_row['directory']."' Doesn't Exist! (".PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].")";
+                return(FALSE);
+			}
+
+			if(!file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'])) {
+				$this->error['sync_model'] = "Product Directory '".$product_row['cfg_dir']."' Doesn't Exist! (".PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].")";
+                return(FALSE);
+			}
+
+			if(!file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/family_data.xml')) {
+				$this->error['sync_model'] = "File 'family_data.xml Doesn't exist in directory: ".PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'];
+                return(FALSE);
+			}
+						
             $family_line_xml = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/family_data.xml');
 
             if($product_row['cfg_ver'] <= $family_line_xml['data']['version']) {

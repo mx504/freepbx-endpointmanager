@@ -429,6 +429,9 @@ switch($_REQUEST['subpage']) {
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['tz'] . "' WHERE var_name='tz'";
             $endpoint->db->query($sql);
 
+            $sql="UPDATE endpointman_global_vars SET value='" . $_POST['cfg_type'] . "' WHERE var_name='server_type'";
+            $endpoint->db->query($sql);
+
             //No trailing slash. Help the user out and add one :-)
             if($_POST['config_loc'][strlen($_POST['config_loc'])-1] != "/") {
                 $_POST['config_loc'] = $_POST['config_loc'] ."/";
@@ -498,6 +501,12 @@ switch($_REQUEST['subpage']) {
         }
         //Because we are working with global variables we probably updated them, so lets refresh those variables
         $endpoint->global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
+
+        if($endpoint->global_cfg['show_all_registrations']) {
+            $dupext_selected= "checked";
+        } else {
+            $dupext_selected = "";
+        }
 
         if($endpoint->global_cfg['show_all_registrations']) {
             $dupext_selected= "checked";
