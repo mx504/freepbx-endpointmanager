@@ -417,6 +417,8 @@ switch($_REQUEST['subpage']) {
         $endpoint->prepare_message_box();
         echo $endpoint->tpl->draw( 'advanced_settings_poce' );
         break;
+    case "timezone_manager":
+        break;
     case "settings":
     default:
         if(isset($_REQUEST['button_update_globals'])) {
@@ -497,15 +499,19 @@ switch($_REQUEST['subpage']) {
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['disable_help'] . "' WHERE var_name='disable_help'";
             $endpoint->db->query($sql);
 
-            $endpoint->message['advanced_settings'] = "Updated!";
+            if($_POST['cfg_type'] == 'http') {
+                $endpoint->message['advanced_settings'] = "Updated! - Point your phones to: http://".$_SERVER['SERVER_ADDR']."/provisioning/index.php/";
+            } else {
+                $endpoint->message['advanced_settings'] = "Updated!";
+            }
         }
         //Because we are working with global variables we probably updated them, so lets refresh those variables
         $endpoint->global_cfg =& $db->getAssoc("SELECT var_name, value FROM endpointman_global_vars");
 
-        if($endpoint->global_cfg['show_all_registrations']) {
-            $dupext_selected= "checked";
+        if($endpoint->global_cfg['server_type'] == 'http') {
+            $endpoint->tpl->assign("type_http", 'yes');
         } else {
-            $dupext_selected = "";
+            $endpoint->tpl->assign("type_file", 'yes');
         }
 
         if($endpoint->global_cfg['show_all_registrations']) {

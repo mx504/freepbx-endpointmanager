@@ -859,7 +859,7 @@ if(!$new_install) {
         $db->query($sql);
     }
 
-    if($ver <= "2.9.1.2") {
+    if($ver <= "2.9.2.0") {
         out("Adding new Network Time Protocol Setting");
         $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'ntp\', \'\');';
         $db->query($sql);
@@ -869,6 +869,95 @@ if(!$new_install) {
         $db->query($sql);
         $sql = 'ALTER TABLE `endpointman_template_list` ADD `global_settings_override` LONGBLOB NULL;';
         $db->query($sql);
+
+        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'server_type\', \'file\');';
+        $db->query($sql);
+
+        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_time_zones_desc` (
+  `id` int(11) NOT NULL auto_increment,
+  `tid` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=32";
+        $db->query($sql);
+
+        $sql = "INSERT INTO `endpointman_time_zones_desc` (`id`, `tid`, `name`, `description`) VALUES
+(1, 1, 'UTC', 'Universal Coordinated Time (and Greenwich Mean Time)'),
+(2, 2, 'ECT', 'European Central Time'),
+(3, 3, 'EET', 'Eastern European Time'),
+(4, 3, 'ART', '(Arabic) Egypt Standard Time'),
+(5, 4, 'EAT', 'Eastern African Time'),
+(6, 5, 'MET', 'Middle East Time'),
+(7, 6, 'NET', 'Near East Time'),
+(8, 7, 'PLT', 'Pakistan Lahore Time'),
+(9, 8, 'IST', 'India Standard Time'),
+(10, 9, 'BST', 'Bangladesh Standard Time'),
+(11, 10, 'VST', 'Vietnam Standard Time'),
+(12, 11, 'CTT', 'China Taiwan Time'),
+(13, 12, 'JST', 'Japan Standard Time'),
+(14, 13, 'ACT', 'Australia Central Time'),
+(15, 14, 'AET', 'Australia Eastern Time'),
+(16, 15, 'SST', 'Solomon Standard Time'),
+(17, 16, 'NST', 'New Zealand Standard Time'),
+(18, 17, 'MIT', 'Midway Islands Time'),
+(19, 18, 'HST', 'Hawaii Standard Time'),
+(20, 19, 'AST', 'Alaska Standard Time'),
+(21, 20, 'PST', 'Pacific Standard Time'),
+(22, 21, 'PNT', 'Phoenix Standard Time'),
+(23, 21, 'MST', 'Mountain Standard Time'),
+(24, 22, 'CST', 'Central Standard Time'),
+(25, 23, 'EST', 'Eastern Standard Time'),
+(26, 23, 'IET', 'Indiana Eastern Standard Time'),
+(27, 24, 'PRT', 'Puerto Rico and US Virgin Islands Time'),
+(28, 25, 'CNT', 'Canada Newfoundland Time'),
+(29, 26, 'AGT', 'Argentina Standard Time'),
+(30, 26, 'BET', 'Brazil Eastern Time'),
+(31, 27, 'CAT', 'Central African Time')";
+        $db->query($sql);
+
+        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_time_zones_new` (
+  `id` int(11) NOT NULL auto_increment,
+  `gmt` varchar(255) NOT NULL,
+  `offset` int(11) NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=28";
+        $db->query($sql);
+
+        $sql = "INSERT INTO `endpointman_time_zones_new` (`id`, `gmt`, `offset`) VALUES
+(1, 'GMT', 0),
+(2, 'GMT+1:00', 3600),
+(3, 'GMT+2:00', 7200),
+(4, 'GMT+3:00', 10800),
+(5, 'GMT+3:30', 12600),
+(6, 'GMT+4:00', 14400),
+(7, 'GMT+5:00', 18000),
+(8, 'GMT+5:30', 19800),
+(9, 'GMT+6:00', 21600),
+(10, 'GMT+7:00', 25200),
+(11, 'GMT+8:00', 28800),
+(12, 'GMT+9:00', 32400),
+(13, 'GMT+9:30', 34200),
+(14, 'GMT+10:00', 36000),
+(15, 'GMT+11:00', 39600),
+(16, 'GMT+12:00', 43200),
+(17, 'GMT-11:00', -39600),
+(18, 'GMT-10:00', -36000),
+(19, 'GMT-9:00', -32400),
+(20, 'GMT-8:00', -28800),
+(21, 'GMT-7:00', -25200),
+(22, 'GMT-6:00', -21600),
+(23, 'GMT-5:00', -18000),
+(24, 'GMT-4:00', -14400),
+(25, 'GMT-3:30', -12600),
+(26, 'GMT-3:00', -10800),
+(27, 'GMT-1:00', -3600)";
+        $db->query($sql);
+
+        out('Creating symlink to web provisioner');
+        if(!symlink(LOCAL_PATH."provisioning",$amp_conf['AMPWEBROOT']."/provisioning")) {
+            out("<strong>Your permissions are wrong on ".$amp_conf['AMPWEBROOT'].", web provisioning link not created!</strong>");
+        }
     }
 
 }
@@ -938,7 +1027,8 @@ if ($new_install) {
             (16, 'endpoint_vers', '0'),
             (17, 'disable_help', '0'),
             (18, 'show_all_registrations', '0'),
-            (19, 'ntp', '')";
+            (19, 'ntp', ''),
+            (20, 'server_type, ''file";
     $db->query($sql);
 
     out("Creating mac list Table");
@@ -1012,134 +1102,87 @@ if ($new_install) {
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
     $db->query($sql);
 
-    out("Creating Time Zone List Table");
-    $sql = "CREATE TABLE IF NOT EXISTS `endpointman_time_zones` (
-	  `idnum` int(11) NOT NULL auto_increment COMMENT 'Record Number',
-	  `tz` varchar(10) NOT NULL COMMENT 'Time Zone',
-	  `gmtoff` varchar(10) NOT NULL COMMENT 'Offset in Seconds',
-	  `gmthr` varchar(10) NOT NULL,
-	  PRIMARY KEY  (`idnum`)
-	) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=116";
-    $db->query($sql);
+    out("Creating Time Zone List Tables");
+        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_time_zones_desc` (
+  `id` int(11) NOT NULL auto_increment,
+  `tid` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=32";
+        $db->query($sql);
 
-    out("Inserting Data into table Table");
-    $sql = "INSERT INTO `endpointman_time_zones` (`idnum`, `tz`, `gmtoff`, `gmthr`) VALUES
-	(1, 'USA-10', '-36000', 'GMT-10:00'),
-	(2, 'USA-9', '-32400', 'GMT-09:00'),
-	(3, 'CAN-8', '-28800', 'GMT-08:00'),
-	(4, 'MEX-8', '-28800', 'GMT-08:00'),
-	(5, 'USA-8', '-28800', 'GMT-08:00'),
-	(6, 'CAN-7', '-25200', 'GMT-07:00'),
-	(7, 'MEX-7', '-25200', 'GMT-07:00'),
-	(8, 'USA2-7', '-25200', 'GMT-07:00'),
-	(9, 'USA-7', '-25200', 'GMT-07:00'),
-	(10, 'CAN-6', '-21600', 'GMT-06:00'),
-	(11, 'CHL-6', '-21600', 'GMT-06:00'),
-	(12, 'MEX-6', '-21600', 'GMT-06:00'),
-	(13, 'USA-6', '-21600', 'GMT-06:00'),
-	(14, 'BHS-5', '-18000', 'GMT-05:00'),
-	(15, 'CAN-5', '-18000', 'GMT-05:00'),
-	(16, 'CUB-5', '-18000', 'GMT-05:00'),
-	(17, 'USA-5', '-18000', 'GMT-05:00'),
-	(18, 'VEN-4.5', '-16200', 'GMT-04:00'),
-	(19, 'CAN-4', '-14400', 'GMT-04:00'),
-	(20, 'CHL-4', '-14400', 'GMT-04:00'),
-	(21, 'PRY-4', '-14400', 'GMT-04:00'),
-	(22, 'BMU-4', '-14400', 'GMT-04:00'),
-	(23, 'FLK-4', '-14400', 'GMT-04:00'),
-	(24, 'TTB-4', '-14400', 'GMT-04:00'),
-	(25, 'CAN-3.5', '-12600', 'GMT-03:30'),
-	(26, 'GRL-3', '-10800', 'GMT-03:00'),
-	(27, 'ARG-3', '-10800', 'GMT-03:00'),
-	(28, 'BRA2-3', '-10800', 'GMT-03:00'),
-	(29, 'BRA1-3', '-10800', 'GMT-03:00'),
-	(30, 'BRA-2', '-7200', 'GMT-02:00'),
-	(31, 'PRT-1', '-3600', 'GMT-01:00'),
-	(32, 'FRO-0', '0', 'GMT'),
-	(33, 'IRL-0', '0', 'GMT'),
-	(34, 'PRT-0', '0', 'GMT'),
-	(35, 'ESP-0', '0', 'GMT'),
-	(36, 'GBR-0', '0', 'GMT'),
-	(37, 'ALB+1', '3600', 'GMT+01:00'),
-	(38, 'AUT+1', '3600', 'GMT+01:00'),
-	(39, 'BEL+1', '3600', 'GMT+01:00'),
-	(40, 'CAI+1', '3600', 'GMT+01:00'),
-	(41, 'CHA+1', '3600', 'GMT+01:00'),
-	(42, 'HRV+1', '3600', 'GMT+01:00'),
-	(43, 'CZE+1', '3600', 'GMT+01:00'),
-	(44, 'DNK+1', '3600', 'GMT+01:00'),
-	(45, 'FRA+1', '3600', 'GMT+01:00'),
-	(46, 'GER+1', '3600', 'GMT+01:00'),
-	(47, 'HUN+1', '3600', 'GMT+01:00'),
-	(48, 'ITA+1', '3600', 'GMT+01:00'),
-	(49, 'LUX+1', '3600', 'GMT+01:00'),
-	(50, 'MAK+1', '3600', 'GMT+01:00'),
-	(51, 'NLD+1', '3600', 'GMT+01:00'),
-	(52, 'NAM+1', '3600', 'GMT+01:00'),
-	(53, 'NOR+1', '3600', 'GMT+01:00'),
-	(54, 'POL+1', '3600', 'GMT+01:00'),
-	(55, 'SVK+1', '3600', 'GMT+01:00'),
-	(56, 'ESP+1', '3600', 'GMT+01:00'),
-	(57, 'SWE+1', '3600', 'GMT+01:00'),
-	(58, 'CHE+1', '3600', 'GMT+01:00'),
-	(59, 'GIB+1', '3600', 'GMT+01:00'),
-	(60, 'YUG+1', '3600', 'GMT+01:00'),
-	(61, 'WAT+1', '3600', 'GMT+01:00'),
-	(62, 'BLR+2', '7200', 'GMT+02:00'),
-	(63, 'BGR+2', '7200', 'GMT+02:00'),
-	(64, 'CYP+2', '7200', 'GMT+02:00'),
-	(65, 'CAT+2', '7200', 'GMT+02:00'),
-	(66, 'EGY+2', '7200', 'GMT+02:00'),
-	(67, 'EST+2', '7200', 'GMT+02:00'),
-	(68, 'FIN+2', '7200', 'GMT+02:00'),
-	(69, 'GAZ+2', '7200', 'GMT+02:00'),
-	(70, 'GRC+2', '7200', 'GMT+02:00'),
-	(71, 'ISR+2', '7200', 'GMT+02:00'),
-	(72, 'JOR+2', '7200', 'GMT+02:00'),
-	(73, 'LVA+2', '7200', 'GMT+02:00'),
-	(74, 'LBN+2', '7200', 'GMT+02:00'),
-	(75, 'MDA+2', '7200', 'GMT+02:00'),
-	(76, 'RUS+2', '7200', 'GMT+02:00'),
-	(77, 'ROU+2', '7200', 'GMT+02:00'),
-	(78, 'SYR+2', '7200', 'GMT+02:00'),
-	(79, 'TUR+2', '7200', 'GMT+02:00'),
-	(80, 'UKR+2', '7200', 'GMT+02:00'),
-	(81, 'EAT+3', '10800', 'GMT+03:00'),
-	(82, 'IRQ+3', '10800', 'GMT+03:00'),
-	(83, 'RUS+3', '10800', 'GMT+03:00'),
-	(84, 'IRN+3.5', '12600', 'GMT+03:30'),
-	(85, 'ARM+4', '14400', 'GMT+04:00'),
-	(86, 'AZE+4', '14400', 'GMT+04:00'),
-	(87, 'GEO+4', '14400', 'GMT+04:00'),
-	(88, 'KAZ+4', '14400', 'GMT+04:00'),
-	(89, 'RUS+4', '14400', 'GMT+04:00'),
-	(90, 'KAZ+5', '18000', 'GMT+05:00'),
-	(91, 'KGZ+5', '18000', 'GMT+05:00'),
-	(92, 'PAK+5', '18000', 'GMT+05:00'),
-	(93, 'RUS+5', '18000', 'GMT+05:00'),
-	(94, 'IND+5.5', '19800', 'GMT+05:30'),
-	(95, 'KAZ+6', '21600', 'GMT+06:00'),
-	(96, 'RUS+6', '21600', 'GMT+06:00'),
-	(97, 'RUS+7', '25200', 'GMT+07:00'),
-	(98, 'THA+7', '25200', 'GMT+07:00'),
-	(99, 'CHN+7', '25200', 'GMT+07:00'),
-	(100, 'SGP+8', '28800', 'GMT+08:00'),
-	(101, 'KOR+8', '28800', 'GMT+08:00'),
-	(102, 'AUS+8', '28800', 'GMT+08:00'),
-	(103, 'JPN+9', '32400', 'GMT+09:00'),
-	(104, 'AUS+9.5', '34200', 'GMT+09:30'),
-	(105, 'AUS2+9.5', '34200', 'GMT+09:30'),
-	(106, 'AUS+10', '36000', 'GMT+10:00'),
-	(107, 'AUS2+10', '36000', 'GMT+10:00'),
-	(108, 'AUS3+10', '36000', 'GMT+10:00'),
-	(109, 'RUS+10', '36000', 'GMT+10:00'),
-	(110, 'AUS+10.5', '37800', 'GMT+10:30'),
-	(111, 'NCL+11', '39600', 'GMT+11:00'),
-	(112, 'NZL+12', '43200', 'GMT+12:00'),
-	(113, 'RUS+12', '43200', 'GMT+12:00'),
-	(114, 'NZL+12.75', '45900', 'GMT+12:00'),
-	(115, 'TON+13', '46800', 'GMT+13:00')";
-    $db->query($sql);
+        $sql = "INSERT INTO `endpointman_time_zones_desc` (`id`, `tid`, `name`, `description`) VALUES
+(1, 1, 'UTC', 'Universal Coordinated Time (and Greenwich Mean Time)'),
+(2, 2, 'ECT', 'European Central Time'),
+(3, 3, 'EET', 'Eastern European Time'),
+(4, 3, 'ART', '(Arabic) Egypt Standard Time'),
+(5, 4, 'EAT', 'Eastern African Time'),
+(6, 5, 'MET', 'Middle East Time'),
+(7, 6, 'NET', 'Near East Time'),
+(8, 7, 'PLT', 'Pakistan Lahore Time'),
+(9, 8, 'IST', 'India Standard Time'),
+(10, 9, 'BST', 'Bangladesh Standard Time'),
+(11, 10, 'VST', 'Vietnam Standard Time'),
+(12, 11, 'CTT', 'China Taiwan Time'),
+(13, 12, 'JST', 'Japan Standard Time'),
+(14, 13, 'ACT', 'Australia Central Time'),
+(15, 14, 'AET', 'Australia Eastern Time'),
+(16, 15, 'SST', 'Solomon Standard Time'),
+(17, 16, 'NST', 'New Zealand Standard Time'),
+(18, 17, 'MIT', 'Midway Islands Time'),
+(19, 18, 'HST', 'Hawaii Standard Time'),
+(20, 19, 'AST', 'Alaska Standard Time'),
+(21, 20, 'PST', 'Pacific Standard Time'),
+(22, 21, 'PNT', 'Phoenix Standard Time'),
+(23, 21, 'MST', 'Mountain Standard Time'),
+(24, 22, 'CST', 'Central Standard Time'),
+(25, 23, 'EST', 'Eastern Standard Time'),
+(26, 23, 'IET', 'Indiana Eastern Standard Time'),
+(27, 24, 'PRT', 'Puerto Rico and US Virgin Islands Time'),
+(28, 25, 'CNT', 'Canada Newfoundland Time'),
+(29, 26, 'AGT', 'Argentina Standard Time'),
+(30, 26, 'BET', 'Brazil Eastern Time'),
+(31, 27, 'CAT', 'Central African Time')";
+        $db->query($sql);
+
+        $sql = "CREATE TABLE IF NOT EXISTS `endpointman_time_zones_new` (
+  `id` int(11) NOT NULL auto_increment,
+  `gmt` varchar(255) NOT NULL,
+  `offset` int(11) NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=28";
+        $db->query($sql);
+
+        $sql = "INSERT INTO `endpointman_time_zones_new` (`id`, `gmt`, `offset`) VALUES
+(1, 'GMT', 0),
+(2, 'GMT+1:00', 3600),
+(3, 'GMT+2:00', 7200),
+(4, 'GMT+3:00', 10800),
+(5, 'GMT+3:30', 12600),
+(6, 'GMT+4:00', 14400),
+(7, 'GMT+5:00', 18000),
+(8, 'GMT+5:30', 19800),
+(9, 'GMT+6:00', 21600),
+(10, 'GMT+7:00', 25200),
+(11, 'GMT+8:00', 28800),
+(12, 'GMT+9:00', 32400),
+(13, 'GMT+9:30', 34200),
+(14, 'GMT+10:00', 36000),
+(15, 'GMT+11:00', 39600),
+(16, 'GMT+12:00', 43200),
+(17, 'GMT-11:00', -39600),
+(18, 'GMT-10:00', -36000),
+(19, 'GMT-9:00', -32400),
+(20, 'GMT-8:00', -28800),
+(21, 'GMT-7:00', -25200),
+(22, 'GMT-6:00', -21600),
+(23, 'GMT-5:00', -18000),
+(24, 'GMT-4:00', -14400),
+(25, 'GMT-3:30', -12600),
+(26, 'GMT-3:00', -10800),
+(27, 'GMT-1:00', -3600)";
+        $db->query($sql);
 
     out("Create Custom Configs Table");
     $sql = "CREATE TABLE IF NOT EXISTS `endpointman_custom_configs` (
@@ -1152,6 +1195,11 @@ if ($new_install) {
         ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
     $db->query($sql);
 
+}
+
+out('Creating symlink to web provisioner');
+if(!symlink(LOCAL_PATH."provisioning",$amp_conf['AMPWEBROOT']."/provisioning")) {
+    out("<strong>Your permissions are wrong on ".$amp_conf['AMPWEBROOT'].", web provisioning link not created!</strong>");
 }
 
 out("Update Version Number to ".$version);
