@@ -861,7 +861,7 @@ if(!$new_install) {
 
     if($ver <= "2.9.2.0") {
         out("Adding new Network Time Protocol Setting");
-        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'ntp\', \'\');';
+        $sql = "INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, 'ntp', '".$_SERVER["SERVER_ADDR"]."')";
         $db->query($sql);
         out("Upgrading all timezone data to new improved simplified system");
 
@@ -958,6 +958,16 @@ if(!$new_install) {
         if(!symlink(LOCAL_PATH."provisioning",$amp_conf['AMPWEBROOT']."/provisioning")) {
             out("<strong>Your permissions are wrong on ".$amp_conf['AMPWEBROOT'].", web provisioning link not created!</strong>");
         }
+
+        $sql = 'SELECT `value` FROM `endpointman_global_vars` WHERE `var_name` = CONVERT(_utf8 \'gmthr\' USING latin1) COLLATE latin1_swedish_ci';
+        $old_tz_gmt = $db->getOne($sql);
+
+        $sql = "SELECT id FROM `endpointman_time_zones_new` WHERE `gmt` LIKE '".$old_tz_gmt."'";
+        $new_tz_id = $db->getOne($sql);
+
+        $sql = "UPDATE endpointman_global_vars SET value = '".$new_tz_id.".0' WHERE var_name = 'tz'";
+        $db->query($sql);
+
     }
 
 }
