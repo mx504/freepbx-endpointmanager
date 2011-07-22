@@ -140,7 +140,7 @@ function endpointman_configpageinit($pagename) {
                             }
                         } elseif(!isset($delete)) {
                             //Add Extension/Phone to database
-                            $mac_id = $endpoint->add_device($mac, $model, $extdisplay, $temp);
+                            $mac_id = $endpoint->add_device($mac, $model, $extdisplay, $temp, NULL, $name);
 
                             if($mac_id) {
                                 $row = $endpoint->get_phone_info($mac_id);
