@@ -7,6 +7,11 @@ require 'functions.inc';
 
 $endpoint = new endpointmanager();
 
+if($_REQUEST['pop_type'] == 'edit_specifics') {
+    echo "Edit Specifics";
+    echo $endpoint->tpl->draw( 'specifics_pop' );
+}
+
 if($_REQUEST['pop_type'] == 'edit_template') {
     if(empty($_REQUEST['edit_id'])) {
         $message = _("No Device Selected to Edit!")."!";

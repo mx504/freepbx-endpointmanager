@@ -8,8 +8,7 @@
         <link href="common/mainstyle.css" rel="stylesheet" type="text/css" />
         <script language="javascript">
             function Close() {
-                opener.Reload();
-                setTimeout("self.close()",100);
+                self.close();
             }
             function submitform() {
                 $('#myform').append('<input type="hidden" name="button_save" value="Save"/>');
