@@ -1,9 +1,35 @@
+<html>
+    <head>
+        <title>PBX Endpoint Configuration Manager</title>
+        <script type="text/javascript" src="common/libfreepbx.javascripts.js" language="javascript"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.tools.min.js"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.easing.1.3.js"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.coda-slider-2.0.js"></script>
+        <link href="common/mainstyle.css" rel="stylesheet" type="text/css" />
+        <script language="javascript">
+            function Close() {
+                opener.Reload();
+                setTimeout("self.close()",100);
+            }
+            function submitform() {
+                $('#myform').append('<input type="hidden" name="button_save" value="Save"/>');
+                document.myform.submit();
+                setTimeout("opener.Reload()",100);
+            }
+        </script>
+    </head>
+    <body face="Arial">
+        <div id="spinner">
+        </div>
+        <br>
+        <h1><face="Arial"><center><?=_('End Point Configuration Manager')?></center></h1>
+        <hr>
 {if condition="isset($show_error_box)"}
     {include="message_box"}
 {/if}
-<center><h4><?=_("File Configuration Editor")?></h4>
+<center><h4><?=_("File Configuration Editor For")?>: {$file}</h4>
     <font color="red">Warning! You can really mess up your phone by messing with these settings. Potentially causing it to not boot!</font><br/>
-    {if condition="isset($location)"}
+    {if condition="isset($location) && isset($allow_hdfiles)"}
     <strong>You are editing a global file. This will effect any & all phones that reference this hard file
         <br/>It is <font color="red">NOT</font> individual to this template!!!</strong><br/>
     <i>You can setup individual templates in the "Product Options/Configuration Editor" under "End Point Advanced Settings"</i>
@@ -11,14 +37,16 @@
 <table width="90%" border="0" cellspacing="4" cellpadding="4">
     <tr><td><div style="font-size: 14px" align="left">{if condition="isset($location)"}File Location: <i>{$location}</i>{/if}</div></td></tr>
   <tr>
-    <td><form method="post" action="">
+    <td><form name="myform" id="myform" method="post" action=""><input type="hidden" id="value" name="value" value="{$value}" />
       <label>
         <textarea name="config_text" id="textarea" cols="100" rows="30" wrap="off">{if condition="isset($config_data)"}{$config_data}{/if}</textarea>
       </label>
       <br><div style="font-size: 15px">
       <label>
-        <input type="submit" name="button_save" value="<?=_('Save')?>"><input type=button value="Close Window" onClick="javascript:window.close();">
+        <input type="submit" name="button_save" value="<?=_('Save')?>" onClick="javascript:submitform();"><input type=button value="Close Window" onClick="javascript:Close();">
       </label>
   </tr>
 </table>
 </center>
+    </body>
+</html>

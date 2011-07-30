@@ -474,6 +474,13 @@ switch($_REQUEST['subpage']) {
             } else {
                 $_POST['allow_dupext'] = 0;
             }
+            if((isset($_POST['allow_hdfiles'])) AND ($_POST['allow_hdfiles'] == "on")) {
+                $_POST['allow_hdfiles'] = 1;
+            } else {
+                $_POST['allow_hdfiles'] = 0;
+            }
+            $sql="UPDATE endpointman_global_vars SET value='" . $_POST['allow_hdfiles'] . "' WHERE var_name='allow_hdfiles'";
+            $endpoint->db->query($sql);
 
             $sql="UPDATE endpointman_global_vars SET value='" . $_POST['allow_dupext'] . "' WHERE var_name='show_all_registrations'";
             $endpoint->db->query($sql);
@@ -532,6 +539,12 @@ switch($_REQUEST['subpage']) {
             $help_selected = "";
         }
 
+        if($endpoint->global_cfg['allow_hdfiles']) {
+            $allow_hdfiles = "checked";
+        } else {
+            $allow_hdfiles = "";
+        }
+
         if($endpoint->global_cfg['debug']) {
             $debug_selected = "checked";
             global $debug;
@@ -545,6 +558,8 @@ switch($_REQUEST['subpage']) {
 
         $endpoint->tpl->assign("ari_selected", $ari_selected);
         $endpoint->tpl->assign("debug_selected", $debug_selected);
+
+        $endpoint->tpl->assign("hdfiles_selected", $allow_hdfiles);
 
         $endpoint->tpl->assign("ip", $_SERVER["SERVER_ADDR"]);
         $endpoint->tpl->assign("srvip", $endpoint->global_cfg['srvip']);

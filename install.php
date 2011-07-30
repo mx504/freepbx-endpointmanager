@@ -968,6 +968,8 @@ if(!$new_install) {
         $sql = "UPDATE endpointman_global_vars SET value = '".$new_tz_id.".0' WHERE var_name = 'tz'";
         $db->query($sql);
 
+        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`var_name`, `value`) VALUES (\'allow_hdfiles\', \'0\');';
+        $db->query($sql);
     }
 
 }
@@ -1205,11 +1207,10 @@ if ($new_install) {
         ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
     $db->query($sql);
 
-}
-
-out('Creating symlink to web provisioner');
-if(!symlink(LOCAL_PATH."provisioning",$amp_conf['AMPWEBROOT']."/provisioning")) {
-    out("<strong>Your permissions are wrong on ".$amp_conf['AMPWEBROOT'].", web provisioning link not created!</strong>");
+    out('Creating symlink to web provisioner');
+    if(!symlink(LOCAL_PATH."provisioning",$amp_conf['AMPWEBROOT']."/provisioning")) {
+        out("<strong>Your permissions are wrong on ".$amp_conf['AMPWEBROOT'].", web provisioning link not created!</strong>");
+    }
 }
 
 out("Update Version Number to ".$version);
