@@ -10,9 +10,9 @@
 <tr>
   <td align='right'><?=_("Configuration Type")?></td>
   <td align='left'>
-      <select name="cfg_type" id="cfg_type" disabled>
-            <option value="file">File (TFTP/FTP)</option>
-            <option value="web">Web (HTTP)</option>
+      <select name="cfg_type" id="cfg_type">
+            <option value="file" {if condition="isset($type_file)"}selected='selected'{/if}>File (TFTP/FTP)</option>
+            <option value="http" {if condition="isset($type_http)"}selected='selected'{/if}>Web (HTTP)</option>
         </select>
   </td>
 </tr>
@@ -89,6 +89,12 @@
   <td align='right'><?=_("Allow Duplicate Extensions")?></td>
   <td align='left'><label>
     <input type=checkbox name="allow_dupext" {$dupext_selected}>
+  </label></td>
+</tr>
+<tr>
+  <td align='right'><?=_("Allow Saving to Hard-Drive Configuration Files")?></td>
+  <td align='left'><label>
+    <input type=checkbox name="allow_hdfiles" {$hdfiles_selected}>
   </label></td>
 </tr>
 <tr>

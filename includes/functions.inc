@@ -9,13 +9,13 @@
 class endpointmanager {
     //Load this class upon construction of the class
 
-    public $db;
-    public $amp_conf;
-    public $global_cfg;
-    public $error;
-    public $message;
-    public $endpoint_data;
-    public $tpl;
+    public $db; //Database from FreePBX
+    public $amp_conf; //amp information from FreePBX
+    public $global_cfg; //global configuration options for Endpoint Manager
+    public $error; //error construct
+    public $message; //message construct
+    public $endpoint_data; //??
+    public $tpl; //Template System Object (RAIN TPL)
 
     /**
      *
@@ -64,12 +64,12 @@ class endpointmanager {
             die("Phone Modules Directory doesn't exist!");
         }
 
-		//Determine if local path is correct!
-		if(file_exists(MODULES_PATH."endpointman/")) {
-			define("LOCAL_PATH", MODULES_PATH."endpointman/");
-		} else {
-			die("Can't Load Local Endpoint Manager Directory!");
-		}        	
+        //Determine if local path is correct!
+        if(file_exists(MODULES_PATH."endpointman/")) {
+                define("LOCAL_PATH", MODULES_PATH."endpointman/");
+        } else {
+                die("Can't Load Local Endpoint Manager Directory!");
+        }
 
         //include the local template class
         if(file_exists(LOCAL_PATH."includes/rain.tpl.class.php")) {
@@ -279,6 +279,7 @@ class endpointmanager {
     }
 
     function add_device($mac,$model,$ext,$template=NULL,$line=NULL,$displayname=NULL) {
+
         $mac = $this->mac_check_clean($mac);
         if($mac) {
             if(empty($model)) {
@@ -296,6 +297,7 @@ class endpointmanager {
                         if(!isset($template)) {
                             $template = $dup['template_id'];
                         }
+
                         $sql = "UPDATE endpointman_mac_list SET model = ".$model.", template_id =  ".$template." WHERE id = ".$dup['id'];
                         $this->db->query($sql);
                         $return = $this->add_line($dup['id'], $line, $ext);
@@ -338,7 +340,7 @@ class endpointmanager {
                             $line = 1;
                         }
 
-                        $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$ext."', '".$line."', '".$name."')";
+                        $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$ext_id."', '".$ext."', '".$line."', '".addslashes($name)."')";
                         $this->db->query($sql);
 
                         $this->message['add_device'] = "Added ".$name." to line ".$line;
@@ -1209,6 +1211,7 @@ class endpointmanager {
      * @param bool  $write  Write out Directory structure.
      */
     function prepare_configs($phone_info,$reboot=TRUE,$write=TRUE) {
+
         if(file_exists(PHONE_MODULES_PATH.'setup.php')) {
             if(!class_exists('ProvisionerConfig')) {
                 require(PHONE_MODULES_PATH.'setup.php');
@@ -1231,6 +1234,7 @@ class endpointmanager {
                 ProvisionerConfig::endpointsAutoload($class);
             }
             //end quick fix
+            
             if(class_exists($class)) {
                 $provisioner_lib = new $class();
 
@@ -1254,6 +1258,8 @@ class endpointmanager {
                         $settings['tz'] = $this->global_cfg['tz'];
                     }
                 }
+
+
 
                 //Tell the system who we are and were to find the data.
                 $provisioner_lib->root_dir = PHONE_MODULES_PATH;
@@ -1590,35 +1596,45 @@ class endpointmanager {
             echo "<div style='float: left'>Downloading firmware...</div><div style='float: left' id=\"DivExample\">.</div>";
             $this->download_file_with_progress_bar(UPDATE_PATH.$row['directory']."/". $temp['data']['firmware_pkg'], PHONE_MODULES_PATH."temp/".$temp['data']['firmware_pkg']);
             echo "<script type='text/javascript'>document.getElementById('DivExample').innerHTML='Done!';</script><br />";
-            if(!file_exists(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware")) {
-                mkdir(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
-            }
-            echo "Installing Firmware...";
-            exec("rm -Rf ".PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
-            mkdir(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
-            exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $temp['data']['firmware_pkg'] ." -C ".PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']);
-            $i = 0;
-            foreach (glob(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware/*.*") as $filename) {
-                $file = basename($filename);
-                $list[$i] = $file;
-                if (!@copy($filename, $this->global_cfg['config_location'].$file)) {
-                    echo "<BR />--Failed To Copy $file...<BR />";
-                    $copy_error = TRUE;
+            $md5_xml = $temp['data']['firmware_md5sum'];
+            $md5_pkg = md5_file(PHONE_MODULES_PATH.'temp/'. $temp['data']['firmware_pkg']);
+            echo "Checking MD5sum of Package...";
+            if ($md5_xml == $md5_pkg) {
+                echo "Matches!<br />";
+                if(!file_exists(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware")) {
+                    mkdir(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
                 }
-                $i++;
-            }
-            $list = implode(",", $list);
-            $sql = "UPDATE endpointman_product_list SET firmware_vers = '".$temp['data']['firmware_ver']."', firmware_files = '".$list."' WHERE id = ". $row['id'];
-            $this->db->query($sql);
-            if(isset($copy_error)) {
-                echo "Copy Error Detected! Aborting Install!";
-                $this->remove_firmware($product_id);
-                echo "<BR />Please Check Directory/Permissions";
+                echo "Installing Firmware...";
+                exec("rm -Rf ".PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
+                mkdir(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware");
+                exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $temp['data']['firmware_pkg'] ." -C ".PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']);
+                $i = 0;
+                foreach (glob(PHONE_MODULES_PATH."endpoint/".$row['directory']."/".$row['cfg_dir']."/firmware/*.*") as $filename) {
+                    $file = basename($filename);
+                    $list[$i] = $file;
+                    if (!@copy($filename, $this->global_cfg['config_location'].$file)) {
+                        echo "<br />--Failed To Copy $file...";
+                        $copy_error = TRUE;
+                    } elseif($this->global_cfg['debug']) {
+                        echo"<br />--Copied ".$file." to ". $this->global_cfg['config_location'];
+                    }
+                    $i++;
+                }
+                $list = implode(",", $list);
+                $sql = "UPDATE endpointman_product_list SET firmware_vers = '".$temp['data']['firmware_ver']."', firmware_files = '".$list."' WHERE id = ". $row['id'];
+                $this->db->query($sql);
+                if(isset($copy_error)) {
+                    echo "<BR />Copy Error Detected! Aborting Install!";
+                    $this->remove_firmware($product_id);
+                    echo "<BR />Please Check Directory/Permissions";
+                } else {
+                    echo "<BR />Done!";
+                }
             } else {
-                echo "Done!";
+                echo "<BR />Firmware MD5 didn't match<br />";
             }
         } else {
-            echo "Your Firmware is already up to date";
+            echo "<BR />Your Firmware is already up to date";
 
         }
     }
@@ -1830,16 +1846,25 @@ class endpointmanager {
             echo "<script type='text/javascript'>document.getElementById('DivExample').innerHTML='Done!';</script><br />";
 
             if(file_exists(PHONE_MODULES_PATH.'temp/'. $package)) {
-                echo "Extracting Tarball........";
-                exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $package ." -C ".PHONE_MODULES_PATH."temp/");
-                echo "Done!<br />";
+                $md5_xml = $temp['data']['brands']['md5sum'];
+                $md5_pkg = md5_file(PHONE_MODULES_PATH.'temp/'. $package);
 
-                //Update File in directory
-                copy(PHONE_MODULES_PATH.'endpoint/'. $row[0]['directory'].'/brand_data.xml', PHONE_MODULES_PATH.'temp/'. $row[0]['directory'].'/brand_data.xml');
+                echo "Checking MD5sum of Package....";
+                if($md5_xml == $md5_pkg) {
+                    echo "Done!<br/>";
+                    echo "Extracting Tarball........";
+                    exec("tar -xvf ".PHONE_MODULES_PATH.'temp/'. $package ." -C ".PHONE_MODULES_PATH."temp/");
+                    echo "Done!<br />";
 
-                $package = basename($package, ".tgz");
-                $package = explode("-",$package);
-                $this->update_brand($package[0]);
+                    //Update File in directory
+                    copy(PHONE_MODULES_PATH.'endpoint/'. $row[0]['directory'].'/brand_data.xml', PHONE_MODULES_PATH.'temp/'. $row[0]['directory'].'/brand_data.xml');
+
+                    $package = basename($package, ".tgz");
+                    $package = explode("-",$package);
+                    $this->update_brand($package[0]);
+                } else {
+                    echo "MD5 Did not match!";
+                }
             } else {
                 $this->error['uploader'] = "Can't Find Downloaded File!";
             }
@@ -1892,6 +1917,23 @@ class endpointmanager {
                     }
                 }
                 echo "Done!<br />";
+
+                if($remote) {
+                    $local = 0;
+                } else {
+                    $local = 1;
+                }
+                $brand_version = max($last_mod, $brand_last_mod);
+
+                $b_data = $this->db->getOne("SELECT id FROM endpointman_brand_list WHERE id='".$brand_id."'", array(), DB_FETCHMODE_ASSOC);
+                if($b_data) {
+                    echo "Updating data..........";
+                    $sql = "UPDATE endpointman_brand_list SET local = '".$local."', name = '".$brand_name."', cfg_ver = '".$brand_version."', installed = 1, hidden = 0 WHERE id = ".$brand_id;
+                    $this->db->query($sql);
+                } else {
+                    $sql = "INSERT INTO endpointman_brand_list (id, name, directory, cfg_ver, local, installed) VALUES ('".$brand_id."', '".$brand_name."', '".$directory."', '".$brand_version."', '1', '1')";
+                    $this->db->query($sql);
+                }
 
                 $last_mod = "";
                 $temp['data']['brands']['family_list']['family'] = $this->fix_single_array_keys($temp['data']['brands']['family_list']['family']);
@@ -2037,22 +2079,6 @@ class endpointmanager {
                     }
                     //TODO: Phone Models Move Here
                 }
-                if($remote) {
-                    $local = 0;
-                } else {
-                    $local = 1;
-                }
-                $brand_version = max($last_mod, $brand_last_mod);
-
-                $b_data = $this->db->getOne("SELECT id FROM endpointman_brand_list WHERE id='".$brand_id."'", array(), DB_FETCHMODE_ASSOC);
-                if($b_data) {
-                    echo "Updating data..........";
-                    $sql = "UPDATE endpointman_brand_list SET local = '".$local."', name = '".$brand_name."', cfg_ver = '".$brand_version."', installed = 1, hidden = 0 WHERE id = ".$brand_id;
-                    $this->db->query($sql);
-                } else {
-                    $sql = "INSERT INTO endpointman_brand_list (id, name, directory, cfg_ver, local, installed) VALUES ('".$brand_id."', '".$brand_name."', '".$directory."', '".$brand_version."', '1', '1')";
-                    $this->db->query($sql);
-                }
 
                 foreach($temp['data']['brands']['oui_list']['oui'] as $oui) {
                     $sql = "INSERT INTO endpointman_oui_list (`oui`, `brand`, `custom`) VALUES ('".$oui."', '".$brand_id."', '0')";
@@ -2122,9 +2148,23 @@ class endpointmanager {
 
             $sql = "SELECT * FROM  endpointman_brand_list WHERE id=".$model_row['brand'];
 
-
             $brand_row = $this->db->getRow($sql, array(),DB_FETCHMODE_ASSOC);
 
+			if(!file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'])) {
+				$this->error['sync_model'] = "Brand Directory '".$brand_row['directory']."' Doesn't Exist! (".PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].")";
+                return(FALSE);
+			}
+
+			if(!file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'])) {
+				$this->error['sync_model'] = "Product Directory '".$product_row['cfg_dir']."' Doesn't Exist! (".PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].")";
+                return(FALSE);
+			}
+
+			if(!file_exists(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/family_data.xml')) {
+				$this->error['sync_model'] = "File 'family_data.xml Doesn't exist in directory: ".PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'];
+                return(FALSE);
+			}
+						
             $family_line_xml = $this->xml2array(PHONE_MODULES_PATH.'/endpoint/'.$brand_row['directory'].'/'.$product_row['cfg_dir'].'/family_data.xml');
 
             if($product_row['cfg_ver'] <= $family_line_xml['data']['version']) {
@@ -2898,150 +2938,24 @@ class endpointmanager {
     }
 
     function timezone_array() {
-        $array[0]['gmt'] = 'GMT';
-        $array[0]['offset'] = '0';
-        $array[0]['info'][0]['name'] = 'UTC';
-        $array[0]['info'][0]['description'] = 'Universal Coordinated Time (and Greenwich Mean Time)';
+        $sql = "SELECT * FROM endpointman_time_zones_desc, endpointman_time_zones_new WHERE endpointman_time_zones_desc.tid = endpointman_time_zones_new.id";
+        $tz_list = $this->db->getAll($sql,array(),DB_FETCHMODE_ASSOC);
 
-        $array[1]['gmt'] = 'GMT+1:00';
-        $array[1]['offset'] = '3600';
-        $array[1]['info'][0]['name'] = 'ECT';
-        $array[1]['info'][0]['description'] = 'European Central Time';
-
-        $array[2]['gmt'] = 'GMT+2:00';
-        $array[2]['offset'] = '7200';
-        $array[2]['info'][0]['name'] = 'EET';
-        $array[2]['info'][0]['description'] = 'Eastern European Time';
-        $array[2]['info'][1]['name'] = 'ART';
-        $array[2]['info'][1]['description'] = '(Arabic) Egypt Standard Time';
-
-        $array[3]['gmt'] = 'GMT+3:00';
-        $array[3]['offset'] = '10800';
-        $array[3]['info'][0]['name'] = 'EAT';
-        $array[3]['info'][0]['description'] = 'Eastern African Time';
-
-        $array[4]['gmt'] = 'GMT+3:30';
-        $array[4]['offset'] = '12600';
-        $array[4]['info'][0]['name'] = 'MET';
-        $array[4]['info'][0]['description'] = 'Middle East Time';
-
-        $array[5]['gmt'] = 'GMT+4:00';
-        $array[5]['offset'] = '14400';
-        $array[5]['info'][0]['name'] = 'NET';
-        $array[5]['info'][0]['description'] = 'Near East Time';
-
-        $array[6]['gmt'] = 'GMT+5:00';
-        $array[6]['offset'] = '18000';
-        $array[6]['info'][0]['name'] = 'PLT';
-        $array[6]['info'][0]['description'] = 'Pakistan Lahore Time';
-
-        $array[7]['gmt'] = 'GMT+5:30';
-        $array[7]['offset'] = '19800';
-        $array[7]['info'][0]['name'] = 'IST';
-        $array[7]['info'][0]['description'] = 'India Standard Time';
-
-        $array[8]['gmt'] = 'GMT+6:00';
-        $array[8]['offset'] = '21600';
-        $array[8]['info'][0]['name'] = 'BST';
-        $array[8]['info'][0]['description'] = 'Bangladesh Standard Time';
-
-        $array[9]['gmt'] = 'GMT+7:00';
-        $array[9]['offset'] = '25200';
-        $array[9]['info'][0]['name'] = 'VST';
-        $array[9]['info'][0]['description'] = 'Vietnam Standard Time';
-
-        $array[10]['gmt'] = 'GMT+8:00';
-        $array[10]['offset'] = '28800';
-        $array[10]['info'][0]['name'] = 'CTT';
-        $array[10]['info'][0]['description'] = 'China Taiwan Time';
-
-        $array[11]['gmt'] = 'GMT+9:00';
-        $array[11]['offset'] = '32400';
-        $array[11]['info'][0]['name'] = 'JST';
-        $array[11]['info'][0]['description'] = 'Japan Standard Time';
-
-        $array[12]['gmt'] = 'GMT+9:30';
-        $array[12]['offset'] = '34200';
-        $array[12]['info'][0]['name'] = 'ACT';
-        $array[12]['info'][0]['description'] = 'Australia Central Time';
-
-        $array[13]['gmt'] = 'GMT+10:00';
-        $array[13]['offset'] = '36000';
-        $array[13]['info'][0]['name'] = 'AET';
-        $array[13]['info'][0]['description'] = 'Australia Eastern Time';
-
-        $array[14]['gmt'] = 'GMT+11:00';
-        $array[14]['offset'] = '39600';
-        $array[14]['info'][0]['name'] = 'SST';
-        $array[14]['info'][0]['description'] = 'Solomon Standard Time';
-
-        $array[15]['gmt'] = 'GMT+12:00';
-        $array[15]['offset'] = '43200';
-        $array[15]['info'][0]['name'] = 'NST';
-        $array[15]['info'][0]['description'] = 'New Zealand Standard Time';
-
-        $array[16]['gmt'] = 'GMT-11:00';
-        $array[16]['offset'] = '-39600';
-        $array[16]['info'][0]['name'] = 'MIT';
-        $array[16]['info'][0]['description'] = 'Midway Islands Time';
-
-        $array[17]['gmt'] = 'GMT-10:00';
-        $array[17]['offset'] = '-36000';
-        $array[17]['info'][0]['name'] = 'HST';
-        $array[17]['info'][0]['description'] = 'Hawaii Standard Time';
-
-        $array[18]['gmt'] = 'GMT-9:00';
-        $array[18]['offset'] = '-32400';
-        $array[18]['info'][0]['name'] = 'AST';
-        $array[18]['info'][0]['description'] = 'Alaska Standard Time';
-
-        $array[19]['gmt'] = 'GMT-8:00';
-        $array[19]['offset'] = '-28800';
-        $array[19]['info'][0]['name'] = 'PST';
-        $array[19]['info'][0]['description'] = 'Pacific Standard Time';
-
-        $array[20]['gmt'] = 'GMT-7:00';
-        $array[20]['offset'] = '-25200';
-        $array[20]['info'][0]['name'] = 'PNT';
-        $array[20]['info'][0]['description'] = 'Phoenix Standard Time';
-        $array[20]['info'][1]['name'] = 'MST';
-        $array[20]['info'][1]['description'] = 'Mountain Standard Time';
-
-        $array[21]['gmt'] = 'GMT-6:00';
-        $array[21]['offset'] = '-21600';
-        $array[21]['info'][0]['name'] = 'CST';
-        $array[21]['info'][0]['description'] = 'Central Standard Time';
-
-        $array[22]['gmt'] = 'GMT-5:00';
-        $array[22]['offset'] = '-18000';
-        $array[22]['info'][0]['name'] = 'EST';
-        $array[22]['info'][0]['description'] = 'Eastern Standard Time';
-        $array[22]['info'][1]['name'] = 'IET';
-        $array[22]['info'][1]['description'] = 'Indiana Eastern Standard Time';
-
-        $array[23]['gmt'] = 'GMT-4:00';
-        $array[23]['offset'] = '-14400';
-        $array[23]['info'][0]['name'] = 'PRT';
-        $array[23]['info'][0]['description'] = 'Puerto Rico and US Virgin Islands Time';
-
-        $array[24]['gmt'] = 'GMT-3:30';
-        $array[24]['offset'] = '-12600';
-        $array[24]['info'][0]['name'] = 'CNT';
-        $array[24]['info'][0]['description'] = 'Canada Newfoundland Time';
-
-        $array[25]['gmt'] = 'GMT-3:00';
-        $array[25]['offset'] = '-10800';
-        $array[25]['info'][0]['name'] = 'AGT';
-        $array[25]['info'][0]['description'] = 'Argentina Standard Time';
-        $array[25]['info'][1]['name'] = 'BET';
-        $array[25]['info'][1]['description'] = 'Brazil Eastern Time';
-
-        $array[26]['gmt'] = 'GMT-1:00';
-        $array[26]['offset'] = '-3600';
-        $array[26]['info'][0]['name'] = 'CAT';
-        $array[26]['info'][0]['description'] = 'Central African Time';
-
-        return($array);
+        $tz_list2 = array();
+        foreach($tz_list as $key => $data) {
+            if(array_key_exists($data['tid'], $tz_list2)) {
+                $c++;
+                $tz_list2[$data['tid']]['info'][$c]['name'] = $data['name'];
+                $tz_list2[$data['tid']]['info'][$c]['description'] = $data['description'];
+            } else {
+                $c=0;
+                $tz_list2[$data['tid']]['gmt'] = $data['gmt'];
+                $tz_list2[$data['tid']]['offset'] = $data['offset'];
+                $tz_list2[$data['tid']]['info'][$c]['name'] = $data['name'];
+                $tz_list2[$data['tid']]['info'][$c]['description'] = $data['description'];
+            }
+        }
+        return($tz_list2);
     }
 
 }

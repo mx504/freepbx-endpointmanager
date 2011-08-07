@@ -20,18 +20,21 @@
 <script type="text/javascript" src="assets/endpointman/js/jquery.tooltip.execute.js"></script>
 <link href="assets/endpointman/theme/simpletooltip.css" rel="stylesheet" type="text/css" />
 <script language="javascript" type="text/javascript">
+    function Reload() {
+        window.location.reload();
+    }
         function popitup(url, name) {
-            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=' + document.getElementById('altconfig_'+ name).value + '&rand=' + new Date().getTime(),'name','height=710,width=750');
+            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=' + document.getElementById('altconfig_'+ name).value + '&rand=' + new Date().getTime(),'name','height=710,width=800');
                 if (window.focus) {newwindow.focus()}
                 return false;
         }
         function popitup2(url, name) {
-            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=0_' + name + '&rand=' + new Date().getTime(),'name','height=700,width=770');
+            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=0_' + name + '&rand=' + new Date().getTime(),'name','height=700,width=800');
                 if (window.focus) {newwindow.focus()}
                 return false;
         }
         function popitup3(url) {
-            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=0_' + name + '&rand=' + new Date().getTime(),'name','height=700,width=770');
+            newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=0_' + name + '&rand=' + new Date().getTime(),'name','height=700,width=800');
                 if (window.focus) {newwindow.focus()}
                 return false;
         }
@@ -50,7 +53,7 @@
         <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
         {/loop}
         </select>
-        <strong><?=_('Lines')?></strong><i><font size="-2"> (Note: This is NOT the number of supported lines on the phone(s))</font></i>
+        <strong><?=_('Line settings on this page')?></strong><i><font size="-2"> (Note: This is NOT the number of supported lines on the phone(s))</font></i>
 	{/if}
         <form action="config.php?type=tool&display=epm_templates" method="post">
         {if condition="isset($silent_mode)"}
@@ -75,7 +78,7 @@
         <option value="{$value.value}" {if condition="!empty($value.selected)"}selected{/if}>{$value.text}</option>
         {/loop}
         </select>
-        <strong><?=_('Lines')?></strong>
+        <strong><?=_('Line settings on this page')?></strong><i><font size="-2"> (Note: This is NOT the number of supported lines on the phone(s))</font></i>
 	{/if}
         <br />
         <strong><?=_('Edit Global Settings Overrides')?>: </strong> <a href="#" onclick="return popitup3('config.php?type=tool&display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=global_over')"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' border='0'></a>

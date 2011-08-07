@@ -99,6 +99,10 @@ foreach (glob(LOCAL_PATH."assets/theme/*.*") as $filename) {
 if(is_link($dir)) {
     unlink($dir);
 }
+out('Removing symlink to web provisioner');
+if(is_link($amp_conf['AMPWEBROOT']."/provisioning")) {
+    unlink($amp_conf['AMPWEBROOT']."/provisioning");
+}
 
 //ari-modules
 $dir = $amp_conf['AMPWEBROOT'].'/recordings/modules';

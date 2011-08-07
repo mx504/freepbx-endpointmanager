@@ -55,6 +55,12 @@
         if (window.focus) {newwindow.focus()}
         return false;
     }
+
+    function submit_stype(type,id) {
+        newwindow=window.open('config.php?display=epm_config&quietmode=1&handler=file&file=popup.html.php&module=endpointman&pop_type=edit_specifics&edit_id=' + id + '&rand=' + new Date().getTime(),'name2','height=700,width=750');
+        if (window.focus) {newwindow.focus()}
+        return false;
+    }
 </script>
 
 <center>
@@ -301,19 +307,21 @@
         <td align='center'><h3>Line</h3></td>
         <td align='center'><h3>Extension Number</h3></td>
         <td align='center'><h3>Template</h3></td>
+        <td align='center'><h3>Specific</h3></td>
         <td align='center'><h3>Edit</h3></td>
         <td align='center'><h3>Delete</h3></td>
     </tr>
     <form id="managed" action='config.php?type=tool&amp;display=epm_devices' method='POST'>
 	{loop name="list"}
         <tr class="headerRow">
-            <td align='center' ><div id="demo"><a><img src="assets/endpointman/images/bullet_plus.png" id="imgrowGroup{$value.master_id}" alt="" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"><input type="checkbox" name="selected[]" value="{$value.id}"></a></div></td>
+            <td align='center' width="5%"><div id="demo"><img src="assets/endpointman/images/circle_{if condition="$value.status.status == 'OK'"}green{else}red{/if}.png" alt="{$value.status.ip}:{$value.status.port}"><a><img src="assets/endpointman/images/bullet_plus.png" id="imgrowGroup{$value.master_id}" alt="" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"><input type="checkbox" name="selected[]" value="{$value.id}"></a></div></td>
             <td align='center' width='11%'>{$value.mac}</td>
             <td width="13%" align='center'>{$value.name}</td>
             <td width="14%" align='center'>{$value.model}</td>
             <td width="10%" align='center'><div id="demo"><a><img src="assets/endpointman/images/expand.png" id="img2rowGroup{$value.master_id}" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"></a></div></td>
             <td width="19%" align='center'><div id="demo"><a><img src="assets/endpointman/images/expand.png" id="img3rowGroup{$value.master_id}" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"></a></div></td>
             <td align='center' width='15%'>{$value.template_name}</td>
+            <td align='center'><div id="demo"><a href="#" onclick="submit_stype('edit',{$value.id});"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' title='Edit Device' border='0'></a></div></td>
             <td align='center' width='9%'><div id="demo"><a href="#" onclick="submit_wtype('edit',{$value.id});"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' title='Edit Device' border='0'></a></div></td>
             <td align='center' width='7%'><div id="demo"><a href="#" onclick="delete_device({$value.id});"><img src='assets/endpointman/images/delete.png' ALT='<?=_('Delete')?>' title='Delete Device' border='0'></a></div></td>
         </tr>
@@ -327,6 +335,7 @@
             <td width="19%" align='center'>{$value.ext} - {$value.description}</td>
             <td align='center' width='15%'></td>
             <td align='center' width='9%'></td>
+            <td></td>
             <td align='center' width='7%'><div id="demo"><a href="#" onclick="submit_wtype('delete_line',{$value.luid});"><img src='assets/endpointman/images/delete.png' ALT='<?=_('Delete')?>' title='Delete Line' border='0'></a></div></td>
         </tr>
         {/loop}

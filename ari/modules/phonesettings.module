@@ -62,9 +62,9 @@ class phonesettings {
    *   action
     */
     function action($args) {
-        global $endpoint, $global_cfg;
+        global $amp_conf;
 
-        $doc_root =	$_SERVER["DOCUMENT_ROOT"] ."/admin/modules/endpointman/";
+        $doc_root = $amp_conf['AMPWEBROOT'] ."/admin/modules/endpointman/";
         require($doc_root . "includes/functions.inc");
 
         $endpoint = new endpointmanager();
@@ -148,7 +148,9 @@ class phonesettings {
             die('No Database?');
         }
 
-        $doc_root =	$_SERVER["DOCUMENT_ROOT"] ."/admin/modules/endpointman/";
+	global $amp_conf;
+
+        $doc_root =	$amp_conf['AMPWEBROOT'] ."/admin/modules/endpointman/";
         require($doc_root . "includes/functions.inc");
 
         $endpoint = new endpointmanager();

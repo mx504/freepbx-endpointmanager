@@ -1,3 +1,18 @@
+<html>
+    <head>
+        <title>PBX Endpoint Configuration Manager</title>
+        <script type="text/javascript" src="common/libfreepbx.javascripts.js" language="javascript"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.tools.min.js"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.easing.1.3.js"></script>
+        <script type="text/javascript" src="assets/endpointman/js/jquery.coda-slider-2.0.js"></script>
+        <link href="common/mainstyle.css" rel="stylesheet" type="text/css" />
+    </head>
+    <body face="Arial">
+        <div id="spinner">
+        </div>
+        <br>
+        <h1><face="Arial"><center><?=_('End Point Configuration Manager')?></center></h1>
+        <hr>
 {if condition="isset($show_error_box)"}
     {include="message_box"}
 {/if}
@@ -42,9 +57,11 @@
   </label></td>
 </tr>
 <tr>
-<td colspan='2' align='center'><input type='Submit' name='button_update_globals' value='<?=_('Update Global Overrides')?>'><input type=button value="Close Window" onClick="javascript:window.close();">
+<td colspan='2' align='center'><input type='Submit' name='button_update_globals' value='<?=_('Update Global Overrides')?>'><input type='Submit' name='button_reset_globals' value='<?=_('Reset Global Overrides to Default')?>'><input type=button value="Close Window" onClick="javascript:window.close();">
 </td>
 </tr>
 
 </table>
 </form>
+    </body>
+</html>

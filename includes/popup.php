@@ -7,6 +7,10 @@ require 'functions.inc';
 
 $endpoint = new endpointmanager();
 
+if($_REQUEST['pop_type'] == 'edit_specifics') {
+    echo $endpoint->tpl->draw( 'specifics_pop' );
+}
+
 if($_REQUEST['pop_type'] == 'edit_template') {
     if(empty($_REQUEST['edit_id'])) {
         $message = _("No Device Selected to Edit!")."!";
@@ -75,6 +79,18 @@ if($_REQUEST['pop_type'] == 'global_over') {
 
         $endpoint->message['advanced_settings'] = "Updated!";
     }
+    if(isset($_REQUEST['button_reset_globals'])) {
+        if($_REQUEST['custom'] == 0) {
+            //This is a group template
+            $sql = "UPDATE endpointman_template_list SET global_settings_override = NULL WHERE id = ".$_REQUEST['tid'];
+            $endpoint->db->query($sql);
+        } else {
+            //This is an individual template
+            $sql = "UPDATE endpointman_mac_list SET global_settings_override = NULL WHERE id = ".$_REQUEST['tid'];
+            $endpoint->db->query($sql);
+        }
+        $endpoint->message['advanced_settings'] = "Globals Reset to Default!";
+    }
     if($_REQUEST['custom'] == 0) {
         //This is a group template
         $sql = 'SELECT global_settings_override FROM endpointman_template_list WHERE id = '.$_REQUEST['tid'];
@@ -110,9 +126,11 @@ if($_REQUEST['pop_type'] == 'global_over') {
 }
 
 if($_REQUEST['pop_type'] == "alt_cfg_edit") {
+    $value = isset($_POST['value']) ? $_POST['value'] : $_REQUEST['value'];
+    $res = explode("_", $value,2);
     if($_REQUEST['custom'] == 0) {
-        $res = explode("_", $_REQUEST['value'],2);
         if($res[0] != 0) {
+            //SQL Config Files
             if(isset($_REQUEST['button_save'])) {
                 $sql = "UPDATE endpointman_custom_configs SET data = '".addslashes($_REQUEST['config_text'])."' WHERE id = ".$res[0];
                 $endpoint->db->query($sql);
@@ -124,27 +142,65 @@ if($_REQUEST['pop_type'] == "alt_cfg_edit") {
             $endpoint->tpl->assign("filename", $row['original_name']);
             $row['data'] = $endpoint->display_htmlspecialchars($row['data']);
             $endpoint->tpl->assign("config_data", $row['data']);
+            $endpoint->tpl->assign("allow_hdfiles",$endpoint->global_cfg['allow_hdfiles']);
+            $endpoint->tpl->assign("value", $value);
+
         } else {
+            //HD Config Files
             $sql = "SELECT endpointman_brand_list.directory, endpointman_product_list.cfg_dir FROM endpointman_brand_list, endpointman_product_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = (SELECT product_id FROM endpointman_template_list WHERE id = ".$_REQUEST['tid'].")";
             $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
-            //$res[1] = escapeshellcmd($res[1]);
             $file=PHONE_MODULES_PATH.'endpoint/'.$row['directory']."/".$row['cfg_dir']."/".$res[1];
 
-            if(isset($_REQUEST['button_save'])) {
+            if((isset($_REQUEST['button_save'])) && ($endpoint->global_cfg['allow_hdfiles'])) {
                 $wfh=fopen($file,'w');
                 fwrite($wfh,$_REQUEST['config_text']);
                 fclose($wfh);
                 $message = "Saved to Hard Drive!";
+                $handle = fopen($file, "rb");
+                $contents = fread($handle, filesize($file));
+                fclose($handle);
+            } elseif((isset($_REQUEST['button_save'])) && (!$endpoint->global_cfg['allow_hdfiles'])) {
+                $time = time();
+                $sql = 'SELECT endpointman_template_list.name, endpointman_template_list.config_files_override, endpointman_template_list.product_id FROM endpointman_template_list WHERE endpointman_template_list.id = '.$_REQUEST['tid'];
+                $row = $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+                $config_fs = unserialize($row['config_files_override']);
+
+                $sql = 'INSERT INTO endpointman_custom_configs (name, original_name, product_id, data) VALUES ("'.$row['name'].'_'.$time.'","'.addslashes($res[1]).'","'.$row['product_id'].'","'.addslashes($_REQUEST['config_text']).'")';
+                $endpoint->db->query($sql);
+                $message = "Saved to Database!";
+                $new_id =& $endpoint->db->getOne('SELECT last_insert_id()');
+                $sql = 'SELECT * FROM endpointman_custom_configs WHERE id =' . $new_id;
+                $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+
+                $contents = $row['data'];
+
+                $value = $new_id."_".$row['mac'].'_'.$time;
+
+                if(!is_array($config_fs)) {
+                    $config_fs = array();
+                }
+
+                $file = $row['original_name'];
+                $row['original_name'] = str_replace(".","_",$row['original_name']);
+                $config_fs[$row['original_name']] = $new_id;
+                $config_files = serialize($config_fs);
+                $sql = "UPDATE endpointman_template_list SET config_files_override = '".$config_files."' WHERE id = ".$_REQUEST['tid'];
+                $endpoint->db->query($sql);
+            } else {
+                $handle = fopen($file, "rb");
+                $contents = fread($handle, filesize($file));
+                fclose($handle);
             }
 
-            $handle = fopen($file, "rb");
-            $contents = fread($handle, filesize($file));
-            fclose($handle);
             $contents = $endpoint->display_htmlspecialchars($contents);
             $endpoint->tpl->assign("config_data", $contents);
+            $endpoint->tpl->assign("location", $file);
+            $endpoint->tpl->assign("file", basename($file));
+            $endpoint->tpl->assign("allow_hd", $endpoint->global_cfg['allow_hdfiles']);
+            $endpoint->tpl->assign("value", $value);
+
         }
     } else {
-        $res = explode("_", $_REQUEST['value'],2);
         if($res[0] != 0) {
             if(isset($_REQUEST['button_save'])) {
                 $sql = "UPDATE endpointman_custom_configs SET data = '".addslashes($_REQUEST['config_text'])."' WHERE id = ".$res[0];
@@ -153,29 +209,69 @@ if($_REQUEST['pop_type'] == "alt_cfg_edit") {
             }
             $sql = 'SELECT * FROM endpointman_custom_configs WHERE id =' . $res[0];
             $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+            $file = "SQL/".$row['original_name'];
+            $endpoint->tpl->assign("file", basename($file));
             $endpoint->tpl->assign("save_as_name_value", $row['name']);
             $endpoint->tpl->assign("filename", $row['original_name']);
             $row['data'] = $endpoint->display_htmlspecialchars($row['data']);
             $endpoint->tpl->assign("config_data", $row['data']);
+            $endpoint->tpl->assign("allow_hdfiles",$endpoint->global_cfg['allow_hdfiles']);
+            $endpoint->tpl->assign("value", $value);
         } else {
             $sql = "SELECT endpointman_brand_list.directory, endpointman_product_list.cfg_dir FROM endpointman_brand_list, endpointman_product_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = (SELECT endpointman_model_list.product_id FROM endpointman_model_list, endpointman_mac_list WHERE endpointman_mac_list.model = endpointman_model_list.id AND endpointman_mac_list.id = ".$_REQUEST['tid'].")";
             $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
             //$res[1] = escapeshellcmd($res[1]);
             $file=PHONE_MODULES_PATH.'endpoint/'.$row['directory']."/".$row['cfg_dir']."/".$res[1];
 
-            if(isset($_REQUEST['button_save'])) {
+            if((isset($_REQUEST['button_save'])) && ($endpoint->global_cfg['allow_hdfiles'])) {
                 $wfh=fopen($file,'w');
                 fwrite($wfh,$_REQUEST['config_text']);
                 fclose($wfh);
                 $message = "Saved to Hard Drive!";
+                $handle = fopen($file, "rb");
+                $contents = fread($handle, filesize($file));
+                fclose($handle);
+            } elseif((isset($_REQUEST['button_save'])) && (!$endpoint->global_cfg['allow_hdfiles'])) {
+                $time = time();
+                $sql = 'SELECT endpointman_mac_list.mac, endpointman_mac_list.config_files_override, endpointman_model_list.product_id FROM endpointman_mac_list, endpointman_model_list WHERE endpointman_mac_list.model = endpointman_model_list.id AND endpointman_mac_list.id = '.$_REQUEST['tid'];
+                $row = $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+                $config_fs = unserialize($row['config_files_override']);
+
+                $sql = 'INSERT INTO endpointman_custom_configs (name, original_name, product_id, data) VALUES ("'.$row['mac'].'_'.$time.'","'.addslashes($res[1]).'","'.$row['product_id'].'","'.addslashes($_REQUEST['config_text']).'")';
+                $endpoint->db->query($sql);
+                $message = "Saved to Database!";
+                $new_id =& $endpoint->db->getOne('SELECT last_insert_id()');
+                $sql = 'SELECT * FROM endpointman_custom_configs WHERE id =' . $new_id;
+                $row =& $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+                
+                $contents = $row['data'];
+
+                $value = $new_id."_".$row['mac'].'_'.$time;
+
+                if(!is_array($config_fs)) {
+                    $config_fs = array();
+                }
+
+                $file = $row['original_name'];
+                $row['original_name'] = str_replace(".","_",$row['original_name']);
+                $config_fs[$row['original_name']] = $new_id;
+                $config_files = serialize($config_fs);
+                $sql = "UPDATE endpointman_mac_list SET config_files_override = '".$config_files."' WHERE id = ".$_REQUEST['tid'];
+                $endpoint->db->query($sql);
+            } else {
+                $handle = fopen($file, "rb");
+                $contents = fread($handle, filesize($file));
+                fclose($handle);
             }
 
-            $handle = fopen($file, "rb");
-            $contents = fread($handle, filesize($file));
-            fclose($handle);
             $contents = $endpoint->display_htmlspecialchars($contents);
             $endpoint->tpl->assign("config_data", $contents);
             $endpoint->tpl->assign("location", $file);
+            $endpoint->tpl->assign("file", basename($file));
+            $endpoint->tpl->assign("allow_hd", $endpoint->global_cfg['allow_hdfiles']);
+            $endpoint->tpl->assign("value", $value);
+
+
         }
     }
 
