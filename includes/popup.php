@@ -8,7 +8,6 @@ require 'functions.inc';
 $endpoint = new endpointmanager();
 
 if($_REQUEST['pop_type'] == 'edit_specifics') {
-    echo "Edit Specifics";
     echo $endpoint->tpl->draw( 'specifics_pop' );
 }
 

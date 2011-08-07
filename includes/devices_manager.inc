@@ -355,6 +355,18 @@ foreach($devices_list as $devices_row) {
         $list[$i]['line'][$z]['master_id'] = $i;
         $z++;
     }
+    $status = shell_exec($endpoint->global_cfg['asterisk_location']." -rx 'sip show peer ".$list[$i]['line'][0]['ext']."'");
+    preg_match('/Addr->IP(.*)/i', $status, $matches);
+    preg_match('/Status(.*)/i', $status, $matches2);
+
+    $ip_info = trim(str_replace(": ","",$matches[1]));
+    $ip_info = explode(":",$ip_info);
+
+    $status = trim(preg_replace('/\((.*)\)/i', '', str_replace(": ","",$matches2[1])));
+
+    $list[$i]['status']['status'] = $status;
+    $list[$i]['status']['ip'] = ($ip_info[0] != "(null)") ? $ip_info[0] : '';
+    $list[$i]['status']['port'] = ($ip_info[0] != "(null)") ? $ip_info[1] : '';
     $i++;
 }
 

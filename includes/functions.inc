@@ -9,13 +9,13 @@
 class endpointmanager {
     //Load this class upon construction of the class
 
-    public $db;
-    public $amp_conf;
-    public $global_cfg;
-    public $error;
-    public $message;
-    public $endpoint_data;
-    public $tpl;
+    public $db; //Database from FreePBX
+    public $amp_conf; //amp information from FreePBX
+    public $global_cfg; //global configuration options for Endpoint Manager
+    public $error; //error construct
+    public $message; //message construct
+    public $endpoint_data; //??
+    public $tpl; //Template System Object (RAIN TPL)
 
     /**
      *

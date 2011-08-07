@@ -970,6 +970,9 @@ if(!$new_install) {
 
         $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`var_name`, `value`) VALUES (\'allow_hdfiles\', \'0\');';
         $db->query($sql);
+
+	$sql = 'ALTER TABLE `endpointman_mac_list` ADD `specific_settings` LONGBLOB NULL;';
+	$db->query($sql);
     }
 
 }
@@ -1040,7 +1043,7 @@ if ($new_install) {
             (17, 'disable_help', '0'),
             (18, 'show_all_registrations', '0'),
             (19, 'ntp', ''),
-            (20, 'server_type, ''file";
+            (20, 'server_type, 'file'";
     $db->query($sql);
 
     out("Creating mac list Table");
@@ -1053,6 +1056,7 @@ if ($new_install) {
   `global_user_cfg_data` longblob NOT NULL,
   `config_files_override` text NOT NULL,
   `global_settings_override` longblob,
+    `specific_settings` longblob,
   PRIMARY KEY (`id`),
   UNIQUE KEY `mac` (`mac`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";

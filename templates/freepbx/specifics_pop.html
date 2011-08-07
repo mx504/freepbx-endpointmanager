@@ -23,24 +23,12 @@
         <br>
         <h1><face="Arial"><center><?=_('End Point Configuration Manager')?></center></h1>
         <hr>
-	{if condition="isset($show_error_box)"}
-	{include="message_box"}
-	{/if}
-	<center><h4><?=_("File Configuration Editor For")?>: {$file}</h4>
-	    <font color="red">Warning! You can really mess up your phone by messing with these settings. Potentially causing it to not boot!</font><br/>
-	    {if condition="isset($location) && isset($allow_hdfiles)"}
-	    <strong>You are editing a global file. This will effect any & all phones that reference this hard file
-		<br/>It is <font color="red">NOT</font> individual to this template!!!</strong><br/>
-	    <i>You can setup individual templates in the "Product Options/Configuration Editor" under "End Point Advanced Settings"</i>
-	    {/if}
 	    <form name="myform" id="myform" method="post" action=""><input type="hidden" id="value" name="value" value="{$value}" />
 		<table width="90%" border="0" cellspacing="4" cellpadding="4">
 		    <tr><td><div style="font-size: 14px" align="left">{if condition="isset($location)"}File Location: <i>{$location}</i>{/if}</div></td></tr>
 		    <tr>
 			<td>
-			    <label>
-				<textarea name="config_text" id="textarea" cols="100" rows="30" wrap="off">{if condition="isset($config_data)"}{$config_data}{/if}</textarea>
-			    </label>
+			    Coming Soon!
 			    <br><div style="font-size: 15px">
 				<label>
 				    <input type="submit" name="button_save" value="<?=_('Save')?>" onClick="javascript:submitform();"><input type=button value="Close Window" onClick="javascript:Close();">
@@ -48,6 +36,5 @@
 		    </tr>
 		</table>
 	    </form>
-	</center>
-    </body>
+  </body>
 </html>
