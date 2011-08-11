@@ -21,7 +21,7 @@
         <div id="spinner">
         </div>
         <br>
-        <h1><face="Arial"><center><?=_('End Point Configuration Manager')?></center></h1>
+        <h1><face="Arial"><center><?php echo _('End Point Configuration Manager')?></center></h1>
         <hr>
 	    <form name="myform" id="myform" method="post" action=""><input type="hidden" id="value" name="value" value="{$value}" />
 		<table width="90%" border="0" cellspacing="4" cellpadding="4">
@@ -31,7 +31,7 @@
 			    Coming Soon!
 			    <br><div style="font-size: 15px">
 				<label>
-				    <input type="submit" name="button_save" value="<?=_('Save')?>" onClick="javascript:submitform();"><input type=button value="Close Window" onClick="javascript:Close();">
+				    <input type="submit" name="button_save" value="<?php echo _('Save')?>" onClick="javascript:submitform();"><input type=button value="Close Window" onClick="javascript:Close();">
 				</label>
 		    </tr>
 		</table>

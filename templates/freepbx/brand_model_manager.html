@@ -29,7 +29,7 @@
 </script>
 <center>
 <form id='check' action='config.php?type=tool&amp;display=epm_config' method='POST'>
-	<input type="submit" name="button_check_for_updates" onclick="check();" value="<?=_('Check for Updates')?>">
+	<input type="submit" name="button_check_for_updates" onclick="check();" value="<?php echo _('Check for Updates')?>">
 </form>
 </center>
 
@@ -94,7 +94,7 @@ function generateHiddenFieldsForTree(treeId) {
             <ul>
                 {loop name="brand2_list"}
                 <li id="brand_{$value.id}">
-                    <a href="#">{$value.name} <i>(<?=_('Package Last Modified')?> [{$value.cfg_ver}])</i></a>
+                    <a href="#">{$value.name} <i>(<?php echo _('Package Last Modified')?> [{$value.cfg_ver}])</i></a>
                     <ul>
                         {loop name="value.products"}
                         <li id="products_{$value.id}">
@@ -159,21 +159,21 @@ process_module_actions();
     {loop name="brand2_list"}
         <table width="100%" class="brand" border="0" cellspacing="0" cellpadding="0">
             <tr>
-                <td colspan="2">{$value.name} {if condition="$value.installed == '1'"}(<?=_('Package Last Modified')?> [{$value.cfg_ver}]) {/if}{if condition="$value.installed == '1'"}<input type="checkbox" name="vehicle" value="Bike" disabled {if condition="$value.local == 0"}checked{/if}/>Check Online{/if}<form action='config.php?type=tool&amp;display=epm_config' method='POST'><input type="hidden" name="brand" value="{$value.id}"><input type="submit" name="button_{if condition="$value.installed == '1'"}uninstall{else}install{/if}" class="button_{if condition="$value.installed == '1'"}Disable{else}Enable{/if}" value="{if condition="$value.installed == '1'"}<?=_('Uninstall')?>{else}<?=_('Install')?>{/if}">{if condition="array_key_exists('update',$value)"}{if condition="$value.update == 1"}New Package Modified [{$value.update_vers}]<input type="submit" name="button_update" class="button_update" value="<?=_('Update')?>">{/if}{/if}</form></td>
+                <td colspan="2">{$value.name} {if condition="$value.installed == '1'"}(<?php echo _('Package Last Modified')?> [{$value.cfg_ver}]) {/if}{if condition="$value.installed == '1'"}<input type="checkbox" name="vehicle" value="Bike" disabled {if condition="$value.local == 0"}checked{/if}/>Check Online{/if}<form action='config.php?type=tool&amp;display=epm_config' method='POST'><input type="hidden" name="brand" value="{$value.id}"><input type="submit" name="button_{if condition="$value.installed == '1'"}uninstall{else}install{/if}" class="button_{if condition="$value.installed == '1'"}Disable{else}Enable{/if}" value="{if condition="$value.installed == '1'"}<?php echo _('Uninstall')?>{else}<?php echo _('Install')?>{/if}">{if condition="array_key_exists('update',$value)"}{if condition="$value.update == 1"}New Package Modified [{$value.update_vers}]<input type="submit" name="button_update" class="button_update" value="<?php echo _('Update')?>">{/if}{/if}</form></td>
             </tr>
             <tr>
                 <td width="3%">&nbsp;</td>
                 <td width="97%">{loop name="value.products"}
                     <table width="100%" class="product" border="0" cellspacing="0" cellpadding="0">
                         <tr>
-                            <td colspan="2">{$value.long_name} {if condition="$value.cfg_ver != ''"}{/if} <form action='config.php?type=tool&amp;display=epm_config' method='POST'><input type="hidden" name="product" value="{$value.id}">{if condition="array_key_exists('update',$value)"}{if condition="$value.update == 1"}<input type="submit" name="button_update" class="button_update" value="Update">{/if}{/if}{if condition="$value.fw_type == 'install'"}<input type="submit" name="button_install_firmware" class="button_update" value="<?=_('Install Firmware')?>">{elseif condition="$value.fw_type == 'remove'"}<input type="submit" name="button_remove_firmware" class="button_update" value="<?=_('Remove Firmware')?>">{/if}{if condition="array_key_exists('update_fw',$value)"}{if condition="$value.update_fw == 1"}<input type="submit" name="button_update_firmware" class="button_update" value="<?=_('Update Firmware')?>">{/if}{/if}</form></td>
+                            <td colspan="2">{$value.long_name} {if condition="$value.cfg_ver != ''"}{/if} <form action='config.php?type=tool&amp;display=epm_config' method='POST'><input type="hidden" name="product" value="{$value.id}">{if condition="array_key_exists('update',$value)"}{if condition="$value.update == 1"}<input type="submit" name="button_update" class="button_update" value="Update">{/if}{/if}{if condition="$value.fw_type == 'install'"}<input type="submit" name="button_install_firmware" class="button_update" value="<?php echo _('Install Firmware')?>">{elseif condition="$value.fw_type == 'remove'"}<input type="submit" name="button_remove_firmware" class="button_update" value="<?php echo _('Remove Firmware')?>">{/if}{if condition="array_key_exists('update_fw',$value)"}{if condition="$value.update_fw == 1"}<input type="submit" name="button_update_firmware" class="button_update" value="<?php echo _('Update Firmware')?>">{/if}{/if}</form></td>
                         </tr>
                         <tr>
                             <td width="4%">&nbsp;</td>
                             <td width="96%">{loop name="value.models"}
                                 <table width="100%" class="model" border="0" cellspacing="0" cellpadding="0">
                                     <tr>
-                                        <td>{$value.model} <form action='config.php?type=tool&amp;display=epm_config' method='POST'><input type="hidden" name="model" value="{$value.id}"><input type="submit" name="button_{if condition="$value.enabled == '1'"}disable{else}enable{/if}" class="button_{if condition="$value.enabled == '1'"}Disable{else}Enable{/if}" value="{if condition="$value.enabled == '1'"}<?=_('Disable')?>{else}<?=_('Enable')?>{/if}"></form></td>
+                                        <td>{$value.model} <form action='config.php?type=tool&amp;display=epm_config' method='POST'><input type="hidden" name="model" value="{$value.id}"><input type="submit" name="button_{if condition="$value.enabled == '1'"}disable{else}enable{/if}" class="button_{if condition="$value.enabled == '1'"}Disable{else}Enable{/if}" value="{if condition="$value.enabled == '1'"}<?php echo _('Disable')?>{else}<?php echo _('Enable')?>{/if}"></form></td>
                                     </tr>
                                 </table>{/loop}</td>
                         </tr>
