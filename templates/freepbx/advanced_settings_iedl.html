@@ -1,20 +1,20 @@
 {if condition="isset($show_error_box)"}
     {include="message_box"}
 {/if}
-<p><?=_('Export CSV file of devices')?>:
+<p><?php echo _('Export CSV file of devices')?>:
   <br>
-  <a href="{$exporter_address}"><?=_('Export CSV')?></a></p>
-<p><?=_('Import CSV file of devices')?>:<form name="form1" enctype="multipart/form-data" method="post" action="config.php?type=tool&display=epm_advanced&subpage=iedl&action=import">
+  <a href="{$exporter_address}"><?php echo _('Export CSV')?></a></p>
+<p><?php echo _('Import CSV file of devices')?>:<form name="form1" enctype="multipart/form-data" method="post" action="config.php?type=tool&display=epm_advanced&subpage=iedl&action=import">
   <label>
 	<input type="hidden" name="MAX_FILE_SIZE" value="30000" />
     <input type="file" name="import_csv" id="fileField">
   </label>
   <br>
   <label>
-    <input type="submit" name="button_import" value="<?=_('Import')?>">
+    <input type="submit" name="button_import" value="<?php echo _('Import')?>">
   </label>
 </form>
-<p><?=_('Note: CSV file should look like this')?>:</p>
-<p>&lt;Mac&gt;, &lt;<?=_('Brand')?>&gt;, &lt;<?=_('Model')?>&gt;, &lt;<?=_('Extension')?>&gt;, &lt;<?=_('Line')?>&gt;</p>
-<p><?=_('Brand')?>, <?=_('Model')?>, <?=_('Extension')?> &amp; <?=_('Line can be blank')?></p>
+<p><?php echo _('Note: CSV file should look like this')?>:</p>
+<p>&lt;Mac&gt;, &lt;<?php echo _('Brand')?>&gt;, &lt;<?php echo _('Model')?>&gt;, &lt;<?php echo _('Extension')?>&gt;, &lt;<?php echo _('Line')?>&gt;</p>
+<p><?php echo _('Brand')?>, <?php echo _('Model')?>, <?php echo _('Extension')?> &amp; <?php echo _('Line can be blank')?></p>
 <p><strong>Note:</strong>The Extensions need to be previously added into FreePBX before you import</p>

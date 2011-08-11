@@ -2,14 +2,14 @@
     {include="message_box"}
 {/if}
 <center><form method="post" action="config.php?type=tool&amp;display=epm_advanced&amp;subpage=poce">
-  <?=_("Select Product")?>
+  <?php echo _("Select Product")?>
   <select name="product_select" id="product_select">
 	{loop name="product_list"}
 	<option value="{$value.value}" {if condition="isset($value.selected)"}selected='selected'{/if}>{$value.text}</option>
 	{/loop}
   </select>
   <label>
-    <input type="submit" name="button_select" value="<?=_('Select')?>">
+    <input type="submit" name="button_select" value="<?php echo _('Select')?>">
   </label>
 </form>
 </center>
@@ -20,24 +20,24 @@
 {/if}
 </form>
 <hr width="30%">
-<center><h4><?=_("File Configuration Editor")?></h4>
+<center><h4><?php echo _("File Configuration Editor")?></h4>
 <table width="70%" border="0" cellspacing="4" cellpadding="4">
     <tr><td></td><td><div style="font-size: 14px" align="left">{if condition="isset($location)"}File Location: <i>{$location}</i>{/if}</div></td></tr>
   <tr>
     <td valign="top">
         <!--
-        <u><?=_("Custom Template Files")?></u><br />
+        <u><?php echo _("Custom Template Files")?></u><br />
 	{loop name="template_file_list"}
 	<a href="config.php{$web_vars}&display=epm_advanced&subpage=poce&product_select={$product_selected}&temp_file={$value.value}">{$value.text}</a><br />
 	{/loop}
 	<hr>
         -->
-	<u><?=_("Local File Configs")?></u><br />
+	<u><?php echo _("Local File Configs")?></u><br />
 	{loop name="file_list"}
 	<a href="config.php?type=tool&amp;display=epm_advanced&amp;subpage=poce&amp;product_select={$product_selected}&amp;file={$value.value}">{$value.text}</a><br />
 	{/loop}
 	<hr>
-	<u><?=_("User File Configs")?></u><br />
+	<u><?php echo _("User File Configs")?></u><br />
 	{if condition="isset($sql_file_list)"}
 		{loop name="sql_file_list"}
 		<a href="config.php?type=tool&display=epm_advanced&subpage=poce&product_select={$product_selected}&sql={$value.value}">{$value.text}</a> [{$value.ref}] <a href="config.php?type=tool&amp;display=epm_advanced&amp;subpage=poce&product_select={$product_selected}&amp;sql={$value.value}&amp;delete=yes"><img src='images/delete.gif' ALT='Delete' border='0'></a>
@@ -51,10 +51,10 @@
       </label>
       <br><div style="font-size: 15px">
       <label>
-        <input type="submit" name="button_save" value="<?=_('Save')?>">
+        <input type="submit" name="button_save" value="<?php echo _('Save')?>">
       </label>{if condition="!isset($temp_file)"} or
       <label>
-        <input type="submit" name="button_save_as" value="<?=_('Save As')?>..">
+        <input type="submit" name="button_save_as" value="<?php echo _('Save As')?>..">
       </label>
 	<label>
 	  <input type="text" name="save_as_name" id="save_as_name" value="{if condition="isset($save_as_name_value)"}{$save_as_name_value}{/if}">

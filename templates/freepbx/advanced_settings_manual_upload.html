@@ -31,7 +31,7 @@ process_module_actions();
         <input type="file" name="package" id="fileField">
     </label> Local Date Last Modified: {$provisioner_ver}
     <br/>
-    <input type="submit" name="upload_provisioner" value="<?=_('Upload')?>">
+    <input type="submit" name="upload_provisioner" value="<?php echo _('Upload')?>">
 </form>
     <br /><br />
 <form action="" method="post" enctype="multipart/form-data" name="form1">
@@ -39,7 +39,7 @@ process_module_actions();
         <input type="file" name="package" id="fileField">
     </label>
     <br /><font style="font-size: small">Note: The Brand XML File is no longer needed as it is contained within the Brand Package.<br /><br />Learn How to Create your own brand package here: <a target="_blank" href="http://www.provisioner.net/adding_new_phones">http://www.provisioner.net/adding_new_phones</a></font><br />
-    <input type="submit" name="upload_brand" value="<?=_('Upload')?>">
+    <input type="submit" name="upload_brand" value="<?php echo _('Upload')?>">
 </form>
 <br/>
 <br/>
@@ -51,5 +51,5 @@ process_module_actions();
                     <option value="{$value.value}">{$value.text}</option>
 	{/loop}
     </select>
-    <input type="submit" name="export_brand" value="<?=_('Upload')?>">
+    <input type="submit" name="export_brand" value="<?php echo _('Upload')?>">
 </form>

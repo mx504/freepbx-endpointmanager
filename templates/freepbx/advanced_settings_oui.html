@@ -4,7 +4,7 @@
 <table align='center' width='30%'>
 <tr>
 <td align='center'><h3>OUI</h3></td>
-<td align='center'><h3><?=_("Brand")?></h3></td>
+<td align='center'><h3><?php echo _("Brand")?></h3></td>
 <td align='center'></td>
 {loop name="oui_list"}
 </tr><tr>
@@ -19,7 +19,7 @@
 	{/loop}
 {/if}
 <td colspan='4'><hr><tr>
-    <td colspan="2" align='center'><h3><?=_('Add Custom')?> OUI</h3></td>
+    <td colspan="2" align='center'><h3><?php echo _('Add Custom')?> OUI</h3></td>
 </form>
 <form action='config.php?type=tool&amp;display=epm_advanced&amp;subpage=oui_manager' method='POST'>
 	</tr><tr>
@@ -29,7 +29,7 @@
 			{/loop}
 		</select></td>
 	</tr><tr>
-	    <td colspan="2" align='center'><input type="submit" name="oui_sub" value="<?=_('Add')?>"></td>
+	    <td colspan="2" align='center'><input type="submit" name="oui_sub" value="<?php echo _('Add')?>"></td>
 </form>
 </tr>
 </table>

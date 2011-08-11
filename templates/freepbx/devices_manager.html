@@ -66,12 +66,12 @@
 <center>
     {if condition="$no_add == FALSE"}
     <form id='go' action='config.php?type=tool&amp;display=epm_devices' method='POST'>
-        <label><?=_('Search for new devices in netmask')?>
+        <label><?php echo _('Search for new devices in netmask')?>
             <input name="netmask" type="text" value="{$srvip}/24">
-            <input type="Submit" name="button_go" id="button_go" onclick="submit_go();" value="<?=_('Go')?>">
+            <input type="Submit" name="button_go" id="button_go" onclick="submit_go();" value="<?php echo _('Go')?>">
         </label>
         <label>
-            <input name="nmap" type="checkbox" value="1" checked><?=_('Use NMAP')?>
+            <input name="nmap" type="checkbox" value="1" checked><?php echo _('Use NMAP')?>
         </label>
     </form>
     {/if}
@@ -79,12 +79,12 @@
 <table align='center' width='90%'>
     <tr>
         <td align='center' width='45'></td>
-        <td width="157" align='center'><h3><?=_('Mac Address')?></h3></td>
-        <td width="187" align='center'><h3><?=_('Brand')?></h3></td>
-        <td width="216" align='center'><h3><?=_('Model of Phone')?></h3></td>
-        <td width="172" align='center'><h3><?=_('Line')?></h3></td>
-        <td width="275" align='center'><h3><?=_('Extension Number')?></h3></td>
-        <td width="154" align='center'><h3><?=_('Template')?></h3></td>
+        <td width="157" align='center'><h3><?php echo _('Mac Address')?></h3></td>
+        <td width="187" align='center'><h3><?php echo _('Brand')?></h3></td>
+        <td width="216" align='center'><h3><?php echo _('Model of Phone')?></h3></td>
+        <td width="172" align='center'><h3><?php echo _('Line')?></h3></td>
+        <td width="275" align='center'><h3><?php echo _('Extension Number')?></h3></td>
+        <td width="154" align='center'><h3><?php echo _('Template')?></h3></td>
 
         <td width="234" align='center'></td>
         <td align='center'></td>
@@ -136,13 +136,13 @@
         </label></td>
     <td align='center'>
 	{if condition="$mode == 'EDIT'"}
-        <input type='Submit' name='button_save' onclick="submit_wtype_sub('edit',{$edit_id},'button_save');" value='<?=_('Save')?>'>
+        <input type='Submit' name='button_save' onclick="submit_wtype_sub('edit',{$edit_id},'button_save');" value='<?php echo _('Save')?>'>
 	{else}
-               <input type='Submit' name='button_add' onclick="add();" value='<?=_('Add')?>'>
+               <input type='Submit' name='button_add' onclick="add();" value='<?php echo _('Add')?>'>
 	{/if}
     </td>
 
-    <td align='center'>{if condition="$mode != 'EDIT'"}<input type='reset' value='<?=_('Reset')?>'>{/if}</td>
+    <td align='center'>{if condition="$mode != 'EDIT'"}<input type='reset' value='<?php echo _('Reset')?>'>{/if}</td>
 </tr>
 {loop name="line_list_edit"}
 <tr>
@@ -233,7 +233,7 @@
         <td align='center'>&nbsp;</td>
         <td align='center'>&nbsp;</td>
         <td align='center'>&nbsp;</td>
-        <td colspan="3" align='center'><h3><?=_('Unmanaged Extensions')?></h3></td>
+        <td colspan="3" align='center'><h3><?php echo _('Unmanaged Extensions')?></h3></td>
         <td align='center'>&nbsp;</td>
         <td align='center'>&nbsp;</td>
         <td align='center'>&nbsp;</td>
@@ -280,7 +280,7 @@
         <tr>
         <table width="90%" border="0" cellspacing="0" cellpadding="0">
             <tr>
-                <td><center><input type="submit" name="button_add_selected_phones" onclick="submit_unmanaged();" value="<?=_('Add Selected Phones')?>"><br /><input type="checkbox" name="reboot_sel">Reboot Phones</center></td>
+                <td><center><input type="submit" name="button_add_selected_phones" onclick="submit_unmanaged();" value="<?php echo _('Add Selected Phones')?>"><br /><input type="checkbox" name="reboot_sel">Reboot Phones</center></td>
             </tr>
         </table>
         </tr>
@@ -294,7 +294,7 @@
         <td width="3%" align='center'>&nbsp;</td>
         <td align='center'>&nbsp;</td>
         <td align='center'>&nbsp;</td>
-        <td colspan="3" style='vertical-align:text-bottom;text-align:center;'><h3><?=_('Current Managed Extensions')?></h3></td>
+        <td colspan="3" style='vertical-align:text-bottom;text-align:center;'><h3><?php echo _('Current Managed Extensions')?></h3></td>
         <td align='center'>&nbsp;</td>
         <td align='center'></td>
         <td align='center'></td>
@@ -321,9 +321,9 @@
             <td width="10%" align='center'><div id="demo"><a><img src="assets/endpointman/images/expand.png" id="img2rowGroup{$value.master_id}" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"></a></div></td>
             <td width="19%" align='center'><div id="demo"><a><img src="assets/endpointman/images/expand.png" id="img3rowGroup{$value.master_id}" onclick="toggleDisplay(document.getElementById('devList'),'headerRow','rowGroup{$value.master_id}')" title="Click to Expand Line Information"></a></div></td>
             <td align='center' width='15%'>{$value.template_name}</td>
-            <td align='center'><div id="demo"><a href="#" onclick="submit_stype('edit',{$value.id});"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' title='Edit Device' border='0'></a></div></td>
-            <td align='center' width='9%'><div id="demo"><a href="#" onclick="submit_wtype('edit',{$value.id});"><img src='assets/endpointman/images/edit.png' ALT='<?=_('Edit')?>' title='Edit Device' border='0'></a></div></td>
-            <td align='center' width='7%'><div id="demo"><a href="#" onclick="delete_device({$value.id});"><img src='assets/endpointman/images/delete.png' ALT='<?=_('Delete')?>' title='Delete Device' border='0'></a></div></td>
+            <td align='center'><div id="demo"><a href="#" onclick="submit_stype('edit',{$value.id});"><img src='assets/endpointman/images/edit.png' ALT='<?php echo _('Edit')?>' title='Edit Device' border='0'></a></div></td>
+            <td align='center' width='9%'><div id="demo"><a href="#" onclick="submit_wtype('edit',{$value.id});"><img src='assets/endpointman/images/edit.png' ALT='<?php echo _('Edit')?>' title='Edit Device' border='0'></a></div></td>
+            <td align='center' width='7%'><div id="demo"><a href="#" onclick="delete_device({$value.id});"><img src='assets/endpointman/images/delete.png' ALT='<?php echo _('Delete')?>' title='Delete Device' border='0'></a></div></td>
         </tr>
         {loop name="value.line"}
         <tr class="rowGroup{$value.master_id}" style="display:none;">
@@ -336,7 +336,7 @@
             <td align='center' width='15%'></td>
             <td align='center' width='9%'></td>
             <td></td>
-            <td align='center' width='7%'><div id="demo"><a href="#" onclick="submit_wtype('delete_line',{$value.luid});"><img src='assets/endpointman/images/delete.png' ALT='<?=_('Delete')?>' title='Delete Line' border='0'></a></div></td>
+            <td align='center' width='7%'><div id="demo"><a href="#" onclick="submit_wtype('delete_line',{$value.luid});"><img src='assets/endpointman/images/delete.png' ALT='<?php echo _('Delete')?>' title='Delete Line' border='0'></a></div></td>
         </tr>
         {/loop}
 	{/loop}
@@ -345,44 +345,44 @@
 <hr>
 <center>
     <h4>
-        <?=_('Selected Phone(s) Options')?>
+        <?php echo _('Selected Phone(s) Options')?>
     </h4>
 </center>
 <table width='90%' align='center'>
     <tr>
-        <td width="26%" align='center'><input type="submit" name="button_delete_selected_phones" onclick="submit_managed('delete_selected_phones');" value="<?=('Delete Selected Phones')?>"></td>
-        <td width="26%" align='center'><input type="submit" name="button_rebuild_selected" onclick="submit_managed('rebuild_selected_phones');" value="<?=_('Rebuild Configs for Selected Phones')?>"><br /><input type="checkbox" name="reboot" checked>Reboot Phones</td>
-        <td width="32%" align='center'><?=_('Change Selected Phones to')?>: <br /><?=_('Brand')?>:<select name="brand_list_selected" id="brand_list_selected">
+        <td width="26%" align='center'><input type="submit" name="button_delete_selected_phones" onclick="submit_managed('delete_selected_phones');" value="<?php echo ('Delete Selected Phones')?>"></td>
+        <td width="26%" align='center'><input type="submit" name="button_rebuild_selected" onclick="submit_managed('rebuild_selected_phones');" value="<?php echo _('Rebuild Configs for Selected Phones')?>"><br /><input type="checkbox" name="reboot" checked>Reboot Phones</td>
+        <td width="32%" align='center'><?php echo _('Change Selected Phones to')?>: <br /><?php echo _('Brand')?>:<select name="brand_list_selected" id="brand_list_selected">
                 {loop name="brand_ava"}
                 <option value="{$value.value}" {if condition="isset($value.selected)"}selected{/if}>{$value.text}</option>
                 {/loop}
-            </select> <?=_('Model')?>: <select name="model_list_selected" id="model_list_selected"><option></option></select><br /><input type="submit" name="button_update_phones" onclick="submit_managed('change_brand');" value="<?=_('Update Phones')?>"><br /><input type="checkbox" name="reboot_change" checked>Reboot Phones</td>
+            </select> <?php echo _('Model')?>: <select name="model_list_selected" id="model_list_selected"><option></option></select><br /><input type="submit" name="button_update_phones" onclick="submit_managed('change_brand');" value="<?php echo _('Update Phones')?>"><br /><input type="checkbox" name="reboot_change" checked>Reboot Phones</td>
     </tr>
 </table>
 </form>
 <hr>
 <center>
-    <h4><?=_('Global Phone Options')?></h4>
+    <h4><?php echo _('Global Phone Options')?></h4>
 </center>
 <table width='90%' align='center'>
     <tr>
-        <td width="26%" align='center'><form action='' name='globalmanaged' id='globalmanaged' method='POST'><input type='Submit' name='button_rebuild_configs_for_all_phones' onclick="submit_global('rebuild_configs_for_all_phones');" value='<?=_('Rebuild Configs for All Phones')?>'><br /><input type="checkbox" name="reboot" checked>Reboot Phones</form></td>
+        <td width="26%" align='center'><form action='' name='globalmanaged' id='globalmanaged' method='POST'><input type='Submit' name='button_rebuild_configs_for_all_phones' onclick="submit_global('rebuild_configs_for_all_phones');" value='<?php echo _('Rebuild Configs for All Phones')?>'><br /><input type="checkbox" name="reboot" checked>Reboot Phones</form></td>
         <td width="32%" align='center'><form action='' name='globalmanaged2' id='globalmanaged2' method='POST'><select name="rb_brand">
 	{loop name="brand_ava"}
                     <option value="{$value.value}">{$value.text}</option>
 	{/loop}
                 </select>
-                <input type='Submit' name='button_reboot_this_brand' onclick="submit_global2('reboot_brand');" value='<?=_('Reboot This Brand')?>'></form></td>
-        <td width="42%" align='center'><form action='' name='globalmanaged3' id='globalmanaged3' method='POST'><?=_('Reconfigure all')?> <select name="product_select" id="product_select">
+                <input type='Submit' name='button_reboot_this_brand' onclick="submit_global2('reboot_brand');" value='<?php echo _('Reboot This Brand')?>'></form></td>
+        <td width="42%" align='center'><form action='' name='globalmanaged3' id='globalmanaged3' method='POST'><?php echo _('Reconfigure all')?> <select name="product_select" id="product_select">
 	{loop name="product_list"}
                     <option value="{$value.value}">{$value.text}</option>
 	{/loop}
-                </select> <?=_('with')?>
+                </select> <?php echo _('with')?>
                 <label>
                     <select name="template_selector" id="template_selector">
                         <option></option>
                     </select>
-                    <input type="submit" name="button_rebuild_reboot" onclick="submit_global3('rebuild_reboot');" value="<?=_('Rebuild')?>"><br /><input type="checkbox" name="reboot" checked>Reboot Phones
+                    <input type="submit" name="button_rebuild_reboot" onclick="submit_global3('rebuild_reboot');" value="<?php echo _('Rebuild')?>"><br /><input type="checkbox" name="reboot" checked>Reboot Phones
                 </label></td>
     </tr>
 </table>

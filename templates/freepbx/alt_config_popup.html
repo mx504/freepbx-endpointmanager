@@ -21,12 +21,12 @@
         <div id="spinner">
         </div>
         <br>
-        <h1><face="Arial"><center><?=_('End Point Configuration Manager')?></center></h1>
+        <h1><face="Arial"><center><?php echo _('End Point Configuration Manager')?></center></h1>
         <hr>
 	{if condition="isset($show_error_box)"}
 	{include="message_box"}
 	{/if}
-	<center><h4><?=_("File Configuration Editor For")?>: {$file}</h4>
+	<center><h4><?php echo _("File Configuration Editor For")?>: {$file}</h4>
 	    <font color="red">Warning! You can really mess up your phone by messing with these settings. Potentially causing it to not boot!</font><br/>
 	    {if condition="isset($location) && isset($allow_hdfiles)"}
 	    <strong>You are editing a global file. This will effect any & all phones that reference this hard file
@@ -43,7 +43,7 @@
 			    </label>
 			    <br><div style="font-size: 15px">
 				<label>
-				    <input type="submit" name="button_save" value="<?=_('Save')?>" onClick="javascript:submitform();"><input type=button value="Close Window" onClick="javascript:Close();">
+				    <input type="submit" name="button_save" value="<?php echo _('Save')?>" onClick="javascript:submitform();"><input type=button value="Close Window" onClick="javascript:Close();">
 				</label>
 		    </tr>
 		</table>

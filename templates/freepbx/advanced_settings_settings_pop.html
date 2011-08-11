@@ -11,7 +11,7 @@
         <div id="spinner">
         </div>
         <br>
-        <h1><face="Arial"><center><?=_('End Point Configuration Manager')?></center></h1>
+        <h1><face="Arial"><center><?php echo _('End Point Configuration Manager')?></center></h1>
         <hr>
 {if condition="isset($show_error_box)"}
     {include="message_box"}
@@ -19,11 +19,11 @@
 <form action='' method='POST'>
 <table width='90%' align='center'>
 <tr>
-<td width='50%' align='right'><?=_("IP address of phone server")?>:</td>
-<td width='50%' align='left'><input type='text' id='srvip' name='srvip' value='{$srvip}'><a href='#' onclick="document.getElementById('srvip').value = '{$ip}'; "><?=_("Determine for me")?></a></td>
+<td width='50%' align='right'><?php echo _("IP address of phone server")?>:</td>
+<td width='50%' align='left'><input type='text' id='srvip' name='srvip' value='{$srvip}'><a href='#' onclick="document.getElementById('srvip').value = '{$ip}'; "><?php echo _("Determine for me")?></a></td>
 </tr>
 <tr>
-  <td align='right'><?=_("Configuration Type")?></td>
+  <td align='right'><?php echo _("Configuration Type")?></td>
   <td align='left'>
       <select name="cfg_type" id="cfg_type" disabled>
             <option value="file">File (TFTP/FTP)</option>
@@ -32,7 +32,7 @@
   </td>
 </tr>
 <tr>
-  <td align='right'><?=_("Global Final Config & Firmware Directory")?></td>
+  <td align='right'><?php echo _("Global Final Config & Firmware Directory")?></td>
   <td align='left'><label>
     <input type="text" name="config_loc" value="{$config_location}">
   </label></td>
@@ -42,7 +42,7 @@
   <td align='left'></td>
 </tr>
 <tr>
-<td width='50%' align='right'><?=_("Time Zone")?> (<?=_('like')?> USA-5)</td>
+<td width='50%' align='right'><?php echo _("Time Zone")?> (<?php echo _('like')?> USA-5)</td>
 <td width='50%' align='left'><select name="tz" id="tz">
 	{loop name="list_tz"}
 	<option value="{$value.value}" {if condition="$value.selected == 1"}selected='selected'{/if}>{$value.text}</option>
@@ -51,13 +51,13 @@
 </td>
 </tr>
 <tr>
-<td width='50%' align='right'><?=_("Time Server (NTP Server)")?></td>
+<td width='50%' align='right'><?php echo _("Time Server (NTP Server)")?></td>
   <td align='left'><label>
     <input type="text" name="ntp_server" value="{$ntp_server}">
   </label></td>
 </tr>
 <tr>
-<td colspan='2' align='center'><input type='Submit' name='button_update_globals' value='<?=_('Update Global Overrides')?>'><input type='Submit' name='button_reset_globals' value='<?=_('Reset Global Overrides to Default')?>'><input type=button value="Close Window" onClick="javascript:window.close();">
+<td colspan='2' align='center'><input type='Submit' name='button_update_globals' value='<?php echo _('Update Global Overrides')?>'><input type='Submit' name='button_reset_globals' value='<?php echo _('Reset Global Overrides to Default')?>'><input type=button value="Close Window" onClick="javascript:window.close();">
 </td>
 </tr>
 
