@@ -79,8 +79,8 @@ if(!file_exists(PHONE_MODULES_PATH."temp/")) {
 //Detect Version
 
 function ep_table_exists ($table) {
-    global $db;
-    $sql = "SHOW TABLES FROM asterisk";
+    global $amp_conf,$db;
+    $sql = "SHOW TABLES FROM ".$amp_conf['AMPDBNAME'];
     $result = $db->getAll($sql);
 
     foreach($result as $row) {
