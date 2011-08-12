@@ -434,7 +434,7 @@ if(!$new_install) {
         $db->query($sql);
 
         out("Update global variables to include future language support");
-        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (\'13\', \'temp_amp\', \'\');';
+        $sql = 'INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (\'13\', \'temp_amp\', \'\');';
         $db->query($sql);
 
         $sql = "UPDATE endpointman_global_vars SET var_name = 'language' WHERE var_name = 'temp_amp'";
@@ -457,11 +457,11 @@ if(!$new_install) {
         $db->query($sql);
 
         out("Inserting Check for Updates Command");
-        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (\'14\', \'check_updates\', \'1\');';
+        $sql = 'INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (\'14\', \'check_updates\', \'1\');';
         $db->query($sql);
 
         out("Inserting Disable .htaccess command");
-        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (\'15\', \'disable_htaccess\', \'0\');';
+        $sql = 'INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (\'15\', \'disable_htaccess\', \'0\');';
         $db->query($sql);
 
         out("Add Automatic Update Check [Can be Disabled]");
@@ -819,7 +819,7 @@ if(!$new_install) {
     }
 
     if ($ver <= "2.9.0.2") {
-        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'disable_help\', \'0\');';
+        $sql = 'INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'disable_help\', \'0\');';
         $db->query($sql);
     }
 
@@ -836,11 +836,11 @@ if(!$new_install) {
 
     if($ver <= "2.9.0.7") {
         out("Adding UNIQUE key to table global_vars for var_name");
-        $sql = "ALTER TABLE `asterisk`.`endpointman_global_vars` ADD UNIQUE `unique` (`var_name`)";
+        $sql = "ALTER TABLE `endpointman_global_vars` ADD UNIQUE `unique` (`var_name`)";
         $db->query($sql);
 
         out("Adding show_all_registrations to global_vars table");
-        $sql = 'INSERT INTO asterisk.endpointman_global_vars (idnum, var_name, value) VALUES (NULL, "show_all_registrations", "0")';
+        $sql = 'INSERT INTO endpointman_global_vars (idnum, var_name, value) VALUES (NULL, "show_all_registrations", "0")';
         $db->query($sql);
     }
 
@@ -855,13 +855,13 @@ if(!$new_install) {
         out("Fix again to the 'Allow Duplicate Extensions' Error");
         $sql = 'ALTER TABLE `endpointman_global_vars` ADD UNIQUE `var_name` (`var_name`)';
         $db->query($sql);
-        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'show_all_registrations\', \'0\');';
+        $sql = 'INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'show_all_registrations\', \'0\');';
         $db->query($sql);
     }
 
     if($ver <= "2.9.2.0") {
         out("Adding new Network Time Protocol Setting");
-        $sql = "INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, 'ntp', '".$_SERVER["SERVER_ADDR"]."')";
+        $sql = "INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, 'ntp', '".$_SERVER["SERVER_ADDR"]."')";
         $db->query($sql);
         out("Upgrading all timezone data to new improved simplified system");
 
@@ -870,7 +870,7 @@ if(!$new_install) {
         $sql = 'ALTER TABLE `endpointman_template_list` ADD `global_settings_override` LONGBLOB NULL;';
         $db->query($sql);
 
-        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'server_type\', \'file\');';
+        $sql = 'INSERT INTO `endpointman_global_vars` (`idnum`, `var_name`, `value`) VALUES (NULL, \'server_type\', \'file\');';
         $db->query($sql);
 
         $sql = "CREATE TABLE IF NOT EXISTS `endpointman_time_zones_desc` (
@@ -968,7 +968,7 @@ if(!$new_install) {
         $sql = "UPDATE endpointman_global_vars SET value = '".$new_tz_id.".0' WHERE var_name = 'tz'";
         $db->query($sql);
 
-        $sql = 'INSERT INTO `asterisk`.`endpointman_global_vars` (`var_name`, `value`) VALUES (\'allow_hdfiles\', \'0\');';
+        $sql = 'INSERT INTO `endpointman_global_vars` (`var_name`, `value`) VALUES (\'allow_hdfiles\', \'0\');';
         $db->query($sql);
 
 	$sql = 'ALTER TABLE `endpointman_mac_list` ADD `specific_settings` LONGBLOB NULL;';

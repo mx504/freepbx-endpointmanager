@@ -2415,7 +2415,8 @@ class endpointmanager {
      * @return <type>
      */
     function table_exists($table) {
-        $sql = "SHOW TABLES FROM asterisk";
+	global $amp_conf;
+        $sql = "SHOW TABLES FROM ".$amp_conf['AMPDBNAME'];
         $result = $this->db->getAll($sql);
 
         foreach($result as $row) {
