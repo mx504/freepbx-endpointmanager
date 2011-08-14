@@ -23,16 +23,34 @@
         <br>
         <h1><face="Arial"><center><?php echo _('End Point Configuration Manager')?></center></h1>
         <hr>
+	{if condition="isset($show_error_box)"}
+	{include="message_box"}
+	{/if}
 	    <form name="myform" id="myform" method="post" action=""><input type="hidden" id="value" name="value" value="{$value}" />
-		<table width="90%" border="0" cellspacing="4" cellpadding="4">
-		    <tr><td><div style="font-size: 14px" align="left">{if condition="isset($location)"}File Location: <i>{$location}</i>{/if}</div></td></tr>
+		<table width="90%" border="0" cellspacing="0" cellpadding="0">
+		    <tr><td colspan="2"><u>General Settings</u></td></tr>
+		    {loop name="display_name"}
+		    <tr><td>Display Name Line {$value.line}:</td><td><input type="text" name="displayname_{$value.line}" value="{$value.displayname}" /></td></tr>
+		    {/loop}
+		    <tr><td colspan="2">&nbsp;</td></tr>
+		    <tr><td colspan="2"><u>IP Settings</u></td></tr>
+		    <tr><td>IP Type</td><td>
+<select>
+  <option value="dhcp">DHCP</option>
+  <option value="static">Static</option>
+</select>
+			</td></tr>
+		    <tr><td width="30%">IPv4 Address:</td><td><input type="text" name="ipv4" value="" /></td></tr>
+		    <tr><td>IPv6 Address:</td><td><input type="text" name="ipv46" value="" /></td></tr>
+		    <tr><td>Subnet Mask Address:</td><td><input type="text" name="subnet" value="" /></td></tr>
+		    <tr><td>Gateway Address:</td><td><input type="text" name="gateway" value="" /></td></tr>
 		    <tr>
-			<td>
-			    Coming Soon!
+			<td colspan="2">
 			    <br><div style="font-size: 15px">
 				<label>
 				    <input type="submit" name="button_save" value="<?php echo _('Save')?>" onClick="javascript:submitform();"><input type=button value="Close Window" onClick="javascript:Close();">
 				</label>
+			    </td>
 		    </tr>
 		</table>
 	    </form>

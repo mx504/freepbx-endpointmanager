@@ -8,6 +8,30 @@ require 'functions.inc';
 $endpoint = new endpointmanager();
 
 if($_REQUEST['pop_type'] == 'edit_specifics') {
+    $info = $endpoint->get_phone_info($_REQUEST['edit_id']);
+    if(isset($_REQUEST['button_save'])) {
+	$endpoint->message['advanced_settings'] = "Updated!";
+	foreach($info['line'] as $data) {
+	    $line = $data['line'];
+	    $final['displayname_'.$line] = $_REQUEST['displayname_'.$line];
+	}
+	$sql = "UPDATE endpointman_mac_list SET specific_settings = '".serialize($final)."' WHERE id =". $_REQUEST['edit_id'];
+	$endpoint->db->query($sql);
+    }
+
+    $info = $endpoint->get_phone_info($_REQUEST['edit_id']);
+    $specific_settings = !empty($info['specific_settings']) ? unserialize($info['specific_settings']) : array();
+
+    $z = 0;
+    foreach($info['line'] as $data) {
+	$line = $data['line'];
+	$displayname[$z]['displayname'] = isset($specific_settings['displayname_'.$line]) ? $specific_settings['displayname_'.$line] : '{$displayname.line.'.$line.'}';
+	$displayname[$z]['line'] = $line;
+	$z++;
+    }
+
+    $endpoint->prepare_message_box();
+    $endpoint->tpl->assign("display_name", $displayname);
     echo $endpoint->tpl->draw( 'specifics_pop' );
 }
 

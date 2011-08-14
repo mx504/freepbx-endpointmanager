@@ -368,7 +368,7 @@ class endpointmanager {
                         $sql = "SELECT description FROM devices WHERE id = ".$ext;
                         $name=$this->db->getOne($sql);
 
-                        $sql = "UPDATE endpointman_line_list SET line = '".$line."', ext = ".$ext.", description = '".$name."' WHERE luid =  ". $row['luid'];
+                        $sql = "UPDATE endpointman_line_list SET line = '".$line."', ext = ".$ext.", description = '".addslashes($name)."' WHERE luid =  ". $row['luid'];
                         $this->db->query($sql);
                     }
 
@@ -378,7 +378,7 @@ class endpointmanager {
                     $sql = "SELECT description FROM devices WHERE id = ".$reg[0]['value'];
                     $name = $this->db->getOne($sql);
 
-                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$mac_id."', '".$reg[0]['value']."', '".$lines[0]['value']."', '".$name."')";
+                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$mac_id."', '".$reg[0]['value']."', '".$lines[0]['value']."', '".addslashes($name)."')";
                     $this->db->query($sql);
 
                     $this->message['add_line'] = "Added '<i>".$name."</i>' to line '<i>".$lines[0]['value']."</i>' on device '<i>".$reg[0]['value']."</i>' <br/> Configuration Files will not be Generated until you click Save!";
@@ -396,7 +396,7 @@ class endpointmanager {
                 if($this->endpoint_data->all_unused_registrations()) {
                     $lines = array_values($this->linesAvailable(NULL,$mac_id));
 
-                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$mac_id."', '".$ext."', '".$lines[0]['value']."', '".$displayname."')";
+                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$mac_id."', '".$ext."', '".$lines[0]['value']."', '".addslashes($displayname)."')";
                     $this->db->query($sql);
 
                     $this->message['add_line'] = "Added '<i>".$name."</i>' to line '<i>".$lines[0]['value']."</i>' on device '<i>".$reg[0]['value']."</i>' <br/> Configuration Files will not be Generated until you click Save!";
@@ -423,7 +423,7 @@ class endpointmanager {
                     $name = $displayname;
                 }
 
-                $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$mac_id."', '".$ext."', '".$line."', '".$name."')";
+                $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('".$mac_id."', '".$ext."', '".$line."', '".addslashes($name)."')";
                 $this->db->query($sql);
                 $this->message['add_line'] .= "Added ".$name." to line ".$line . "<br/>";
                 return($mac_id);
@@ -584,7 +584,7 @@ class endpointmanager {
         $res = $this->db->query($sql);
         if($res->numRows()) {
             //Returns Brand Name, Brand Directory, Model Name, Mac Address, Extension (FreePBX), Custom Configuration Template, Custom Configuration Data, Product Name, Product ID, Product Configuration Directory, Product Configuration Version, Product XML name,
-            $sql = "SELECT endpointman_mac_list.config_files_override, endpointman_mac_list.global_user_cfg_data, endpointman_model_list.id as model_id, endpointman_brand_list.id as brand_id, endpointman_brand_list.name, endpointman_brand_list.directory, endpointman_model_list.model, endpointman_mac_list.mac, endpointman_mac_list.template_id, endpointman_mac_list.global_custom_cfg_data, endpointman_product_list.long_name, endpointman_product_list.id as product_id, endpointman_product_list.cfg_dir, endpointman_product_list.cfg_ver, endpointman_model_list.template_data, endpointman_model_list.enabled, endpointman_mac_list.global_settings_override FROM endpointman_line_list, endpointman_mac_list, endpointman_model_list, endpointman_brand_list, endpointman_product_list WHERE endpointman_mac_list.model = endpointman_model_list.id AND endpointman_brand_list.id = endpointman_model_list.brand AND endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_mac_list.id = endpointman_line_list.mac_id AND endpointman_mac_list.id = ". $mac_id;
+            $sql = "SELECT endpointman_mac_list.specific_settings, endpointman_mac_list.config_files_override, endpointman_mac_list.global_user_cfg_data, endpointman_model_list.id as model_id, endpointman_brand_list.id as brand_id, endpointman_brand_list.name, endpointman_brand_list.directory, endpointman_model_list.model, endpointman_mac_list.mac, endpointman_mac_list.template_id, endpointman_mac_list.global_custom_cfg_data, endpointman_product_list.long_name, endpointman_product_list.id as product_id, endpointman_product_list.cfg_dir, endpointman_product_list.cfg_ver, endpointman_model_list.template_data, endpointman_model_list.enabled, endpointman_mac_list.global_settings_override FROM endpointman_line_list, endpointman_mac_list, endpointman_model_list, endpointman_brand_list, endpointman_product_list WHERE endpointman_mac_list.model = endpointman_model_list.id AND endpointman_brand_list.id = endpointman_model_list.brand AND endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_mac_list.id = endpointman_line_list.mac_id AND endpointman_mac_list.id = ". $mac_id;
 
             $phone_info = $this->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
 
@@ -1022,13 +1022,47 @@ class endpointmanager {
                 }
                 break;
             case "checkbox":
-                $template_variables_array['type'] = "NA";
+                if((!$admin) && (isset($user_cfg_data[$key]))) {
+                    $custom_cfg_data[$key] = $user_cfg_data[$key];
+                }
+                $num = $custom_cfg_data[$key];
+                $template_variables_array['type'] = "checkbox";
+                $template_variables_array['key'] = $key;
+                $template_variables_array['description'] = $cfg_data['description'];
+                $z = 0;
+                while($z < count($cfg_data['data'])) {
+                    $template_variables_array['data'][$z]['key'] = $key;
+                    $template_variables_array['data'][$z]['value'] = $cfg_data['data'][$z]['value'];
+                    $template_variables_array['data'][$z]['description'] = $cfg_data['data'][$z]['text'];
+                    if ($cfg_data['data'][$z]['value'] == $num) {
+                        $template_variables_array['data'][$z]['checked'] = 'checked';
+                    }
+                    $z++;
+                }
                 break;
             case "file";
-                $template_variables_array['type'] = "NA";
+                if((!$admin) && (isset($user_cfg_data[$key]))) {
+                    $custom_cfg_data[$key] = $user_cfg_data[$key];
+                }
+                $template_variables_array['type'] = "file";
+                if(isset($cfg_data['max_chars'])) {
+                    $template_variables_array['max_chars'] = $cfg_data['max_chars'];
+                }
+                $template_variables_array['key'] = $key;
+                $template_variables_array['value'] = $custom_cfg_data[$key];
+                $template_variables_array['description'] = $cfg_data['description'];
                 break;
             case "textarea":
-                $template_variables_array['type'] = "NA";
+                if((!$admin) && (isset($user_cfg_data[$key]))) {
+                    $custom_cfg_data[$key] = $user_cfg_data[$key];
+                }
+                $template_variables_array['type'] = "textarea";
+                if(isset($cfg_data['max_chars'])) {
+                    $template_variables_array['max_chars'] = $cfg_data['max_chars'];
+                }
+                $template_variables_array['key'] = $key;
+                $template_variables_array['value'] = $custom_cfg_data[$key];
+                $template_variables_array['description'] = $cfg_data['description'];
                 break;
             case "break":
                if($admin) {
@@ -1041,6 +1075,10 @@ class endpointmanager {
                 $template_variables_array['type'] = "NA";
                 break;
         }
+
+	if(isset($cfg_data['description_attr']['tooltip'])) {
+	    $template_variables_array['tooltip'] = $cfg_data['description_attr']['tooltip'];
+	}
 
         if(($this->global_cfg['enable_ari']) AND ($admin) AND ($cfg_data['type'] != "break") AND ($cfg_data['type'] != "group")) {
            
