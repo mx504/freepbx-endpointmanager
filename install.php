@@ -1043,7 +1043,7 @@ if ($new_install) {
             (17, 'disable_help', '0'),
             (18, 'show_all_registrations', '0'),
             (19, 'ntp', ''),
-            (20, 'server_type, 'file'";
+            (20, 'server_type', 'file')";
     $db->query($sql);
 
     out("Creating mac list Table");
