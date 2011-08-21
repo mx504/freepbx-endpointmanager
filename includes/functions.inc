@@ -55,7 +55,14 @@ class endpointmanager {
         define("VER", $this->global_cfg['version']);
         //end possible removal
 
-	define("MODULES_PATH", $this->get_modules_dir());
+	define("MODULES_PATH", $amp_conf['AMPWEBROOT'] . '/admin/modules/');
+                
+        //Determine if local path is correct!
+        if(file_exists(MODULES_PATH."endpointman/")) {
+            define("LOCAL_PATH", MODULES_PATH."endpointman/");
+        } else {
+            die("Can't Load Local Endpoint Manager Directory!");
+        }
 
         //Define the location of phone modules, keeping it outside of the module directory so that when the user updates endpointmanager they don't lose all of their phones
         if(file_exists(MODULES_PATH."_ep_phone_modules/")) {
@@ -76,13 +83,6 @@ class endpointmanager {
             if(!file_exists(MODULES_PATH."_ep_phone_modules/")) {
                 die('Endpoint Manager can not create the modules folder!');
             }
-        }
-
-        //Determine if local path is correct!
-        if(file_exists(MODULES_PATH."endpointman/")) {
-                define("LOCAL_PATH", MODULES_PATH."endpointman/");
-        } else {
-                die("Can't Load Local Endpoint Manager Directory!");
         }
 
         //include the local template class
@@ -139,24 +139,6 @@ class endpointmanager {
         $contents = str_replace("&#039;", "&amp;#039;", $contents);
         return($contents);
     }
-
-    function get_modules_dir() {
-
-        $file_name = "endpointman/includes/functions.inc";
-
-        $includes = get_included_files();
-        foreach($includes as $key => $data) {
-            if(strripos($data,$file_name)) {
-                $keyout = $key;
-                break;
-            }
-        }
-
-        $stripped_path = str_replace("endpointman/includes/functions.inc", "", $includes[$keyout]);
-
-        return $stripped_path;
-    }
-	
 
     /**
      * Used to send sample configurations to provisioner.net
