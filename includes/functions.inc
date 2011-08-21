@@ -61,7 +61,21 @@ class endpointmanager {
         if(file_exists(MODULES_PATH."_ep_phone_modules/")) {
             define("PHONE_MODULES_PATH", MODULES_PATH."_ep_phone_modules/");
         } else {	
-            die("Phone Modules Directory doesn't exist!");
+            define("PHONE_MODULES_PATH", MODULES_PATH."_ep_phone_modules/");
+            if (!file_exists(PHONE_MODULES_PATH)) {
+                mkdir(PHONE_MODULES_PATH, 0764);
+            }
+
+            if (!file_exists(PHONE_MODULES_PATH . "setup.php")) {
+                copy(LOCAL_PATH . "install/setup.php", PHONE_MODULES_PATH . "setup.php");
+            }
+
+            if (!file_exists(PHONE_MODULES_PATH . "temp/")) {
+                mkdir(PHONE_MODULES_PATH . "temp/", 0764);
+            }
+            if(!file_exists(MODULES_PATH."_ep_phone_modules/")) {
+                die('Endpoint Manager can not create the modules folder!');
+            }
         }
 
         //Determine if local path is correct!
